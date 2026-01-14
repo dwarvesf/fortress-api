@@ -520,7 +520,7 @@ func (h *handler) handleNotionLeaveApproveButton(c *gin.Context, l logger.Logger
 		}
 
 		// Update Notion status
-		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Approved", approverPageID)
+		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Acknowledged", approverPageID)
 		if err != nil {
 			l.Errorf(err, "failed to update leave status in Notion")
 			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to approve: %v", err))
@@ -596,7 +596,7 @@ func (h *handler) handleNotionLeaveRejectButton(c *gin.Context, l logger.Logger,
 		}
 
 		// Update Notion status with rejector page ID
-		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Rejected", rejectorPageID)
+		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Not Applicable", rejectorPageID)
 		if err != nil {
 			l.Errorf(err, "failed to update leave status in Notion")
 			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to reject: %v", err))
@@ -866,8 +866,8 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 
 	// Build event summary and description matching the format: "👾 <discord_username> off"
 	summary := fmt.Sprintf("👾 %s off", discordUsername)
-	description := fmt.Sprintf("Leave Type: %s\nReason: %s\nRequested by: %s (%s)",
-		leave.LeaveType, leave.Reason, employee.FullName, employee.TeamEmail)
+	description := fmt.Sprintf("Type: %s\nRequest: %s\nDetails: %s\nRequested by: %s (%s)",
+		leave.UnavailabilityType, leave.LeaveRequestTitle, leave.AdditionalContext, employee.FullName, employee.TeamEmail)
 
 	// Create all-day event (Notion database doesn't have Shift field)
 	// Add assigned approvers as attendees

@@ -18,20 +18,22 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/store"
 )
 
-// LeaveRequest represents a leave request from Notion
+// LeaveRequest represents a leave request from Notion Unavailability Notices database
 type LeaveRequest struct {
-	PageID       string
-	Reason       string     // Title field
-	EmployeeID   string     // Relation page ID
-	Email        string     // Rollup value from Employee relation
-	LeaveType    string     // "Off" or "Remote"
-	StartDate    *time.Time
-	EndDate      *time.Time
-	Shift        string     // "Full day", "Morning", "Afternoon"
-	Status       string     // "Pending", "Approved", "Rejected"
-	ApprovedByID string     // Relation page ID
-	ApprovedAt   *time.Time
-	Assignees    []string   // Notion user emails from People property
+	PageID              string
+	LeaveRequestTitle   string     // Title field - leave request name
+	EmployeeID          string     // Relation page ID - contractor
+	Email               string     // Rollup value from Contractor relation (Team Email)
+	UnavailabilityType  string     // "Personal Time", "Health / Illness", "Family / Emergency", "Travel / Vacation", "Other"
+	StartDate           *time.Time
+	EndDate             *time.Time
+	Shift               string     // "Full day", "Morning", "Afternoon"
+	Status              string     // "New", "Acknowledged", "Not Applicable", "Withdrawn"
+	ReviewedByID        string     // Relation page ID - person who reviewed/approved
+	DateApproved        *time.Time
+	DateRequested       *time.Time // When the request was submitted
+	AdditionalContext   string     // Detailed reason for leave
+	Assignees           []string   // Notion user emails from People property
 }
 
 // LeaveService handles leave request operations with Notion
@@ -80,34 +82,36 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 		return nil, errors.New("failed to cast page properties")
 	}
 
-	// Extract all properties
+	// Extract all properties from Unavailability Notices schema
 	leave := &LeaveRequest{
-		PageID:    pageID,
-		Reason:    s.extractRichText(props, "Reason"),
-		LeaveType: s.extractSelect(props, "Leave Type"),
-		Shift:     s.extractSelect(props, "Shift"),
-		Status:    s.extractSelect(props, "Status"),
+		PageID:             pageID,
+		LeaveRequestTitle:  s.extractTitle(props, "Leave Request"),
+		UnavailabilityType: s.extractSelect(props, "Unavailability Type"),
+		AdditionalContext:  s.extractRichText(props, "Additional Context"),
+		Shift:              s.extractSelect(props, "Shift"),
+		Status:             s.extractSelect(props, "Status"),
 	}
 
 	// Extract dates
 	leave.StartDate = s.extractDate(props, "Start Date")
 	leave.EndDate = s.extractDate(props, "End Date")
-	leave.ApprovedAt = s.extractDate(props, "Approved at")
+	leave.DateApproved = s.extractDate(props, "Date Approved")
+	leave.DateRequested = s.extractDate(props, "Date Requested")
 
 	// Extract email from Team Email property (rollup type)
 	leave.Email = s.extractEmailFromRollup(props, "Team Email")
 	s.logger.Debug(fmt.Sprintf("extracted email from Team Email: %s", leave.Email))
 
-	// Extract relation IDs
-	leave.EmployeeID = s.extractFirstRelationID(props, "Employee")
-	leave.ApprovedByID = s.extractFirstRelationID(props, "Approved By")
+	// Extract relation IDs - using Contractor instead of Employee
+	leave.EmployeeID = s.extractFirstRelationID(props, "Contractor")
+	leave.ReviewedByID = s.extractFirstRelationID(props, "Reviewed By")
 
 	// Extract assignees from multi_select property (format: "Name (email@domain)")
 	leave.Assignees = s.extractEmailsFromMultiSelect(props, "Assignees")
 	s.logger.Debug(fmt.Sprintf("extracted assignees from multi_select: %v", leave.Assignees))
 
-	s.logger.Debug(fmt.Sprintf("fetched leave request: page_id=%s reason=%s email=%s status=%s leave_type=%s assignees=%v",
-		pageID, leave.Reason, leave.Email, leave.Status, leave.LeaveType, leave.Assignees))
+	s.logger.Debug(fmt.Sprintf("fetched leave request: page_id=%s title=%s email=%s status=%s unavailability_type=%s assignees=%v",
+		pageID, leave.LeaveRequestTitle, leave.Email, leave.Status, leave.UnavailabilityType, leave.Assignees))
 
 	return leave, nil
 }
@@ -132,9 +136,9 @@ func (s *LeaveService) UpdateLeaveStatus(ctx context.Context, pageID, status, ap
 		},
 	}
 
-	// If approving/rejecting, also set Approved/Rejected By and Date Approved
-	if (status == "Approved" || status == "Rejected") && approverPageID != "" {
-		updateParams.DatabasePageProperties["Approved/Rejected By"] = nt.DatabasePageProperty{
+	// If acknowledging/rejecting/withdrawing, also set Reviewed By and Date Approved
+	if (status == "Acknowledged" || status == "Not Applicable" || status == "Withdrawn") && approverPageID != "" {
+		updateParams.DatabasePageProperties["Reviewed By"] = nt.DatabasePageProperty{
 			Relation: []nt.Relation{
 				{ID: approverPageID},
 			},
@@ -236,14 +240,15 @@ func (s *LeaveService) QueryPendingLeaveRequests(ctx context.Context) ([]LeaveRe
 		}
 
 		leave := LeaveRequest{
-			PageID:    page.ID,
-			Reason:    s.extractTitle(props, "Reason"),
-			LeaveType: s.extractSelect(props, "Leave Type"),
-			Shift:     s.extractSelect(props, "Shift"),
-			Status:    s.extractSelect(props, "Status"),
-			StartDate: s.extractDate(props, "Start Date"),
-			EndDate:   s.extractDate(props, "End Date"),
-			Email:     s.extractEmail(props, "Team Email"),
+			PageID:             page.ID,
+			LeaveRequestTitle:  s.extractTitle(props, "Leave Request"),
+			UnavailabilityType: s.extractSelect(props, "Unavailability Type"),
+			AdditionalContext:  s.extractRichText(props, "Additional Context"),
+			Shift:              s.extractSelect(props, "Shift"),
+			Status:             s.extractSelect(props, "Status"),
+			StartDate:          s.extractDate(props, "Start Date"),
+			EndDate:            s.extractDate(props, "End Date"),
+			Email:              s.extractEmail(props, "Team Email"),
 		}
 		requests = append(requests, leave)
 	}

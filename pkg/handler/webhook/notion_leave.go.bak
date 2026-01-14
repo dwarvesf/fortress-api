@@ -47,6 +47,499 @@ type NotionLeaveWebhookData struct {
 	Status string `json:"status"` // Current status
 }
 
+// HandleNotionLeave handles all leave request webhook events from Notion
+func (h *handler) HandleNotionLeave(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "webhook",
+		"method":  "HandleNotionLeave",
+	})
+
+	l.Debug("received notion leave webhook request")
+
+	// Read body
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		l.Error(err, "failed to read notion leave webhook body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("received webhook body: %s", string(body)))
+
+	// Parse payload
+	var payload NotionLeaveWebhookPayload
+	if err := json.Unmarshal(body, &payload); err != nil {
+		l.Error(err, "failed to parse notion leave webhook payload")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Handle verification challenge
+	// When Notion sends a verification request, respond with the challenge or acknowledge the token
+	if payload.VerificationToken != "" {
+		l.Debug(fmt.Sprintf("responding to notion webhook verification: token=%s challenge=%s", payload.VerificationToken, payload.Challenge))
+		if payload.Challenge != "" {
+			c.JSON(http.StatusOK, gin.H{"challenge": payload.Challenge})
+		} else {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		}
+		return
+	}
+
+	// Verify webhook signature if verification token is configured
+	verificationToken := h.config.LeaveIntegration.Notion.VerificationToken
+	if verificationToken != "" {
+		signature := c.GetHeader("X-Notion-Signature")
+		l.Debug(fmt.Sprintf("signature header: %s", signature))
+		if signature == "" {
+			l.Error(errors.New("missing signature"), "no X-Notion-Signature header in webhook request")
+			c.JSON(http.StatusUnauthorized, view.CreateResponse[any](nil, nil, errors.New("missing signature"), nil, ""))
+			return
+		}
+
+		if !h.verifyNotionWebhookSignature(body, signature, verificationToken) {
+			l.Error(errors.New("invalid signature"), "webhook signature verification failed")
+			c.JSON(http.StatusUnauthorized, view.CreateResponse[any](nil, nil, errors.New("invalid signature"), nil, ""))
+			return
+		}
+		l.Debug("webhook signature verified successfully")
+	}
+
+	// Validate payload has entity with page ID
+	if payload.Entity == nil || payload.Entity.ID == "" {
+		l.Error(errors.New("missing entity.id"), "no entity.id in webhook payload")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("missing entity.id"), nil, ""))
+		return
+	}
+
+	// Only process page events
+	if payload.Entity.Type != "page" {
+		l.Debug(fmt.Sprintf("ignoring non-page entity type: %s", payload.Entity.Type))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ignored"))
+		return
+	}
+
+	pageID := payload.Entity.ID
+	l.Debug(fmt.Sprintf("parsed webhook payload: type=%s page_id=%s", payload.Type, pageID))
+
+	// Create leave service
+	leaveService := notion.NewLeaveService(h.config, h.store, h.repo, h.logger)
+	if leaveService == nil {
+		l.Error(errors.New("failed to create leave service"), "notion leave service not configured")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New("service not configured"), nil, ""))
+		return
+	}
+
+	// Fetch leave request from Notion
+	ctx := c.Request.Context()
+	leave, err := leaveService.GetLeaveRequest(ctx, pageID)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to fetch leave request from Notion: page_id=%s", pageID))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("fetched leave request: page_id=%s status=%s email=%s", pageID, leave.Status, leave.Email))
+
+	// Determine event type based on webhook type and current status
+	var eventType NotionLeaveEventType
+	switch payload.Type {
+	case "page.created":
+		eventType = NotionLeaveEventCreated
+	case "page.updated", "page.content_updated", "page.properties_updated":
+		// Determine event type based on current status
+		switch leave.Status {
+		case "Approved":
+			eventType = NotionLeaveEventApproved
+		case "Rejected":
+			eventType = NotionLeaveEventRejected
+		default:
+			l.Debug(fmt.Sprintf("ignoring update event with status: %s", leave.Status))
+			c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ignored"))
+			return
+		}
+	default:
+		l.Debug(fmt.Sprintf("ignoring unknown webhook type: %s", payload.Type))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ignored"))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("processing leave event: type=%s email=%s", eventType, leave.Email))
+
+	// Route to appropriate handler
+	switch eventType {
+	case NotionLeaveEventCreated:
+		h.handleNotionLeaveCreated(c, l, leaveService, leave)
+	case NotionLeaveEventApproved:
+		h.handleNotionLeaveApproved(c, l, leaveService, leave)
+	case NotionLeaveEventRejected:
+		h.handleNotionLeaveRejected(c, l, leaveService, leave)
+	default:
+		l.Debug(fmt.Sprintf("ignoring leave event type: %s", eventType))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ignored"))
+	}
+}
+
+// handleNotionLeaveCreated validates a new leave request and sends Discord notification
+func (h *handler) handleNotionLeaveCreated(c *gin.Context, l logger.Logger, leaveService *notion.LeaveService, leave *notion.LeaveRequest) {
+	l.Debug(fmt.Sprintf("validating leave request: page_id=%s email=%s employee_id=%s start_date=%v end_date=%v",
+		leave.PageID, leave.Email, leave.EmployeeID, leave.StartDate, leave.EndDate))
+
+	// Validate employee exists - use email from Team Email rollup
+	if leave.Email == "" {
+		l.Error(errors.New("missing employee email"), "Team Email is empty")
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_email"))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("looking up employee by email: %s", leave.Email))
+	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
+	if err != nil || len(employees) == 0 {
+		l.Error(err, fmt.Sprintf("employee not found: email=%s notion_id=%s", leave.Email, leave.EmployeeID))
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Request Validation Failed",
+			"Employee not found in database",
+			15158332, // Red color
+			[]model.DiscordMessageField{
+				{Name: "Email", Value: leave.Email, Inline: nil},
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:employee_not_found"))
+		return
+	}
+	employee := employees[0]
+
+	l.Debug(fmt.Sprintf("found employee: id=%s full_name=%s team_email=%s", employee.ID, employee.FullName, employee.TeamEmail))
+
+	// Validate dates
+	if leave.StartDate == nil {
+		l.Error(errors.New("missing start date"), "start date is required")
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Request Validation Failed",
+			"Start date is required",
+			15158332,
+			[]model.DiscordMessageField{
+				{Name: "Employee", Value: employee.FullName, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_start_date"))
+		return
+	}
+
+	if leave.EndDate == nil {
+		l.Error(errors.New("missing end date"), "end date is required")
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Request Validation Failed",
+			"End date is required",
+			15158332,
+			[]model.DiscordMessageField{
+				{Name: "Employee", Value: employee.FullName, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_end_date"))
+		return
+	}
+
+	// Validate date range (end >= start)
+	if leave.EndDate.Before(*leave.StartDate) {
+		l.Debug(fmt.Sprintf("end date before start date: start_date=%v end_date=%v", leave.StartDate, leave.EndDate))
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Request Validation Failed",
+			"End date must be after start date",
+			15158332,
+			[]model.DiscordMessageField{
+				{Name: "Employee", Value: employee.FullName, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:invalid_date_range"))
+		return
+	}
+
+	// Send Discord message with buttons to onleave channel
+	channelID := h.config.Discord.IDs.OnLeaveChannel
+	if channelID == "" {
+		l.Debug("onleave channel not configured, falling back to auditlog webhook")
+		// Fallback to auditlog webhook
+		description := fmt.Sprintf("%s request time off", employee.FullName)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		}
+		inlineTrue := true
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"📋 Leave Request",
+			description,
+			3447003, // Blue color
+			[]model.DiscordMessageField{
+				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: &inlineTrue},
+				{Name: "Reason", Value: leave.Reason, Inline: &inlineTrue},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
+		return
+	}
+
+	// Get AM/DL mentions from deployments
+	mentions := h.getAMDLMentionsFromDeployments(c.Request.Context(), l, leaveService, leave.Email)
+
+	var assigneeMentions string
+	if len(mentions) == 0 {
+		l.Info(fmt.Sprintf("no AM/DL mentions found for leave request: email=%s", leave.Email))
+		// Still send notification without mentions
+	} else {
+		assigneeMentions = fmt.Sprintf("🔔 **Assignees:** %s", strings.Join(mentions, " "))
+	}
+
+	// Build embed description with Discord mention
+	description := fmt.Sprintf("%s request time off", employee.FullName)
+	if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+		description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "📋 Leave Request",
+		Description: description,
+		Color:       3447003, // Blue color
+		Fields: []*discordgo.MessageEmbedField{
+			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
+			{Name: "Reason", Value: leave.Reason, Inline: true},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	// Build buttons
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Approve",
+					Style:    discordgo.SecondaryButton,
+					CustomID: fmt.Sprintf("notion_leave_approve_%s", leave.PageID),
+					Emoji: discordgo.ComponentEmoji{
+						Name: "✅",
+					},
+				},
+				discordgo.Button{
+					Label:    "Reject",
+					Style:    discordgo.SecondaryButton,
+					CustomID: fmt.Sprintf("notion_leave_reject_%s", leave.PageID),
+					Emoji: discordgo.ComponentEmoji{
+						Name: "❌",
+					},
+				},
+			},
+		},
+	}
+
+	// Send message with assignee mentions as content
+	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, assigneeMentions, []*discordgo.MessageEmbed{embed}, components)
+	if err != nil {
+		l.Error(err, "failed to send leave request message to discord channel")
+		// Fallback to auditlog
+		description := fmt.Sprintf("%s request time off", employee.FullName)
+		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
+			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		}
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"📋 Leave Request",
+			description,
+			3447003,
+			[]model.DiscordMessageField{
+				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
+				{Name: "Reason", Value: leave.Reason, Inline: nil},
+			},
+		)
+	} else {
+		l.Debug(fmt.Sprintf("sent leave request message to discord channel: message_id=%s", msg.ID))
+	}
+
+	l.Debug(fmt.Sprintf("leave request validated successfully: employee_id=%s page_id=%s", employee.ID, leave.PageID))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
+}
+
+// handleNotionLeaveApproved handles approval of a leave request
+func (h *handler) handleNotionLeaveApproved(c *gin.Context, l logger.Logger, leaveService *notion.LeaveService, leave *notion.LeaveRequest) {
+	l.Debug(fmt.Sprintf("approving leave request: page_id=%s email=%s employee_id=%s",
+		leave.PageID, leave.Email, leave.EmployeeID))
+
+	// Lookup employee by email from Team Email rollup
+	if leave.Email == "" {
+		l.Error(errors.New("missing employee email"), "Team Email is empty")
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Approval Failed",
+			"Employee email not found",
+			15158332, // Red color
+			[]model.DiscordMessageField{
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("missing_email"), nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("looking up employee by email: %s", leave.Email))
+	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
+	if err != nil || len(employees) == 0 {
+		l.Error(err, fmt.Sprintf("employee not found: email=%s notion_id=%s", leave.Email, leave.EmployeeID))
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Approval Failed",
+			"Employee not found in database",
+			15158332, // Red color
+			[]model.DiscordMessageField{
+				{Name: "Email", Value: leave.Email, Inline: nil},
+				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, errors.New("employee_not_found"), nil, ""))
+		return
+	}
+	employee := employees[0]
+
+	l.Debug(fmt.Sprintf("found employee: id=%s full_name=%s team_email=%s", employee.ID, employee.FullName, employee.TeamEmail))
+
+	// Lookup approver
+	var approverID model.UUID
+	if leave.ApprovedByID != "" {
+		// Try to find approver's email from Notion contractor page
+		approverEmail, err := h.getNotionContractorEmail(c.Request.Context(), leaveService, leave.ApprovedByID)
+		if err == nil && approverEmail != "" {
+			approver, err := h.store.Employee.OneByEmail(h.repo.DB(), approverEmail)
+			if err == nil {
+				approverID = approver.ID
+			}
+		}
+	}
+	if approverID.String() == "" {
+		approverID = employee.ID
+	}
+
+	// Check if leave request already exists (prevent duplicates on re-approval)
+	existingLeave, err := h.store.OnLeaveRequest.GetByNotionPageID(h.repo.DB(), leave.PageID)
+	if err == nil && existingLeave != nil {
+		l.Debug(fmt.Sprintf("leave request already approved (skipping duplicate): page_id=%s db_id=%s", leave.PageID, existingLeave.ID))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, fmt.Sprintf("already_approved:%s", existingLeave.ID)))
+		return
+	}
+
+	// Generate title
+	startDateFormatted := leave.StartDate.Format("2006/01/02")
+	endDateFormatted := leave.EndDate.Format("2006/01/02")
+	title := fmt.Sprintf("%s | %s | %s - %s",
+		employee.FullName,
+		leave.LeaveType,
+		startDateFormatted,
+		endDateFormatted,
+	)
+	if leave.Shift != "" {
+		title += " | " + leave.Shift
+	}
+
+	// Map leave type
+	leaveType := mapNotionLeaveType(leave.LeaveType)
+
+	// Create new on_leave_request record
+	pageID := leave.PageID
+	leaveRequest := &model.OnLeaveRequest{
+		Type:         leaveType,
+		StartDate:    leave.StartDate,
+		EndDate:      leave.EndDate,
+		Shift:        leave.Shift,
+		Title:        title,
+		Description:  leave.Reason,
+		CreatorID:    employee.ID,
+		ApproverID:   approverID,
+		AssigneeIDs:  model.JSONArrayString{employee.ID.String()},
+		NotionPageID: &pageID,
+	}
+
+	_, err = h.store.OnLeaveRequest.Create(h.repo.DB(), leaveRequest)
+	if err != nil {
+		l.Error(err, "failed to create leave request")
+		h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+			"❌ Leave Approval Failed",
+			"Database error",
+			15158332, // Red color
+			[]model.DiscordMessageField{
+				{Name: "Employee", Value: employee.FullName, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, errors.New("failed_to_create_record"), nil, ""))
+		return
+	}
+
+	// Create Google Calendar event
+	l.Debug("creating Google Calendar event for leave request")
+	if err := h.createLeaveCalendarEvent(c.Request.Context(), l, employee, leave); err != nil {
+		l.Error(err, "failed to create calendar event (non-fatal, continuing)")
+		// Non-fatal - continue even if calendar creation fails
+	}
+
+	// Send Discord notification
+	datesValue := formatShortDateRange(*leave.StartDate, *leave.EndDate)
+	if leave.Shift != "" {
+		datesValue = fmt.Sprintf("%s • %s", leave.Shift, datesValue)
+	}
+	h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+		"✅ Approved",
+		"",
+		3066993, // Green color
+		[]model.DiscordMessageField{
+			{Name: "Employee", Value: employee.FullName, Inline: nil},
+			{Name: "Dates", Value: datesValue, Inline: nil},
+			{Name: "Reason", Value: leave.Reason, Inline: nil},
+		},
+	)
+
+	l.Debug(fmt.Sprintf("leave request approved and persisted: id=%s employee_id=%s page_id=%s",
+		leaveRequest.ID, employee.ID, leave.PageID))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, fmt.Sprintf("approved:%s", leaveRequest.ID)))
+}
+
+// handleNotionLeaveRejected handles rejection of a leave request
+func (h *handler) handleNotionLeaveRejected(c *gin.Context, l logger.Logger, leaveService *notion.LeaveService, leave *notion.LeaveRequest) {
+	l.Debug(fmt.Sprintf("rejecting leave request: page_id=%s email=%s",
+		leave.PageID, leave.Email))
+
+	// Lookup employee by email
+	employee, err := h.store.Employee.OneByEmail(h.repo.DB(), leave.Email)
+	if err != nil {
+		l.Debug(fmt.Sprintf("employee not found for rejection notification: email=%s", leave.Email))
+	}
+
+	// Check if this record was previously approved and exists in DB
+	existingLeave, err := h.store.OnLeaveRequest.GetByNotionPageID(h.repo.DB(), leave.PageID)
+	if err == nil && existingLeave != nil {
+		// Record exists in DB - delete it since it's now rejected
+		l.Debug(fmt.Sprintf("deleting previously approved leave request from DB: page_id=%s db_id=%s", leave.PageID, existingLeave.ID))
+		if err := h.store.OnLeaveRequest.Delete(h.repo.DB(), existingLeave.ID.String()); err != nil {
+			l.Error(err, "failed to delete rejected leave request from DB")
+		} else {
+			l.Debug(fmt.Sprintf("deleted previously approved leave request: page_id=%s db_id=%s", leave.PageID, existingLeave.ID))
+		}
+	}
+
+	// Send Discord notification
+	employeeName := leave.Email
+	if employee != nil {
+		employeeName = employee.FullName
+	}
+	h.sendNotionLeaveDiscordNotification(c.Request.Context(),
+		"❌ Rejected",
+		"",
+		15158332, // Red color
+		[]model.DiscordMessageField{
+			{Name: "Employee", Value: employeeName, Inline: nil},
+			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
+		},
+	)
+
+	l.Debug(fmt.Sprintf("leave request rejected: page_id=%s email=%s",
+		leave.PageID, leave.Email))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "rejected"))
+}
 
 // getNotionContractorEmail fetches the email from a Notion contractor page
 func (h *handler) getNotionContractorEmail(ctx context.Context, leaveService *notion.LeaveService, contractorPageID string) (string, error) {
@@ -422,9 +915,9 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 
 	l.Debug(fmt.Sprintf("parsed on-leave: page_id=%s status=%s created_by_user_id=%s", pageID, status, createdByUserID))
 
-	// Only process New status (new leave requests)
-	if status != "New" {
-		l.Debug(fmt.Sprintf("ignoring non-new status: %s", status))
+	// Only process Pending status (new leave requests)
+	if status != "Pending" {
+		l.Debug(fmt.Sprintf("ignoring non-pending status: %s", status))
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ignored"))
 		return
 	}
@@ -478,17 +971,17 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		l.Debug(fmt.Sprintf("contractor relation already set: %v", payload.Data.Properties.Contractor.Relation))
 	}
 
-	// Auto-fill Unavailability Type to "Personal Time" if empty
-	if leave.UnavailabilityType == "" {
-		l.Debug("unavailability type is empty, auto-filling with Personal Time")
-		if err := h.updateUnavailabilityType(ctx, l, pageID, "Personal Time"); err != nil {
-			l.Error(err, fmt.Sprintf("failed to update unavailability type: page_id=%s", pageID))
+	// Auto-fill Leave Type to "Annual Leave" if empty
+	if leave.LeaveType == "" {
+		l.Debug("leave type is empty, auto-filling with Annual Leave")
+		if err := h.updateLeaveType(ctx, l, pageID, "Annual Leave"); err != nil {
+			l.Error(err, fmt.Sprintf("failed to update leave type: page_id=%s", pageID))
 		} else {
-			l.Debug(fmt.Sprintf("successfully updated unavailability type: page_id=%s type=Personal Time", pageID))
-			leave.UnavailabilityType = "Personal Time" // Update local object
+			l.Debug(fmt.Sprintf("successfully updated leave type: page_id=%s type=Annual Leave", pageID))
+			leave.LeaveType = "Annual Leave" // Update local object
 		}
 	} else {
-		l.Debug(fmt.Sprintf("unavailability type already set: %s", leave.UnavailabilityType))
+		l.Debug(fmt.Sprintf("leave type already set: %s", leave.LeaveType))
 	}
 
 	// Validate employee exists - use email from Team Email rollup
@@ -579,16 +1072,13 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
 			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
 		}
-		inlineTrue := true
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"📋 Leave Request",
 			description,
 			3447003, // Blue color
 			[]model.DiscordMessageField{
-				{Name: "Request", Value: leave.LeaveRequestTitle, Inline: &inlineTrue},
-				{Name: "Type", Value: leave.UnavailabilityType, Inline: &inlineTrue},
 				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
-				{Name: "Details", Value: leave.AdditionalContext, Inline: nil},
+				{Name: "Reason", Value: leave.Reason, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
@@ -616,10 +1106,8 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		Description: description,
 		Color:       3447003, // Blue color
 		Fields: []*discordgo.MessageEmbedField{
-			{Name: "Request", Value: leave.LeaveRequestTitle, Inline: true},
-			{Name: "Type", Value: leave.UnavailabilityType, Inline: true},
 			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
-			{Name: "Details", Value: leave.AdditionalContext, Inline: false},
+			{Name: "Reason", Value: leave.Reason, Inline: true},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
@@ -657,16 +1145,13 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
 			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
 		}
-		inlineTrue := true
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"📋 Leave Request",
 			description,
 			3447003,
 			[]model.DiscordMessageField{
-				{Name: "Request", Value: leave.LeaveRequestTitle, Inline: &inlineTrue},
-				{Name: "Type", Value: leave.UnavailabilityType, Inline: &inlineTrue},
 				{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: nil},
-				{Name: "Details", Value: leave.AdditionalContext, Inline: nil},
+				{Name: "Reason", Value: leave.Reason, Inline: nil},
 			},
 		)
 	} else {
@@ -779,19 +1264,19 @@ func (h *handler) getContractorEmail(ctx context.Context, l logger.Logger, contr
 	return "", nil
 }
 
-// updateUnavailabilityType updates the Unavailability Type property on a leave request page
-func (h *handler) updateUnavailabilityType(ctx context.Context, l logger.Logger, leavePageID, unavailabilityType string) error {
-	l.Debug(fmt.Sprintf("updating unavailability type: leave_page=%s type=%s", leavePageID, unavailabilityType))
+// updateLeaveType updates the Leave Type property on a leave request page
+func (h *handler) updateLeaveType(ctx context.Context, l logger.Logger, leavePageID, leaveType string) error {
+	l.Debug(fmt.Sprintf("updating leave type: leave_page=%s type=%s", leavePageID, leaveType))
 
 	// Create Notion client
 	client := nt.NewClient(h.config.Notion.Secret)
 
-	// Build update params with Unavailability Type select
+	// Build update params with Leave Type select
 	updateParams := nt.UpdatePageParams{
 		DatabasePageProperties: nt.DatabasePageProperties{
-			"Unavailability Type": nt.DatabasePageProperty{
+			"Leave Type": nt.DatabasePageProperty{
 				Select: &nt.SelectOptions{
-					Name: unavailabilityType,
+					Name: leaveType,
 				},
 			},
 		},
@@ -806,7 +1291,7 @@ func (h *handler) updateUnavailabilityType(ctx context.Context, l logger.Logger,
 	}
 
 	l.Debug(fmt.Sprintf("notion API response - page ID: %s, URL: %s", updatedPage.ID, updatedPage.URL))
-	l.Debug(fmt.Sprintf("successfully updated unavailability type on leave request page: %s", leavePageID))
+	l.Debug(fmt.Sprintf("successfully updated leave type on leave request page: %s", leavePageID))
 	return nil
 }
 
@@ -821,19 +1306,18 @@ func (h *handler) createLeaveCalendarEvent(ctx context.Context, l logger.Logger,
 	isAllDay := leave.Shift == "Full day" || leave.Shift == ""
 
 	// Build event summary
-	summary := fmt.Sprintf("%s - %s", employee.FullName, leave.UnavailabilityType)
+	summary := fmt.Sprintf("%s - %s", employee.FullName, leave.LeaveType)
 	if leave.Shift != "" && leave.Shift != "Full day" {
 		summary += fmt.Sprintf(" (%s)", leave.Shift)
 	}
 
 	// Build description
-	description := fmt.Sprintf("Employee: %s\nEmail: %s\nType: %s\nShift: %s\nRequest: %s\nDetails: %s",
+	description := fmt.Sprintf("Employee: %s\nEmail: %s\nType: %s\nShift: %s\nReason: %s",
 		employee.FullName,
 		employee.TeamEmail,
-		leave.UnavailabilityType,
+		leave.LeaveType,
 		leave.Shift,
-		leave.LeaveRequestTitle,
-		leave.AdditionalContext,
+		leave.Reason,
 	)
 
 	// Set start and end times based on shift
