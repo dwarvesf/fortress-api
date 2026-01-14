@@ -577,9 +577,11 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	monthTime, _ := time.Parse("2006-01", month)
 	var issueDate time.Time
 	if payDay > 0 && payDay <= 31 {
-		// Use the Payday from Contractor Rates for the given month
-		issueDate = time.Date(monthTime.Year(), monthTime.Month(), payDay, 0, 0, 0, 0, time.UTC)
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Payday from rates: payDay=%d issueDate=%s", payDay, issueDate.Format("2006-01-02")))
+		// Invoice is issued in the NEXT month on the Payday
+		// Example: December 2025 invoice (month=2025-12) issued on January 1st, 2026 (payDay=1)
+		nextMonth := monthTime.AddDate(0, 1, 0)
+		issueDate = time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Payday in next month: month=%s payDay=%d issueDate=%s", month, payDay, issueDate.Format("2006-01-02")))
 	} else {
 		// Fallback to current date if Payday is not set
 		issueDate = time.Now()
