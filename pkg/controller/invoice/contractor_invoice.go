@@ -129,13 +129,13 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	var payoutsErr, refundCommissionErr, bankAccountErr error
 	var wg sync.WaitGroup
 
-	// Build cutoff date for Refund/Commission payouts: month + PayDay (e.g., 2025-01-15)
+	// Build cutoff date for Refund/Commission/Other payouts: month + PayDay (e.g., 2025-01-15)
 	payDay := rateData.PayDay
 	if payDay <= 0 || payDay > 31 {
 		payDay = 1 // Default to 1st if invalid
 	}
 	cutoffDate := fmt.Sprintf("%s-%02d", month, payDay)
-	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: cutoff date for Refund/Commission payouts: %s (payDay=%d)", cutoffDate, rateData.PayDay))
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: cutoff date for Refund/Commission/Other payouts: %s (payDay=%d)", cutoffDate, rateData.PayDay))
 
 	// Query Payouts (by month)
 	wg.Add(1)
@@ -151,18 +151,18 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payouts query completed, found=%d err=%v", len(payouts), payoutsErr))
 	}()
 
-	// Query Refund/Commission payouts before cutoff date
+	// Query Refund/Commission/Other payouts before cutoff date
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: querying Refund/Commission payouts before %s (parallel)", cutoffDate))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: querying Refund/Commission/Other payouts before %s (parallel)", cutoffDate))
 		payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
 		if payoutsService == nil {
 			refundCommissionErr = fmt.Errorf("failed to create contractor payouts service")
 			return
 		}
 		refundCommissionPayouts, refundCommissionErr = payoutsService.QueryPendingRefundCommissionBeforeDate(ctx, rateData.ContractorPageID, cutoffDate)
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Refund/Commission query completed, found=%d err=%v", len(refundCommissionPayouts), refundCommissionErr))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Refund/Commission/Other query completed, found=%d err=%v", len(refundCommissionPayouts), refundCommissionErr))
 	}()
 
 	// Query Bank Account
@@ -190,7 +190,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 	// Note: refundCommissionErr is non-fatal - just log and continue
 	if refundCommissionErr != nil {
-		l.Error(refundCommissionErr, "[DEBUG] contractor_invoice: failed to query Refund/Commission payouts - continuing without them")
+		l.Error(refundCommissionErr, "[DEBUG] contractor_invoice: failed to query Refund/Commission/Other payouts - continuing without them")
 	}
 
 	if bankAccountErr != nil {
@@ -198,9 +198,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		return nil, fmt.Errorf("bank account not found: %w", bankAccountErr)
 	}
 
-	l.Debug(fmt.Sprintf("found %d pending payouts (month filter), %d Refund/Commission payouts (before payday)", len(payouts), len(refundCommissionPayouts)))
+	l.Debug(fmt.Sprintf("found %d pending payouts (month filter), %d Refund/Commission/Other payouts (before payday)", len(payouts), len(refundCommissionPayouts)))
 
-	// Merge Refund/Commission payouts with main payouts (deduplicate by PageID)
+	// Merge Refund/Commission/Other payouts with main payouts (deduplicate by PageID)
 	existingPageIDs := make(map[string]bool)
 	for _, p := range payouts {
 		existingPageIDs[p.PageID] = true
@@ -209,7 +209,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		if !existingPageIDs[p.PageID] {
 			payouts = append(payouts, p)
 			existingPageIDs[p.PageID] = true
-			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: merged Refund/Commission payout: pageID=%s name=%s type=%s", p.PageID, p.Name, p.SourceType))
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: merged payout: pageID=%s name=%s type=%s", p.PageID, p.Name, p.SourceType))
 		} else {
 			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: skipping duplicate payout: pageID=%s", p.PageID))
 		}

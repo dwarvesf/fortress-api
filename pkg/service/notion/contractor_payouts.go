@@ -218,15 +218,15 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 	return payouts, nil
 }
 
-// QueryPendingRefundCommissionBeforeDate queries pending Refund/Commission payouts for a contractor
-// where Date < beforeDate. This is used to include older Refund/Commission items in the current invoice.
+// QueryPendingRefundCommissionBeforeDate queries pending Refund/Commission/Other payouts for a contractor
+// where Date < beforeDate. This is used to include older Refund/Commission/Other items in the current invoice.
 func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx context.Context, contractorPageID string, beforeDate string) ([]PayoutEntry, error) {
 	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
 	if payoutsDBID == "" {
 		return nil, errors.New("contractor payouts database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending Refund/Commission payouts for contractor=%s beforeDate=%s", contractorPageID, beforeDate))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending Refund/Commission/Other payouts for contractor=%s beforeDate=%s", contractorPageID, beforeDate))
 
 	// Parse beforeDate to time.Time for Notion API
 	beforeDateTime, err := time.Parse("2006-01-02", beforeDate)
@@ -308,13 +308,13 @@ func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx co
 			// Determine source type based on which relation is set
 			entry.SourceType = s.determineSourceType(entry)
 
-			// Only include Refund or Commission types
-			if entry.SourceType != PayoutSourceTypeRefund && entry.SourceType != PayoutSourceTypeCommission {
-				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: skipping entry pageID=%s sourceType=%s (not Refund/Commission)", entry.PageID, entry.SourceType))
+			// Only include Refund, Commission, or Other types (exclude Service Fee)
+			if entry.SourceType == PayoutSourceTypeServiceFee {
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: skipping entry pageID=%s sourceType=%s (Service Fee excluded from before-date query)", entry.PageID, entry.SourceType))
 				continue
 			}
 
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: including Refund/Commission entry pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: including entry pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
 				entry.PageID, entry.Name, entry.SourceType, entry.Amount, entry.Currency))
 
 			payouts = append(payouts, entry)
