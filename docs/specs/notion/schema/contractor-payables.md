@@ -4,14 +4,21 @@
 
 - **Database ID**: `2c264b29-b84c-8037-807c-000bf6d0792c`
 - **Title**: Contractor Payables
-- **Created**: 2025-12-07
-- **Last Edited**: 2026-01-04
+- **Created**: 2025-12-07T18:47:00.000Z
+- **Last Edited**: 2026-01-15T03:55:00.000Z
 - **Icon**: 💸
 - **URL**: https://www.notion.so/2c264b29b84c80e39bd8c22e7612c1ea
+- **Parent Database**: `2c264b29-b84c-80e3-9bd8-c22e7612c1ea`
 
 ## Purpose
 
-The Contractor Payables database aggregates payout items into payable records for each contractor. It represents the sum of all payouts for a given period, used for generating contractor invoices via Discord `/gen invoice` command.
+The Contractor Payables database aggregates payout items into payable records for each contractor. It represents the sum of all payouts for a given period.
+
+### Workflow
+1. Sum payout amounts for a contractor
+2. Use Discord `/gen invoice` command to generate invoice file
+3. System returns link to invoice for preview
+4. Send invoice via email service to contractor
 
 ## Properties
 
@@ -28,6 +35,8 @@ The Contractor Payables database aggregates payout items into payable records fo
 | `Notes` | Rich Text | `jyfE` | Additional notes |
 | `ID` | Unique ID | `IW]b` | Auto-generated unique identifier |
 | `Attachments` | Files | `^LN`` | Attached invoice files |
+| `Exchange Rate` | Number | `KnQx` | Exchange rate for currency conversion |
+| `Created time` | Created Time | `nf{Z` | Timestamp when payable record was created |
 
 ### Payment Status Property
 
