@@ -101,6 +101,8 @@ func main() {
 		Handler: router,
 	}
 
+	log.Infof("Server ready - listening on port %s", cfg.ApiServer.Port)
+
 	// serve http server
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {

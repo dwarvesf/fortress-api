@@ -70,7 +70,7 @@ func (s *syncService) StartBackgroundSync(ctx context.Context) error {
 		return fmt.Errorf("invalid sync interval: %w", err)
 	}
 
-	s.logger.Infof("Starting parquet background sync with interval: %s", interval)
+	s.logger.Debugf("Starting parquet background sync with interval: %s", interval)
 
 	// Perform initial sync
 	if err := s.SyncNow(ctx); err != nil {
