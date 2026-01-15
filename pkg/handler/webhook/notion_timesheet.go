@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -113,6 +115,7 @@ func (h *handler) HandleNotionTimesheet(c *gin.Context) {
 
 	pageID := payload.Data.ID
 	l.Debug(fmt.Sprintf("parsed webhook payload: source_type=%s page_id=%s", payload.Source.Type, pageID))
+	l.Debug(fmt.Sprintf("processing timesheet webhook: page_id=%s timestamp=%s", pageID, time.Now().Format(time.RFC3339Nano)))
 
 	// Create timesheet service
 	timesheetService := notion.NewTimesheetService(h.config, h.logger)
@@ -148,20 +151,39 @@ func (h *handler) HandleNotionTimesheet(c *gin.Context) {
 		return
 	}
 
+	l.Debug(fmt.Sprintf("looking up contractor: user_id=%s page_id=%s", entry.CreatedByUserID, pageID))
+	lookupStart := time.Now()
 	contractorPageID, _, err := timesheetService.FindContractorByPersonID(ctx, entry.CreatedByUserID)
+	lookupDuration := time.Since(lookupStart)
+
 	if err != nil {
-		l.Error(err, fmt.Sprintf("contractor not found for created_by user: user_id=%s", entry.CreatedByUserID))
+		l.Error(err, fmt.Sprintf("contractor not found for created_by user: user_id=%s page_id=%s lookup_duration=%s",
+			entry.CreatedByUserID, pageID, lookupDuration))
+
+		// Send Discord notification for contractor not found
+		h.sendTimesheetErrorNotification(pageID, entry.CreatedByUserID,
+			fmt.Sprintf("Contractor not found in database for user: %s (lookup took %s)", entry.CreatedByUserID, lookupDuration))
+
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "contractor_not_found"))
 		return
 	}
+
+	l.Debug(fmt.Sprintf("contractor lookup completed: user_id=%s contractor_id=%s duration=%s",
+		entry.CreatedByUserID, contractorPageID, lookupDuration))
 
 	l.Debug(fmt.Sprintf("found contractor: user_id=%s contractor_id=%s",
 		entry.CreatedByUserID, contractorPageID))
 
 	// Update timesheet entry with contractor
+	l.Debug(fmt.Sprintf("attempting to update timesheet entry: page_id=%s contractor_id=%s", pageID, contractorPageID))
 	err = timesheetService.UpdateTimesheetEntry(ctx, pageID, contractorPageID)
 	if err != nil {
-		l.Error(err, fmt.Sprintf("failed to update timesheet entry: page_id=%s", pageID))
+		l.Error(err, fmt.Sprintf("failed to update timesheet entry after retries: page_id=%s contractor_id=%s user_id=%s",
+			pageID, contractorPageID, entry.CreatedByUserID))
+
+		// Send Discord notification to fortress-logs channel
+		h.sendTimesheetErrorNotification(pageID, entry.CreatedByUserID, err.Error())
+
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
@@ -173,4 +195,71 @@ func (h *handler) HandleNotionTimesheet(c *gin.Context) {
 		"page_id":            pageID,
 		"contractor_updated": true,
 	}, nil, nil, nil, "success"))
+}
+
+// sendTimesheetErrorNotification sends an error notification to the fortress-logs Discord channel
+// when timesheet contractor fill fails after all retries
+func (h *handler) sendTimesheetErrorNotification(pageID, userID, errorMsg string) {
+	const fortressLogsChannelID = "1409767264298860665"
+
+	l := h.logger.Fields(logger.Fields{
+		"handler": "webhook",
+		"method":  "sendTimesheetErrorNotification",
+		"page_id": pageID,
+	})
+
+	// Check if Discord service is configured
+	if h.service.Discord == nil {
+		l.Debug("discord service not configured, skipping error notification")
+		return
+	}
+
+	l.Debug(fmt.Sprintf("sending timesheet error notification to fortress-logs channel: %s", fortressLogsChannelID))
+
+	// Create Discord embed message
+	embed := &discordgo.MessageEmbed{
+		Title:       "⚠️ Timesheet Contractor Fill Failed",
+		Description: "Failed to automatically fill contractor information in timesheet entry after multiple retries.",
+		Color:       0xFF0000, // Red color for errors
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Page ID",
+				Value:  pageID,
+				Inline: true,
+			},
+			{
+				Name:   "Created By User",
+				Value:  userID,
+				Inline: true,
+			},
+			{
+				Name:   "Error",
+				Value:  errorMsg,
+				Inline: false,
+			},
+			{
+				Name:   "Action Required",
+				Value:  "Please manually fill the contractor field in Notion",
+				Inline: false,
+			},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "Fortress API - Notion Webhook Handler",
+		},
+	}
+
+	// Send message to Discord channel
+	_, err := h.service.Discord.SendChannelMessageComplex(
+		fortressLogsChannelID,
+		"",
+		[]*discordgo.MessageEmbed{embed},
+		nil,
+	)
+	if err != nil {
+		l.Error(err, "failed to send timesheet error notification to discord")
+		return
+	}
+
+	l.Info(fmt.Sprintf("successfully sent timesheet error notification to fortress-logs channel: page_id=%s", pageID))
 }

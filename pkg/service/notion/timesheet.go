@@ -173,6 +173,8 @@ func (s *TimesheetService) isRetryableError(err error) bool {
 		"temporary failure",
 		"too many requests",
 		"rate limit",
+		"409", // Conflict from concurrent updates
+		"conflict",
 		"503",
 		"502",
 		"504",

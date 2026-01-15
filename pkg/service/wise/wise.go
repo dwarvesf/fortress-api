@@ -79,8 +79,8 @@ func (w *wiseService) GetRate(sourceCurrency, targetCurrency string) (float64, e
 }
 
 func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64, error) {
-	// if run_mode is non-prod, we use mock data
-	if w.cfg.Env != "prod" {
+	// Use mock data if not prod AND UseRealAPI is not enabled
+	if w.cfg.Env != "prod" && !w.cfg.Wise.UseRealAPI {
 		sourceRate, err := getLocalRate(sourceCurrency)
 		if err != nil {
 			return 0, err
@@ -89,15 +89,30 @@ func (w *wiseService) getTWRate(sourceCurrency, targetCurrency string) (float64,
 		if err != nil {
 			return 0, err
 		}
+
+		w.l.Fields(logger.Fields{
+			"source_currency": sourceCurrency,
+			"target_currency": targetCurrency,
+			"rate":            targetRate / sourceRate,
+			"env":             w.cfg.Env,
+			"use_real_api":    w.cfg.Wise.UseRealAPI,
+		}).Debug("wise: using mock exchange rate for non-prod environment")
+
 		return targetRate / sourceRate, nil
 	}
 
 	var conversionRate []model.WiseConversionRate
 
 	l := w.l.Fields(logger.Fields{
-		"handler": "wise",
-		"method":  "getTWRate",
+		"handler":         "wise",
+		"method":          "getTWRate",
+		"source_currency": sourceCurrency,
+		"target_currency": targetCurrency,
+		"env":             w.cfg.Env,
+		"use_real_api":    w.cfg.Wise.UseRealAPI,
 	})
+
+	l.Debug("wise: fetching exchange rate from Wise API (real API enabled)")
 
 	// try to get from cache to reduce api call
 	rate := w.getCache(sourceCurrency + targetCurrency)
