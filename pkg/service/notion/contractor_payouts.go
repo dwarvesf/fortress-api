@@ -219,7 +219,7 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 }
 
 // QueryPendingRefundCommissionBeforeDate queries pending Refund/Commission/Other payouts for a contractor
-// where Date < beforeDate. This is used to include older Refund/Commission/Other items in the current invoice.
+// where Date <= beforeDate. This is used to include older Refund/Commission/Other items in the current invoice.
 func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx context.Context, contractorPageID string, beforeDate string) ([]PayoutEntry, error) {
 	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
 	if payoutsDBID == "" {
@@ -259,7 +259,7 @@ func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx co
 					Property: "Date",
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Date: &nt.DatePropertyFilter{
-							Before: &beforeDateTime,
+							OnOrBefore: &beforeDateTime,
 						},
 					},
 				},

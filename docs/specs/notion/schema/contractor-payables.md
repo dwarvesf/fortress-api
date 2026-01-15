@@ -88,8 +88,8 @@ The Contractor Payables database aggregates payout items into payable records fo
 
 | Property | Type | ID | Related Database | Description |
 |----------|------|-----|------------------|-------------|
-| `Contractor` | Relation | `ZVms` | Contractors (`ed2b9224-97d9-4dff-97f9-82598b61f65d`) | The contractor this payable belongs to |
-| `Payout Items` | Relation | `sMWI` | Contractor Payouts (`2c564b29-b84c-8045-80ee-000bee2e3669`) | Individual payout line items aggregated into this payable |
+| `Contractor` | Relation | `ZVms` | Contractors (DB: `9d468753-ebb4-4977-a8dc-156428398a6b`, DS: `ed2b9224-97d9-4dff-97f9-82598b61f65d`) | The contractor this payable belongs to |
+| `Payout Items` | Relation | `sMWI` | Contractor Payouts (DB: `2c564b29-b84c-806c-9d73-def95eb7ff30`, DS: `2c564b29-b84c-8045-80ee-000bee2e3669`) | Individual payout line items aggregated into this payable |
 
 ### Rollup Properties
 
@@ -349,8 +349,15 @@ New → Pending → Paid
 
 ## Related Databases
 
-- **Contractors** (`ed2b9224-97d9-4dff-97f9-82598b61f65d`): Contractor profiles with Discord handles
-- **Contractor Payouts** (`2c564b29-b84c-8045-80ee-000bee2e3669`): Individual payout line items (Service Fee, Commission, Refund)
+- **Contractors**
+  - Database ID: `9d468753-ebb4-4977-a8dc-156428398a6b`
+  - Data Source ID: `ed2b9224-97d9-4dff-97f9-82598b61f65d`
+  - Description: Contractor profiles with Discord handles and payment information
+
+- **Contractor Payouts**
+  - Database ID: `2c564b29-b84c-806c-9d73-def95eb7ff30`
+  - Data Source ID: `2c564b29-b84c-8045-80ee-000bee2e3669`
+  - Description: Individual payout line items (Service Fee, Commission, Refund, Other)
 
 ## Notes
 
