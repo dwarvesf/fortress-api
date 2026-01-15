@@ -1032,6 +1032,24 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, month time.Ti
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Bonus section with %d items", len(bonusItems)))
 	}
 
+	// Group Other items - individual display
+	var otherItems []ContractorInvoiceLineItem
+	for _, item := range items {
+		if item.Type == string(notion.PayoutSourceTypeOther) {
+			otherItems = append(otherItems, item)
+		}
+	}
+
+	if len(otherItems) > 0 {
+		sections = append(sections, ContractorInvoiceSection{
+			Name:         "Other",
+			IsAggregated: false,
+			Items:        otherItems,
+		})
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Other section with %d items", len(otherItems)))
+	}
+
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped into %d sections", len(sections)))
 
 	return sections
