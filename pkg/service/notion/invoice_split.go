@@ -211,14 +211,6 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 		}
 	}
 
-	if input.InvoicePageID != "" {
-		props["Client Invoices"] = nt.DatabasePageProperty{
-			Relation: []nt.Relation{
-				{ID: input.InvoicePageID},
-			},
-		}
-	}
-
 	// Create the page
 	page, err := s.client.CreatePage(ctx, nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,

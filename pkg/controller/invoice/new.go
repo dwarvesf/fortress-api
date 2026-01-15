@@ -9,6 +9,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service"
 	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/dwarvesf/fortress-api/pkg/view"
 	"github.com/dwarvesf/fortress-api/pkg/worker"
 )
 
@@ -40,6 +41,7 @@ type IController interface {
 	MarkInvoiceAsPaidByBasecampWebhookMessage(invoice *model.Invoice, msg *model.BasecampWebhookMessage) (*model.Invoice, error)
 	MarkInvoiceAsPaidWithTaskRef(invoice *model.Invoice, ref *taskprovider.InvoiceTaskRef, sendThankYouEmail bool) (*model.Invoice, error)
 	MarkInvoiceAsPaidByNumber(invoiceNumber string) (*MarkPaidResult, error)
+	GenerateInvoiceSplitsByLegacyNumber(legacyNumber string) (*view.GenerateSplitsResponse, error)
 	Send(iv *model.Invoice) (*model.Invoice, error)
 	UpdateStatus(in UpdateStatusInput) (*model.Invoice, error)
 

@@ -570,3 +570,55 @@ func (h *handler) MarkPaid(c *gin.Context) {
 	l.Infof("invoice marked as paid successfully: invoiceNumber=%s source=%s", result.InvoiceNumber, result.Source)
 	c.JSON(http.StatusOK, view.CreateResponse(response, nil, nil, req, ""))
 }
+
+// GenerateSplits godoc
+// @Summary Generate invoice splits by Legacy Number
+// @Description Query Notion Client Invoices database and enqueue worker job to generate splits
+// @id generateInvoiceSplits
+// @Tags Invoice
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body request.GenerateSplitsRequest true "Generate Splits Request"
+// @Success 200 {object} view.GenerateSplitsResponse
+// @Failure 400 {object} ErrorResponse "Invalid request"
+// @Failure 404 {object} ErrorResponse "Invoice not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /invoices/generate-splits [post]
+func (h *handler) GenerateSplits(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "invoice",
+		"method":  "GenerateSplits",
+	})
+
+	l.Debug("handling generate invoice splits request")
+
+	// 1. Parse and validate request
+	var req request.GenerateSplitsRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		l.Error(err, "invalid request body")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	l.Debugf("received request: legacyNumber=%s", req.LegacyNumber)
+
+	// 2. Call controller to generate splits
+	resp, err := h.controller.Invoice.GenerateInvoiceSplitsByLegacyNumber(req.LegacyNumber)
+	if err != nil {
+		l.Error(err, "failed to generate invoice splits")
+
+		// Handle not found error
+		if strings.Contains(err.Error(), "not found") {
+			c.JSON(http.StatusNotFound, view.CreateResponse[any](nil, nil, err, req, ""))
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, req, ""))
+		return
+	}
+
+	// 3. Return success response
+	l.Infof("invoice splits generation job enqueued successfully: legacyNumber=%s pageID=%s", req.LegacyNumber, resp.InvoicePageID)
+	c.JSON(http.StatusOK, view.CreateResponse(resp, nil, nil, req, ""))
+}

@@ -199,13 +199,34 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 					InvoicePageID:     p.InvoicePageID,
 				}
 
-				_, err := w.service.Notion.InvoiceSplit.CreateCommissionSplit(w.ctx, input)
+				split, err := w.service.Notion.InvoiceSplit.CreateCommissionSplit(w.ctx, input)
 				if err != nil {
 					l.Errorf(err, "failed to create commission split for role=%s person=%s", role.name, personID)
 					// Continue with other splits even if one fails
 					continue
 				}
 				createdCount++
+
+				// Create corresponding payout for this split
+				if w.service.Notion.ContractorPayouts != nil && split != nil {
+					payoutInput := notion.CreateCommissionPayoutInput{
+						Name:             splitName,
+						ContractorPageID: personID,
+						InvoiceSplitID:   split.PageID,
+						Amount:           split.Amount,
+						Currency:         split.Currency,
+						Date:             item.Month.Format("2006-01-02"),
+						Description:      "", // Empty for now, can be populated if needed
+					}
+
+					_, payoutErr := w.service.Notion.ContractorPayouts.CreateCommissionPayout(w.ctx, payoutInput)
+					if payoutErr != nil {
+						l.Errorf(payoutErr, "failed to create payout for split=%s role=%s person=%s", split.PageID, role.name, personID)
+						// Continue even if payout creation fails
+					} else {
+						l.Debugf("created payout for split=%s", split.PageID)
+					}
+				}
 			}
 		}
 	}

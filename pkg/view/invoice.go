@@ -385,3 +385,11 @@ func ToInvoiceListResponse(invoices []*model.Invoice) ([]InvoiceData, error) {
 
 	return rs, nil
 }
+
+// GenerateSplitsResponse is the response for generating invoice splits
+type GenerateSplitsResponse struct {
+	LegacyNumber  string `json:"legacy_number"`
+	InvoicePageID string `json:"invoice_page_id"`
+	JobEnqueued   bool   `json:"job_enqueued"`
+	Message       string `json:"message"`
+} // @name GenerateSplitsResponse

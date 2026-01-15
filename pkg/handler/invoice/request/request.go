@@ -26,6 +26,11 @@ type MarkPaidRequest struct {
 	InvoiceNumber string `json:"invoice_number" binding:"required"`
 } // @name MarkPaidRequest
 
+// GenerateSplitsRequest is the request body for generating invoice splits by legacy number
+type GenerateSplitsRequest struct {
+	LegacyNumber string `json:"legacy_number" binding:"required"`
+} // @name GenerateSplitsRequest
+
 func (r *UpdateStatusRequest) Validate() error {
 	if r.Status != "" && !r.Status.IsValid() {
 		return errs.ErrInvalidInvoiceStatus

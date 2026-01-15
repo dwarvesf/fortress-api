@@ -10,4 +10,5 @@ type IHandler interface {
 	CalculateCommissions(c *gin.Context)
 	GenerateContractorInvoice(c *gin.Context)
 	MarkPaid(c *gin.Context)
+	GenerateSplits(c *gin.Context)
 }
