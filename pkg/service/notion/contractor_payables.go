@@ -32,6 +32,7 @@ type CreatePayableInput struct {
 	InvoiceID        string   // Invoice number e.g., CONTR-202512-A1B2 (required)
 	PayoutItemIDs    []string // Relation to Payout Items (required)
 	ContractorType   string   // "Individual", "Sole Proprietor", "LLC", etc. (optional, defaults to "Individual")
+	ExchangeRate     float64  // Exchange rate for currency conversion (optional)
 	PDFBytes         []byte   // PDF file bytes to upload to Notion (optional)
 }
 
@@ -259,6 +260,14 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 	}
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set contractorType=%s", contractorType))
 
+	// Add Exchange Rate (optional)
+	if input.ExchangeRate > 0 {
+		props["Exchange Rate"] = nt.DatabasePageProperty{
+			Number: &input.ExchangeRate,
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set exchangeRate=%.2f", input.ExchangeRate))
+	}
+
 	params := nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
 		ParentID:               payablesDBID,
@@ -378,6 +387,14 @@ func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID st
 		Select: &nt.SelectOptions{
 			Name: contractorType,
 		},
+	}
+
+	// Add Exchange Rate (optional)
+	if input.ExchangeRate > 0 {
+		props["Exchange Rate"] = nt.DatabasePageProperty{
+			Number: &input.ExchangeRate,
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating exchangeRate=%.2f", input.ExchangeRate))
 	}
 
 	// Update the page

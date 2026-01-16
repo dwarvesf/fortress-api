@@ -191,8 +191,9 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 		InvoiceDate:      time.Now().Format("2006-01-02"),
 		InvoiceID:        invoiceData.InvoiceNumber,
 		PayoutItemIDs:    invoiceData.PayoutPageIDs,
-		ContractorType:   "Individual", // Default to Individual
-		PDFBytes:         pdfBytes,     // Upload PDF to Notion
+		ContractorType:   "Individual",           // Default to Individual
+		ExchangeRate:     invoiceData.ExchangeRate,
+		PDFBytes:         pdfBytes,               // Upload PDF to Notion
 	}
 
 	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
