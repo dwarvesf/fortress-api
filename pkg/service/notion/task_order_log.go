@@ -1025,10 +1025,10 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 			}
 			s.logger.Debug("[DEBUG] task_order_log: ===== End of properties =====")
 
-			// Extract project name: Subitem -> Deployment -> Project
+			// Extract project name: Subitem -> Project Deployment -> Project
 			projectName := ""
 			projectID := ""
-			deploymentID := s.extractFirstRelationID(props, "Deployment")
+			deploymentID := s.extractFirstRelationID(props, "Project Deployment")
 			s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted deploymentID=%s", deploymentID))
 			if deploymentID != "" {
 				// Fetch Deployment page to get Project relation
@@ -1070,7 +1070,7 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 				ProjectName: projectName,
 				ProjectID:   projectID,
 				Hours:       s.extractNumber(props, "Line Item Hours"),
-				ProofOfWork: s.extractRichText(props, "Key deliverables"),
+				ProofOfWork: s.extractRichText(props, "Proof of Works"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("found subitem: pageID=%s project=%s projectID=%s hours=%.2f", subitem.PageID, subitem.ProjectName, subitem.ProjectID, subitem.Hours))
