@@ -159,7 +159,7 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 	// Build properties for the new payable
 	props := nt.DatabasePageProperties{
 		// Title: Payable name (empty, Auto Name formula will fill it)
-		"Payable": nt.DatabasePageProperty{
+		"Payable Title": nt.DatabasePageProperty{
 			Title: []nt.RichText{
 				{Text: &nt.Text{Content: ""}},
 			},

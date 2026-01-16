@@ -5,7 +5,7 @@
 - **Database ID**: `2c264b29-b84c-8037-807c-000bf6d0792c`
 - **Title**: Contractor Payables
 - **Created**: 2025-12-07T18:47:00.000Z
-- **Last Edited**: 2026-01-15T03:55:00.000Z
+- **Last Edited**: 2026-01-16T03:52:00.000Z
 - **Icon**: 💸
 - **URL**: https://www.notion.so/2c264b29b84c80e39bd8c22e7612c1ea
 - **Parent Database**: `2c264b29-b84c-80e3-9bd8-c22e7612c1ea`
@@ -26,7 +26,7 @@ The Contractor Payables database aggregates payout items into payable records fo
 
 | Property | Type | ID | Description |
 |----------|------|-----|-------------|
-| `Payable` | Title | `title` | Main payable name/description |
+| `Payable Title` | Title | `title` | Main payable name/description |
 | `Total` | Number | `` `GxT`` | Total payable amount (formatted with commas) |
 | `Period` | Date | `>HDF` | Month this payable covers |
 | `Invoice Date` | Date | `QD]A` | Date of invoice |
@@ -96,6 +96,7 @@ The Contractor Payables database aggregates payout items into payable records fo
 | Property | Type | ID | Source | Description |
 |----------|------|-----|--------|-------------|
 | `Discord` | Rollup | `x]OV` | From `Contractor` → `Discord` | Discord handle from contractor |
+| `Payday` | Rollup | `gLTe` | From `Contractor` → `Payday` | Payday preference from contractor |
 
 ### Formula Properties
 
@@ -198,7 +199,7 @@ lets(
   "object": "page",
   "id": "2c264b29-b84c-8030-a95c-example",
   "properties": {
-    "Payable": {
+    "Payable Title": {
       "type": "title",
       "title": [
         {
