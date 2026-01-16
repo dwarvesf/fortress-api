@@ -1,17 +1,17 @@
-# Timesheet Database Schema
+# Project Updates Database Schema
 
 ## Overview
 
-- **Database ID**: `2c664b29-b84c-8089-b304-e9c5b5c70ac3`
-- **Title**: Timesheet
+- **Database ID**: `2c664b29-b84c-8048-b7e2-000bb8278044`
+- **Title**: Project Updates
 - **Created**: 2025-12-11
-- **Last Edited**: 2025-12-22
-- **Icon**: Clock (gray)
-- **URL**: https://www.notion.so/2c664b29b84c8089b304e9c5b5c70ac3
+- **Last Edited**: 2026-01-15
+- **Icon**: Bullseye/Target (gray)
+- **URL**: https://www.notion.so/2c664b29b84c8048b7e2000bb8278044
 
 ## Purpose
 
-The Timesheet database tracks work hours logged by contractors for various projects. It supports time tracking, task categorization, approval workflows, and proof of work documentation.
+The Project Updates database is for contractors to record key activities, deliverables, or updates for project coordination and billing verification. It supports activity tracking, task categorization, feedback workflows, and deliverable documentation.
 
 ## Properties
 
@@ -19,23 +19,22 @@ The Timesheet database tracks work hours logged by contractors for various proje
 
 | Property | Type | ID | Description |
 |----------|------|-----|-------------|
-| `(auto) Timesheet Entry` | Title | `title` | Auto-generated title combining project, contractor discord, date, and hours (e.g., "kafi :: cor3.co :: Dec 15 – 6h") |
+| `(auto) Entry` | Title | `title` | Auto-generated title combining project, contractor discord, date, and approximate effort (e.g., "kafi :: cor3.co :: Dec 15 – 6h") |
 | `Date` | Date | `joDR` | The date when the work was performed |
-| `Hours` | Number | `RUz\` | Number of hours worked (numeric format) |
-| `Task Type` | Select | `ZA~q` | Category of work performed |
-| `Proof of Works` | Rich Text | `SJfi` | Detailed description of work completed, often including links to tickets or design files |
-| `Status` | Status | `QeGl` | Current approval status of the timesheet entry |
+| `Appx. effort` | Number | `RUz\` | Approximate effort in hours (numeric format) |
+| `Focus areas` | Select | `ZA~q` | Category of work performed |
+| `Key deliverables` | Rich Text | `SJfi` | Detailed description of key deliverables and work completed, often including links to tickets or design files |
+| `Status` | Status | `QeGl` | Current review status of the project update entry |
 
-### Task Type Options
+### Focus Areas Options
 
 - Development (blue)
 - Design (orange)
 - Meeting (green)
-- Overtime (orange)
 - Documentation (purple)
 - Research (pink)
 - Planning (yellow)
-- Training (red)
+- Other (brown)
 
 ### Status Options
 
@@ -45,10 +44,10 @@ The status property uses grouped statuses:
 - Draft
 
 **In Progress Group** (blue):
-- Pending Approval
+- Pending Feedback
 
 **Complete Group** (green):
-- Approved
+- Reviewed
 - Completed
 
 ### Relations
@@ -105,10 +104,10 @@ let (
     project + " :: " + style(discord, "blue")
         + " :: "
         + formatDate({{Date}}, "MMM D")
-        + if(empty({{Hours}}, "", " – " + {{Hours}} + "h")
+        + if(empty({{Appx. effort}}, "", " – " + {{Appx. effort}} + "h")
 )
 ```
-Creates a formatted title with project code, contractor's discord username (in blue), formatted date, and hours.
+Creates a formatted title with project code, contractor's discord username (in blue), formatted date, and approximate effort hours.
 
 ## Sample Data Structure
 
@@ -119,15 +118,15 @@ Creates a formatted title with project code, contractor's discord username (in b
     "Status": {
       "type": "status",
       "status": {
-        "name": "Pending Approval",
+        "name": "Pending Feedback",
         "color": "blue"
       }
     },
-    "Hours": {
+    "Appx. effort": {
       "type": "number",
       "number": 6
     },
-    "Proof of Works": {
+    "Key deliverables": {
       "type": "rich_text",
       "rich_text": [{
         "text": {
@@ -147,7 +146,7 @@ Creates a formatted title with project code, contractor's discord username (in b
         }]
       }
     },
-    "Task Type": {
+    "Focus areas": {
       "type": "select",
       "select": {
         "name": "Development",
@@ -178,11 +177,11 @@ Creates a formatted title with project code, contractor's discord username (in b
 
 ## Workflow
 
-1. **Creation**: Contractor creates a timesheet entry with date, hours, task type, project, and proof of work
+1. **Creation**: Contractor creates a project update entry with date, approximate effort, focus area, project, and key deliverables
 2. **Draft**: Entry starts in "Draft" status
-3. **Submission**: Entry is moved to "Pending Approval" status
-4. **Review**: Assigned reviewers validate the proof of work and hours
-5. **Approval**: Reviewers approve the entry (status: "Approved")
+3. **Submission**: Entry is moved to "Pending Feedback" status
+4. **Review**: Assigned reviewers validate the key deliverables and effort
+5. **Review Complete**: Reviewers complete review (status: "Reviewed")
 6. **Completion**: Entry is marked as "Completed" after processing
 
 ## Integration Notes
@@ -190,8 +189,9 @@ Creates a formatted title with project code, contractor's discord username (in b
 - The `Discord` rollup property provides quick access to contractor identification
 - The `Month` formula enables easy filtering and grouping by month for payroll processing
 - The auto-generated title makes entries easily scannable in list views
-- Task Type categorization allows for reporting on different types of work
-- Proof of Works supports rich text with links to tickets, designs, and documentation
+- Focus areas categorization allows for reporting on different types of work
+- Key deliverables supports rich text with links to tickets, designs, and documentation
+- Webhook integration: `https://local.arcline.app/webhooks/notion/timesheet`
 
 ## Related Databases
 
@@ -200,4 +200,7 @@ Creates a formatted title with project code, contractor's discord username (in b
 
 ## Notes
 
+- **Database Renamed**: This database was previously named "Timesheet" with ID `2c664b29-b84c-8089-b304-e9c5b5c70ac3`. It has been renamed to "Project Updates" with new ID `2c664b29-b84c-8048-b7e2-000bb8278044` (January 2026)
+- **Property Changes**: `Hours` → `Appx. effort`, `Proof of Works` → `Key deliverables`, `Task Type` → `Focus areas`
+- **Status Changes**: `Pending Approval` → `Pending Feedback`, `Approved` → `Reviewed`
 - Second database ID `2b964b29-b84c-801c-accb-dc8ca1e38a5f` was not accessible (404 error - either not found or not shared with the integration)
