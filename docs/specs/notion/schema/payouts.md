@@ -106,7 +106,7 @@ if(
     "Commission",
     if(not empty(01 Refund),
       "Refund",
-      "Other")
+      "Extra Payment")
   )
 )
 ```
@@ -115,7 +115,7 @@ if(
 - `Service Fee` - when 00 Task Order relation is set
 - `Commission` - when 02 Invoice Split relation is set
 - `Refund` - when 01 Refund relation is set
-- `Other` - when no source relation is set
+- `Extra Payment` - when no source relation is set
 
 #### Auto Name Formula
 
@@ -332,7 +332,7 @@ Where:
 | Service Fee | 00 Task Order | Regular service fee from task orders |
 | Commission | 02 Invoice Split | Commission from client invoices |
 | Refund | 01 Refund | Refund back to contractor |
-| Other | None | Manual entries without linked source |
+| Extra Payment | None | Manual entries without linked source |
 
 ## Related Databases
 

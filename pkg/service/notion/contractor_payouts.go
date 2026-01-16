@@ -375,8 +375,8 @@ func (s *ContractorPayoutsService) determineSourceType(entry PayoutEntry) Payout
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Refund (RefundRequestID=%s)", entry.RefundRequestID))
 		return PayoutSourceTypeRefund
 	}
-	s.logger.Debug("[DEBUG] contractor_payouts: sourceType=Other (no relation set)")
-	return PayoutSourceTypeOther
+	s.logger.Debug("[DEBUG] contractor_payouts: sourceType=Extra Payment (no relation set)")
+	return PayoutSourceTypeExtraPayment
 }
 
 // Helper functions for extracting properties
@@ -1027,4 +1027,3 @@ func (s *ContractorPayoutsService) UpdatePayoutStatus(ctx context.Context, pageI
 
 	return nil
 }
-

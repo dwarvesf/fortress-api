@@ -54,6 +54,9 @@ type ContractorInvoiceData struct {
 	// Notion relation IDs (for creating Contractor Payables record)
 	ContractorPageID string   // Contractor page ID from rates query
 	PayoutPageIDs    []string // Payout Item page IDs from pending payouts
+
+	// PayDay for Period calculation
+	PayDay int // Pay day of month (1 or 15)
 }
 
 // ContractorInvoiceLineItem represents a line item in a contractor invoice
@@ -82,11 +85,11 @@ type ContractorInvoiceLineItem struct {
 
 // ContractorInvoiceSection represents a section of line items in the invoice
 type ContractorInvoiceSection struct {
-	Name         string                        // "Development work from [start] to [end]", "Refund", "Bonus"
-	IsAggregated bool                          // true for Development Work (Service Fee)
-	Total        float64                       // Total amount for aggregated sections
-	Currency     string                        // Currency for aggregated sections
-	Items        []ContractorInvoiceLineItem   // Individual items
+	Name         string                      // "Development work from [start] to [end]", "Refund", "Bonus"
+	IsAggregated bool                        // true for Development Work (Service Fee)
+	Total        float64                     // Total amount for aggregated sections
+	Currency     string                      // Currency for aggregated sections
+	Items        []ContractorInvoiceLineItem // Individual items
 }
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
@@ -418,10 +421,10 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		// Round total to 2 decimal places
 		groupTotal := math.Round(totalAmount*100) / 100
 
-		// Build description: "Bonus for Renaiss" or "Bonus"
-		description := "Bonus"
+		// Build description: "Fee for Renaiss" or "Fee"
+		description := "Fee"
 		if project != "" {
-			description = fmt.Sprintf("Bonus for %s", project)
+			description = fmt.Sprintf("Fee for %s", project)
 		}
 
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped commission - description=%s total=%.2f", description, groupTotal))
@@ -474,7 +477,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	}
 
 	// 5.6 Calculate VND subtotal by converting all items to VND
-	var vndFromVNDItems float64 // Sum of all VND-denominated items
+	var vndFromVNDItems float64   // Sum of all VND-denominated items
 	var usdItemsToConvert float64 // Sum of all USD-denominated items (to be converted to VND)
 	var vndItemCount int
 	var usdItemCount int
@@ -623,6 +626,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 		// Notion relation IDs (for creating Contractor Payables record)
 		ContractorPageID: rateData.ContractorPageID,
+
+		// PayDay for Period calculation
+		PayDay: payDay,
 	}
 
 	// Collect payout page IDs from processed payouts
@@ -1015,39 +1021,40 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, month time.Ti
 	}
 
 	// Group Bonus (Commission) items - individual display
-	var bonusItems []ContractorInvoiceLineItem
-	for _, item := range items {
+	var feeItems []ContractorInvoiceLineItem
+	for i, item := range items {
+		items[i].Description = strings.Replace(items[i].Description, "Bonus", "Fee", -1)
 		if item.Type == string(notion.PayoutSourceTypeCommission) {
-			bonusItems = append(bonusItems, item)
+			feeItems = append(feeItems, item)
 		}
 	}
 
-	if len(bonusItems) > 0 {
+	if len(feeItems) > 0 {
 		sections = append(sections, ContractorInvoiceSection{
-			Name:         "Bonus",
+			Name:         "Fee",
 			IsAggregated: false,
-			Items:        bonusItems,
+			Items:        feeItems,
 		})
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Bonus section with %d items", len(bonusItems)))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Fee section with %d items", len(feeItems)))
 	}
 
-	// Group Other items - individual display
-	var otherItems []ContractorInvoiceLineItem
+	// Group Extra Payment items - individual display
+	var extraPaymentItems []ContractorInvoiceLineItem
 	for _, item := range items {
-		if item.Type == string(notion.PayoutSourceTypeOther) {
-			otherItems = append(otherItems, item)
+		if item.Type == string(notion.PayoutSourceTypeExtraPayment) {
+			extraPaymentItems = append(extraPaymentItems, item)
 		}
 	}
 
-	if len(otherItems) > 0 {
+	if len(extraPaymentItems) > 0 {
 		sections = append(sections, ContractorInvoiceSection{
-			Name:         "Other",
+			Name:         "Extra Payment",
 			IsAggregated: false,
-			Items:        otherItems,
+			Items:        extraPaymentItems,
 		})
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Other section with %d items", len(otherItems)))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Extra Payment section with %d items", len(extraPaymentItems)))
 	}
 
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped into %d sections", len(sections)))

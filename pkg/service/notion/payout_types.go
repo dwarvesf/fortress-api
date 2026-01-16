@@ -4,10 +4,11 @@ package notion
 type PayoutSourceType string
 
 const (
-	PayoutSourceTypeServiceFee  PayoutSourceType = "Service Fee"
-	PayoutSourceTypeCommission  PayoutSourceType = "Commission"
-	PayoutSourceTypeRefund      PayoutSourceType = "Refund"
-	PayoutSourceTypeOther       PayoutSourceType = "Other"
+	PayoutSourceTypeServiceFee   PayoutSourceType = "Service Fee"
+	PayoutSourceTypeCommission   PayoutSourceType = "Commission"
+	PayoutSourceTypeRefund       PayoutSourceType = "Refund"
+	PayoutSourceTypeExtraPayment PayoutSourceType = "Extra Payment"
+	PayoutSourceTypeOther        PayoutSourceType = "Other" // DEPRECATED
 )
 
 // PayoutDirection represents the direction of a payout

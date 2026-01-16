@@ -26,7 +26,8 @@ type CreatePayableInput struct {
 	ContractorPageID string   // Relation to Contractor (required)
 	Total            float64  // Total amount in USD (required)
 	Currency         string   // "USD" or "VND" (required)
-	Period           string   // YYYY-MM-DD start of month (required)
+	PeriodStart      string   // YYYY-MM-DD start of period - payday of invoice month (required)
+	PeriodEnd        string   // YYYY-MM-DD end of period - payday of next month (required)
 	InvoiceDate      string   // YYYY-MM-DD (required)
 	InvoiceID        string   // Invoice number e.g., CONTR-202512-A1B2 (required)
 	PayoutItemIDs    []string // Relation to Payout Items (required)
@@ -57,16 +58,16 @@ type ExistingPayable struct {
 	Status string // "New", "Pending", etc.
 }
 
-// findExistingPayable searches for an existing payable record by contractor and period
-func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, contractorPageID, period string) (*ExistingPayable, error) {
+// findExistingPayable searches for an existing payable record by contractor and period start date
+func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, contractorPageID, periodStart string) (*ExistingPayable, error) {
 	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
 	if payablesDBID == "" {
 		return nil, errors.New("contractor payables database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching for existing payable contractor=%s period=%s", contractorPageID, period))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching for existing payable contractor=%s periodStart=%s", contractorPageID, periodStart))
 
-	// Build filter: Contractor relation contains contractorPageID AND Period equals period date
+	// Build filter: Contractor relation contains contractorPageID AND Period start equals periodStart date
 	filter := &nt.DatabaseQueryFilter{
 		And: []nt.DatabaseQueryFilter{
 			{
@@ -82,7 +83,7 @@ func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, con
 				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 					Date: &nt.DatePropertyFilter{
 						Equals: func() *time.Time {
-							t, err := time.Parse("2006-01-02", period)
+							t, err := time.Parse("2006-01-02", periodStart)
 							if err != nil {
 								return nil
 							}
@@ -142,7 +143,7 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 		input.ContractorPageID, input.Total, input.Currency, input.InvoiceID, len(input.PayoutItemIDs)))
 
 	// Check for existing payable
-	existing, err := s.findExistingPayable(ctx, input.ContractorPageID, input.Period)
+	existing, err := s.findExistingPayable(ctx, input.ContractorPageID, input.PeriodStart)
 	if err != nil {
 		s.logger.Error(err, "[DEBUG] contractor_payables: failed to check existing payable - proceeding with create")
 		// Continue with creation on error
@@ -192,18 +193,20 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set currency=%s", input.Currency))
 	}
 
-	// Add Period date
-	if input.Period != "" {
-		dateObj, err := nt.ParseDateTime(input.Period)
-		if err == nil {
+	// Add Period date range (start and end)
+	if input.PeriodStart != "" && input.PeriodEnd != "" {
+		startDateObj, startErr := nt.ParseDateTime(input.PeriodStart)
+		endDateObj, endErr := nt.ParseDateTime(input.PeriodEnd)
+		if startErr == nil && endErr == nil {
 			props["Period"] = nt.DatabasePageProperty{
 				Date: &nt.Date{
-					Start: dateObj,
+					Start: startDateObj,
+					End:   &endDateObj,
 				},
 			}
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set period=%s", input.Period))
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set period=%s to %s", input.PeriodStart, input.PeriodEnd))
 		} else {
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: failed to parse period=%s: %v", input.Period, err))
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: failed to parse period start=%s end=%s: startErr=%v endErr=%v", input.PeriodStart, input.PeriodEnd, startErr, endErr))
 		}
 	}
 
@@ -316,6 +319,21 @@ func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID st
 			Select: &nt.SelectOptions{
 				Name: input.Currency,
 			},
+		}
+	}
+
+	// Add Period date range (start and end)
+	if input.PeriodStart != "" && input.PeriodEnd != "" {
+		startDateObj, startErr := nt.ParseDateTime(input.PeriodStart)
+		endDateObj, endErr := nt.ParseDateTime(input.PeriodEnd)
+		if startErr == nil && endErr == nil {
+			props["Period"] = nt.DatabasePageProperty{
+				Date: &nt.Date{
+					Start: startDateObj,
+					End:   &endDateObj,
+				},
+			}
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating period=%s to %s", input.PeriodStart, input.PeriodEnd))
 		}
 	}
 

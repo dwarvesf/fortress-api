@@ -148,14 +148,46 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 
 	l.Debug(fmt.Sprintf("PDF uploaded to Google Drive: url=%s", fileURL))
 
-	// Step 3.5: Create Contractor Payables record in Notion
-	l.Debug("step 3.5: creating contractor payables record in Notion")
+	// Step 3.5a: Query contractor rate data (needed for payday and personal email)
+	l.Debug("step 3.5a: fetching contractor rate data")
+	ratesService := notion.NewContractorRatesService(h.config, h.logger)
+	if ratesService == nil {
+		l.Error(nil, "failed to create contractor rates service")
+		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to lookup contractor information")
+		return
+	}
+
+	rateData, err := ratesService.QueryRatesByDiscordAndMonth(ctx, req.DiscordUsername, req.Month)
+	if err != nil {
+		l.Errorf(err, "failed to query contractor rates")
+		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to find contractor: %v", err))
+		return
+	}
+
+	// Step 3.5b: Create Contractor Payables record in Notion
+	l.Debug("step 3.5b: creating contractor payables record in Notion")
+
+	// Calculate period dates based on payday from contractor rate
+	// PeriodStart: payday of invoice month
+	// PeriodEnd: payday of next month
+	monthTime, _ := time.Parse("2006-01", invoiceData.Month)
+	payday := rateData.PayDay
+	if payday == 0 {
+		payday = 15 // Default to 15 if not set
+	}
+	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payday, 0, 0, 0, 0, time.UTC)
+	nextMonth := monthTime.AddDate(0, 1, 0)
+	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
+
+	l.Debug(fmt.Sprintf("[DEBUG] calculated period: payday=%d start=%s end=%s",
+		payday, periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
 
 	payableInput := notion.CreatePayableInput{
 		ContractorPageID: invoiceData.ContractorPageID,
 		Total:            invoiceData.TotalUSD,
 		Currency:         "USD",
-		Period:           invoiceData.Month + "-01",
+		PeriodStart:      periodStart.Format("2006-01-02"),
+		PeriodEnd:        periodEnd.Format("2006-01-02"),
 		InvoiceDate:      time.Now().Format("2006-01-02"),
 		InvoiceID:        invoiceData.InvoiceNumber,
 		PayoutItemIDs:    invoiceData.PayoutPageIDs,
@@ -163,8 +195,8 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 		PDFBytes:         pdfBytes,     // Upload PDF to Notion
 	}
 
-	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d",
-		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs)))
+	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
+		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs), payableInput.PeriodStart, payableInput.PeriodEnd))
 
 	payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)
 	if payableErr != nil {
@@ -186,20 +218,6 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 
 	// Step 4: Get contractor's personal email from Notion
 	l.Debug("step 4: fetching contractor personal email")
-	ratesService := notion.NewContractorRatesService(h.config, h.logger)
-	if ratesService == nil {
-		l.Error(nil, "failed to create contractor rates service")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to lookup contractor information")
-		return
-	}
-
-	rateData, err := ratesService.QueryRatesByDiscordAndMonth(ctx, req.DiscordUsername, req.Month)
-	if err != nil {
-		l.Errorf(err, "failed to query contractor rates")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to find contractor: %v", err))
-		return
-	}
-
 	taskOrderLogService := h.service.Notion.TaskOrderLog
 	personalEmail := taskOrderLogService.GetContractorPersonalEmail(ctx, rateData.ContractorPageID)
 	if personalEmail == "" {

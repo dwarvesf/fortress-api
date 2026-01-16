@@ -444,11 +444,27 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 	// 5.5 Create Contractor Payables record in Notion
 	l.Debug("[DEBUG] creating contractor payables record in Notion")
 
+	// Calculate period dates based on payday from invoice data
+	// PeriodStart: payday of invoice month
+	// PeriodEnd: payday of next month
+	monthTime, _ := time.Parse("2006-01", invoiceData.Month)
+	payday := invoiceData.PayDay
+	if payday == 0 {
+		payday = 15 // Default to 15 if not set
+	}
+	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payday, 0, 0, 0, 0, time.UTC)
+	nextMonth := monthTime.AddDate(0, 1, 0)
+	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
+
+	l.Debug(fmt.Sprintf("[DEBUG] calculated period: payday=%d start=%s end=%s",
+		payday, periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
+
 	payableInput := notion.CreatePayableInput{
 		ContractorPageID: invoiceData.ContractorPageID,
 		Total:            invoiceData.TotalUSD,
 		Currency:         "USD",
-		Period:           invoiceData.Month + "-01",
+		PeriodStart:      periodStart.Format("2006-01-02"),
+		PeriodEnd:        periodEnd.Format("2006-01-02"),
 		InvoiceDate:      time.Now().Format("2006-01-02"),
 		InvoiceID:        invoiceData.InvoiceNumber,
 		PayoutItemIDs:    invoiceData.PayoutPageIDs,
@@ -456,8 +472,8 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		PDFBytes:         pdfBytes,     // Upload PDF to Notion
 	}
 
-	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d",
-		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs)))
+	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
+		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs), payableInput.PeriodStart, payableInput.PeriodEnd))
 
 	payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(c.Request.Context(), payableInput)
 	if payableErr != nil {
