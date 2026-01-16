@@ -19,7 +19,7 @@ const (
 	retryInterval = 500 * time.Millisecond
 )
 
-// TimesheetEntry represents a timesheet entry from Notion
+// TimesheetEntry represents a project update entry from Notion
 type TimesheetEntry struct {
 	PageID            string
 	Title             string
@@ -28,7 +28,7 @@ type TimesheetEntry struct {
 	CreatedByUserName string  // Created by user name
 	ProjectPageID     string  // Relation page ID
 	Date              string  // Date field
-	Hours             float64 // Number field
+	ApproxEffort      float64 // Approximate effort in hours
 	Status            string  // Status field
 }
 
@@ -77,11 +77,11 @@ func (s *TimesheetService) GetTimesheetEntry(ctx context.Context, pageID string)
 	// Extract all properties
 	entry := &TimesheetEntry{
 		PageID:           pageID,
-		Title:            s.extractTitle(props, "(auto) Timesheet Entry"),
+		Title:            s.extractTitle(props, "(auto) Entry"),
 		ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
 		ProjectPageID:    s.extractFirstRelationID(props, "Project"),
 		Date:             s.extractDateString(props, "Date"),
-		Hours:            s.extractNumber(props, "Hours"),
+		ApproxEffort:     s.extractNumber(props, "Appx. effort"),
 		Status:           s.extractStatus(props, "Status"),
 	}
 

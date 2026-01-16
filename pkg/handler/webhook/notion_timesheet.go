@@ -39,7 +39,7 @@ type NotionTimesheetWebhookData struct {
 	ID     string `json:"id"`     // Page ID
 }
 
-// HandleNotionTimesheet handles timesheet entry webhook events from Notion
+// HandleNotionTimesheet handles project update entry webhook events from Notion
 // Automatically fills missing Contractor and Discord fields based on Created By user
 func (h *handler) HandleNotionTimesheet(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
@@ -47,7 +47,7 @@ func (h *handler) HandleNotionTimesheet(c *gin.Context) {
 		"method":  "HandleNotionTimesheet",
 	})
 
-	l.Debug("received notion timesheet webhook request")
+	l.Debug("received notion project update webhook request")
 
 	// Read body
 	body, err := io.ReadAll(c.Request.Body)
@@ -218,8 +218,8 @@ func (h *handler) sendTimesheetErrorNotification(pageID, userID, errorMsg string
 
 	// Create Discord embed message
 	embed := &discordgo.MessageEmbed{
-		Title:       "⚠️ Timesheet Contractor Fill Failed",
-		Description: "Failed to automatically fill contractor information in timesheet entry after multiple retries.",
+		Title:       "⚠️ Project Update Contractor Fill Failed",
+		Description: "Failed to automatically fill contractor information in project update entry after multiple retries.",
 		Color:       0xFF0000, // Red color for errors
 		Fields: []*discordgo.MessageEmbedField{
 			{

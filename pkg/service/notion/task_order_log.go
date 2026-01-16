@@ -146,16 +146,16 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 
 			entry := &TimesheetEntry{
 				PageID:           page.ID,
-				Title:            s.extractTitle(props, "(auto) Timesheet Entry"),
+				Title:            s.extractTitle(props, "(auto) Entry"),
 				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
 				ProjectPageID:    s.extractFirstRelationID(props, "Project"),
 				Date:             s.extractDateString(props, "Date"),
-				Hours:            s.extractNumber(props, "Hours"),
+				ApproxEffort:     s.extractNumber(props, "Appx. effort"),
 				Status:           s.extractStatus(props, "Status"),
 			}
 
 			// Extract proof of works
-			if prop, ok := props["Proof of Works"]; ok && len(prop.RichText) > 0 {
+			if prop, ok := props["Key deliverables"]; ok && len(prop.RichText) > 0 {
 				var pow string
 				for _, rt := range prop.RichText {
 					pow += rt.PlainText
@@ -565,7 +565,7 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 			"Status": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeSelect,
 				Select: &nt.SelectOptions{
-					Name: "Pending Approval",
+					Name: "Pending Feedback",
 				},
 			},
 			"Date": nt.DatabasePageProperty{
@@ -578,7 +578,7 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 				Type:   nt.DBPropTypeNumber,
 				Number: &hours,
 			},
-			"Proof of Works": nt.DatabasePageProperty{
+			"Key deliverables": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeRichText,
 				RichText: []nt.RichText{
 					{
@@ -712,7 +712,7 @@ func (s *TaskOrderLogService) CreateEmptyTimesheetLineItem(ctx context.Context, 
 	return lineItemID, nil
 }
 
-// UpdateTimesheetLineItem updates existing line item with new data and resets status to "Pending Approval"
+// UpdateTimesheetLineItem updates existing line item with new data and resets status to "Pending Feedback"
 func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineItemID, orderID string, hours float64, proofOfWorks string, timesheetIDs []string) error {
 	s.logger.Debug(fmt.Sprintf("updating line item: lineItemID=%s orderID=%s hours=%.2f timesheets=%d", lineItemID, orderID, hours, len(timesheetIDs)))
 
@@ -729,7 +729,7 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 				Type:   nt.DBPropTypeNumber,
 				Number: &hours,
 			},
-			"Proof of Works": nt.DatabasePageProperty{
+			"Key deliverables": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeRichText,
 				RichText: []nt.RichText{
 					{
@@ -747,7 +747,7 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 			"Status": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeSelect,
 				Select: &nt.SelectOptions{
-					Name: "Pending Approval",
+					Name: "Pending Feedback",
 				},
 			},
 		},
@@ -761,9 +761,9 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 
 	s.logger.Debug(fmt.Sprintf("successfully updated line item: %s", lineItemID))
 
-	// Also update parent Order status to "Pending Approval"
+	// Also update parent Order status to "Pending Feedback"
 	s.logger.Debug(fmt.Sprintf("updating parent order status: orderID=%s", orderID))
-	err = s.UpdateOrderStatus(ctx, orderID, "Pending Approval")
+	err = s.UpdateOrderStatus(ctx, orderID, "Pending Feedback")
 	if err != nil {
 		s.logger.Error(err, fmt.Sprintf("failed to update order status after line item update: orderID=%s", orderID))
 		// Don't fail the whole operation, just log the error
@@ -938,7 +938,7 @@ type OrderSubitem struct {
 	ProjectName string  // From Project rollup
 	ProjectID   string  // From Project relation
 	Hours       float64 // From Line Item Hours
-	ProofOfWork string  // From Proof of Works rich text
+	ProofOfWork string  // From Key deliverables rich text
 }
 
 // QueryOrderSubitems queries timesheet line items (subitems) for a given order
@@ -1070,7 +1070,7 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 				ProjectName: projectName,
 				ProjectID:   projectID,
 				Hours:       s.extractNumber(props, "Line Item Hours"),
-				ProofOfWork: s.extractRichText(props, "Proof of Works"),
+				ProofOfWork: s.extractRichText(props, "Key deliverables"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("found subitem: pageID=%s project=%s projectID=%s hours=%.2f", subitem.PageID, subitem.ProjectName, subitem.ProjectID, subitem.Hours))
@@ -1097,7 +1097,7 @@ type ApprovedOrderData struct {
 	ContractorDiscord string    // From contractor page Discord property
 	Date              time.Time // From Date property (property ID: Ri:O)
 	FinalHoursWorked  float64   // From Final Hours Worked formula (property ID: ;J>Y)
-	ProofOfWorks      string    // From Proof of Works rich text (property ID: hlty)
+	ProofOfWorks      string    // From Key deliverables rich text (property ID: hlty)
 }
 
 // DeploymentData represents an active deployment from Deployment Tracker
@@ -1273,8 +1273,8 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 				s.logger.Debug(fmt.Sprintf("extracted final hours worked: %.2f", finalHoursWorked))
 			}
 
-			// Extract Proof of Works (rich text)
-			proofOfWorks := s.extractRichText(props, "Proof of Works")
+			// Extract Key deliverables (rich text)
+			proofOfWorks := s.extractRichText(props, "Key deliverables")
 			s.logger.Debug(fmt.Sprintf("extracted proof of works length: %d", len(proofOfWorks)))
 
 			order := &ApprovedOrderData{

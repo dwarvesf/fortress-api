@@ -173,11 +173,11 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 			)
 
 			for _, ts := range projectTimesheets {
-				hours += ts.Hours
-				if ts.Title != "" { // Title contains Proof of Works from query
+				hours += ts.ApproxEffort
+				if ts.Title != "" { // Title contains Key deliverables from query
 					proofOfWorks = append(proofOfWorks, openrouter.ProofOfWorkEntry{
 						Text:  ts.Title,
-						Hours: ts.Hours,
+						Hours: ts.ApproxEffort,
 					})
 				}
 				timesheetIDs = append(timesheetIDs, ts.PageID)

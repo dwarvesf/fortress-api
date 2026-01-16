@@ -18,7 +18,7 @@ import (
 const (
 	notionAPIURL   = "https://api.notion.com/v1"
 	notionVersion  = "2022-06-28"
-	timesheetDBID  = "2c664b29b84c8089b304e9c5b5c70ac3"
+	timesheetDBID  = "2c664b29b84c8048b7e2000bb8278044"
 	contractorDBID = "9d468753ebb44977a8dc156428398a6b"
 	rateLimitDelay = 350 * time.Millisecond // Notion rate limit: ~3 requests/sec
 )
@@ -378,7 +378,7 @@ func getPersonIDsByUsername(contractors []NotionPage, username string) []string 
 
 func getPageTitle(page NotionPage) string {
 	// Try to get auto-generated title
-	titleProp, ok := page.Properties["(auto) Timesheet Entry"].(map[string]interface{})
+	titleProp, ok := page.Properties["(auto) Entry"].(map[string]interface{})
 	if !ok {
 		return "Unknown"
 	}
