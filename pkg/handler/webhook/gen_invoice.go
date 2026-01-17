@@ -115,7 +115,7 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 
 	// Step 1: Generate invoice data
 	l.Debug("step 1: generating invoice data")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month)
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month, nil)
 	if err != nil {
 		l.Errorf(err, "failed to generate contractor invoice data")
 		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to generate invoice: %v", err))

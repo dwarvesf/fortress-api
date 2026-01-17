@@ -378,9 +378,17 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	// 3. Generate invoice data
+	// 3. Build options from request
+	opts := &invoiceCtrl.ContractorInvoiceOptions{
+		GroupFeeByProject: true, // default
+	}
+	if req.GroupFeeByProject != nil {
+		opts.GroupFeeByProject = *req.GroupFeeByProject
+	}
+
+	// 4. Generate invoice data
 	l.Debug("calling controller to generate contractor invoice data")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.Contractor, req.Month)
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.Contractor, req.Month, opts)
 	if err != nil {
 		l.Error(err, "failed to generate contractor invoice")
 		if strings.Contains(err.Error(), "not found") {

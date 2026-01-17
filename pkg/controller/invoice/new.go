@@ -57,6 +57,6 @@ type IController interface {
 	GenerateInvoicePDFForNotion(l logger.Logger, invoice *model.Invoice, items []model.InvoiceItem) error
 
 	// Contractor invoice generation
-	GenerateContractorInvoice(ctx context.Context, discord, month string) (*ContractorInvoiceData, error)
+	GenerateContractorInvoice(ctx context.Context, discord, month string, opts *ContractorInvoiceOptions) (*ContractorInvoiceData, error)
 	GenerateContractorInvoicePDF(l logger.Logger, data *ContractorInvoiceData) ([]byte, error)
 }

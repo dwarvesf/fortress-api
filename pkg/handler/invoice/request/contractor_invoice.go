@@ -4,9 +4,10 @@ import "regexp"
 
 // GenerateContractorInvoiceRequest represents the request to generate a contractor invoice
 type GenerateContractorInvoiceRequest struct {
-	Contractor string `json:"contractor" binding:"required"`
-	Month      string `json:"month"`       // YYYY-MM format (optional, if empty fetches all pending)
-	SkipUpload bool   `json:"skipUpload"` // Skip uploading to Google Drive (optional, default false)
+	Contractor        string `json:"contractor" binding:"required"`
+	Month             string `json:"month"`             // YYYY-MM format (optional, if empty fetches all pending)
+	SkipUpload        bool   `json:"skipUpload"`        // Skip uploading to Google Drive (optional, default false)
+	GroupFeeByProject *bool  `json:"groupFeeByProject"` // Group Fee items by project (optional, default true)
 } // @name GenerateContractorInvoiceRequest
 
 // Validate validates the request

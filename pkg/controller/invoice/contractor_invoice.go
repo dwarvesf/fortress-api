@@ -91,8 +91,18 @@ type ContractorInvoiceSection struct {
 	Items        []ContractorInvoiceLineItem // Individual items
 }
 
+// ContractorInvoiceOptions contains options for generating contractor invoice
+type ContractorInvoiceOptions struct {
+	GroupFeeByProject bool // Group Fee (Commission) items by project (default true)
+}
+
 // GenerateContractorInvoice generates contractor invoice data from Notion
-func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, month string) (*ContractorInvoiceData, error) {
+func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, month string, opts *ContractorInvoiceOptions) (*ContractorInvoiceData, error) {
+	// Default options
+	if opts == nil {
+		opts = &ContractorInvoiceOptions{GroupFeeByProject: true}
+	}
+
 	// Default to current month if not provided
 	if month == "" {
 		month = time.Now().Format("2006-01")
@@ -410,59 +420,63 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	lineItems = aggregateHourlyServiceFees(lineItems, month, l)
 	l.Debug(fmt.Sprintf("after aggregation: %d line items", len(lineItems)))
 
-	// 4.6 Group Commission items by Project (all commissions for same project are summed)
-	l.Debug("grouping commission items by project")
-	var nonCommissionItems []ContractorInvoiceLineItem
-	commissionGroups := make(map[string]float64) // key = project name
+	// 4.6 Group Commission items by Project (if enabled)
+	if opts.GroupFeeByProject {
+		l.Debug("grouping commission items by project")
+		var nonCommissionItems []ContractorInvoiceLineItem
+		commissionGroups := make(map[string]float64) // key = project name
 
-	for _, item := range lineItems {
-		if item.Type != string(notion.PayoutSourceTypeCommission) {
-			nonCommissionItems = append(nonCommissionItems, item)
-			continue
+		for _, item := range lineItems {
+			if item.Type != string(notion.PayoutSourceTypeCommission) {
+				nonCommissionItems = append(nonCommissionItems, item)
+				continue
+			}
+
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission - project=%s amount=%.2f",
+				item.CommissionProject, item.AmountUSD))
+
+			// Group by project name (empty string if no project)
+			commissionGroups[item.CommissionProject] += item.AmountUSD
 		}
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: commission - project=%s amount=%.2f",
-			item.CommissionProject, item.AmountUSD))
+		// Convert grouped commissions to line items
+		var groupedCommissionItems []ContractorInvoiceLineItem
+		for project, totalAmount := range commissionGroups {
+			// Round total to 2 decimal places
+			groupTotal := math.Round(totalAmount*100) / 100
 
-		// Group by project name (empty string if no project)
-		commissionGroups[item.CommissionProject] += item.AmountUSD
-	}
+			// Build description: "Fee for Renaiss" or "Fee"
+			description := "Fee"
+			if project != "" {
+				description = fmt.Sprintf("Fee for %s", project)
+			}
 
-	// Convert grouped commissions to line items
-	var groupedCommissionItems []ContractorInvoiceLineItem
-	for project, totalAmount := range commissionGroups {
-		// Round total to 2 decimal places
-		groupTotal := math.Round(totalAmount*100) / 100
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped commission - description=%s total=%.2f", description, groupTotal))
 
-		// Build description: "Fee for Renaiss" or "Fee"
-		description := "Fee"
-		if project != "" {
-			description = fmt.Sprintf("Fee for %s", project)
+			groupedCommissionItems = append(groupedCommissionItems, ContractorInvoiceLineItem{
+				Title:       "",
+				Description: description,
+				Hours:       1,
+				Rate:        groupTotal,
+				Amount:      groupTotal,
+				AmountUSD:   groupTotal,
+				Type:        string(notion.PayoutSourceTypeCommission),
+				// Grouped commissions are in USD (sum of converted amounts)
+				OriginalAmount:   groupTotal,
+				OriginalCurrency: "USD",
+			})
+
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: set grouped commission currency - %.2f USD", groupTotal))
 		}
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped commission - description=%s total=%.2f", description, groupTotal))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped %d commission items into %d groups",
+			len(lineItems)-len(nonCommissionItems), len(groupedCommissionItems)))
 
-		groupedCommissionItems = append(groupedCommissionItems, ContractorInvoiceLineItem{
-			Title:       "",
-			Description: description,
-			Hours:       1,
-			Rate:        groupTotal,
-			Amount:      groupTotal,
-			AmountUSD:   groupTotal,
-			Type:        string(notion.PayoutSourceTypeCommission),
-			// Grouped commissions are in USD (sum of converted amounts)
-			OriginalAmount:   groupTotal,
-			OriginalCurrency: "USD",
-		})
-
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: set grouped commission currency - %.2f USD", groupTotal))
+		// Combine non-commission items with grouped commission items
+		lineItems = append(nonCommissionItems, groupedCommissionItems...)
+	} else {
+		l.Debug("skipping commission grouping (groupFeeByProject=false)")
 	}
-
-	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped %d commission items into %d groups",
-		len(lineItems)-len(nonCommissionItems), len(groupedCommissionItems)))
-
-	// Combine non-commission items with grouped commission items
-	lineItems = append(nonCommissionItems, groupedCommissionItems...)
 
 	// 5. Sort line items by Type (Service Fee last) then by Amount ASC
 	l.Debug("sorting line items by Type (Service Fee last) and Amount ASC")

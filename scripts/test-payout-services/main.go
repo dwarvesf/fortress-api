@@ -114,7 +114,7 @@ func main() {
 		ctrl := controller.New(nil, nil, svc, nil, l, cfg)
 
 		// Use GenerateContractorInvoice to get properly sorted line items
-		invoiceData, err := ctrl.Invoice.GenerateContractorInvoice(ctx, contractorDiscord, month)
+		invoiceData, err := ctrl.Invoice.GenerateContractorInvoice(ctx, contractorDiscord, month, nil)
 		if err != nil {
 			l.Error(err, "Failed to generate contractor invoice data")
 			os.Exit(1)
