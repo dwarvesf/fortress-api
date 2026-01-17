@@ -233,12 +233,12 @@
                             {{if eq (len $section.Items) 1}}
                                 {{$item := index $section.Items 0}}
                                 <td>{{$item.Hours}}</td>
-                                <td>{{formatCurrency $item.Rate $section.Currency}}</td>
+                                <td>{{formatUSD $item.AmountUSD}}</td>
                             {{else}}
                                 <td>1</td>
-                                <td>{{formatCurrency $section.Total $section.Currency}}</td>
+                                <td>{{formatUSD $section.Total}}</td>
                             {{end}}
-                            <td>{{formatCurrency $section.Total $section.Currency}}</td>
+                            <td>{{formatUSD $section.Total}}</td>
                         </tr>
                     {{else}}
                         {{/* Section with individual items (Refund, Bonus) */}}
@@ -254,8 +254,8 @@
                                 {{formatProofOfWork .Description}}
                             </td>
                             <td>1</td>
-                            <td>{{formatCurrency .OriginalAmount .OriginalCurrency}}</td>
-                            <td>{{formatCurrency .OriginalAmount .OriginalCurrency}}</td>
+                            <td>{{formatUSD .AmountUSD}}</td>
+                            <td>{{formatUSD .AmountUSD}}</td>
                         </tr>
                         {{end}}
                     {{end}}
@@ -283,31 +283,11 @@
                     <td colspan="4" style="padding-top:8px;"></td>
                 </tr>
 
-                {{/* Show VND Subtotal only if there are VND items */}}
-                {{if gt .Invoice.SubtotalVND 0.0}}
-                <tr style="line-height: 1.4">
-                    <td colspan="2"></td>
-                    <td style="font-weight: bold; text-align: right; font-size: 13px;">Subtotal</td>
-                    <td style="font-size: 13px;">{{formatVND .Invoice.SubtotalVND}}</td>
-                </tr>
-                {{end}}
-
                 {{/* Show USD Subtotal */}}
                 <tr style="line-height: 1.4">
                     <td colspan="2"></td>
-                    {{if gt .Invoice.SubtotalVND 0.0}}
-                    <td style="text-align: right; font-size: 13px;"></td>
-                    {{else}}
                     <td style="font-weight: bold; text-align: right; font-size: 13px;">Subtotal</td>
-                    {{end}}
                     <td style="font-size: 13px;">{{formatUSD .Invoice.SubtotalUSD}}</td>
-                </tr>
-
-                {{/* FX Support Fee */}}
-                <tr style="line-height: 1.4">
-                    <td colspan="2"></td>
-                    <td style="text-align: right; font-size: 13px;">FX support</td>
-                    <td style="font-size: 13px;">{{formatUSD .Invoice.FXSupport}}</td>
                 </tr>
 
                 {{/* Separator line */}}
@@ -324,8 +304,8 @@
             </tfoot>
         </table>
 
-        {{/* Exchange Rate Footnote - only show if VND items exist */}}
-        {{if gt .Invoice.SubtotalVND 0.0}}
+        {{/* Exchange Rate Footnote - only show if exchange rate is set (VND items exist) */}}
+        {{if gt .Invoice.ExchangeRate 0.0}}
         <div style="margin-top: 10px; margin-bottom: 20px; font-size: 9px; color: #666; font-style: italic;">
             (*FX Rate: {{formatExchangeRate .Invoice.ExchangeRate}})
         </div>
