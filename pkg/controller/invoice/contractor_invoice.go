@@ -377,7 +377,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			lineItem = ContractorInvoiceLineItem{
 				Title:             title,
 				Description:       description,
-				Hours:             1,             // Default quantity
+				Hours:             1,         // Default quantity
 				Rate:              amountUSD, // Unit cost in USD
 				Amount:            amountUSD, // Amount in USD
 				AmountUSD:         amountUSD,
@@ -940,12 +940,12 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, l logger.Logg
 
 	if len(refundItems) > 0 {
 		sections = append(sections, ContractorInvoiceSection{
-			Name:         "Refund",
+			Name:         "Expense Reimbursement",
 			IsAggregated: false,
 			Items:        refundItems,
 		})
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Refund section with %d items", len(refundItems)))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Expense Reimbursement section with %d items", len(refundItems)))
 	}
 
 	// Group Bonus (Commission) items - individual display
