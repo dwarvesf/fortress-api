@@ -1,6 +1,7 @@
 package webhook
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -125,8 +126,14 @@ func (h *handler) HandleNotionTimesheet(c *gin.Context) {
 		return
 	}
 
-	// Fetch timesheet entry from Notion
-	ctx := c.Request.Context()
+	// Use a detached context with timeout for Notion API calls
+	// The HTTP request context may be canceled before we complete all operations
+	// (webhook sender may have short timeout), so we use a separate context
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	l.Debug(fmt.Sprintf("using detached context with 30s timeout for Notion API calls: page_id=%s", pageID))
+
 	entry, err := timesheetService.GetTimesheetEntry(ctx, pageID)
 	if err != nil {
 		l.Error(err, fmt.Sprintf("failed to fetch timesheet entry from Notion: page_id=%s", pageID))
