@@ -309,6 +309,11 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using default Service Fee description (no positions): %s", description))
 				}
 			}
+			// Final fallback: generate default description from invoice month
+			if description == "" {
+				description = generateDefaultServiceFeeDescription(month)
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generating default description from month: %s", description))
+			}
 		case notion.PayoutSourceTypeRefund:
 			// For Refund: use Description field, fallback to Name if empty
 			if payout.Description != "" {
@@ -1322,4 +1327,26 @@ func concatenateDescriptions(descriptions []string) string {
 
 	// STEP 2: Join with double line breaks
 	return strings.Join(filtered, "\n\n")
+}
+
+// generateDefaultServiceFeeDescription creates a default description based on invoice month.
+// Input format: "2006-01" (e.g., "2025-01")
+// Output format: "Professional work from Jan 1 to Jan 31"
+func generateDefaultServiceFeeDescription(month string) string {
+	if month == "" {
+		return ""
+	}
+
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return ""
+	}
+
+	// Get first and last day of the month
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, -1) // Last day of month
+
+	return fmt.Sprintf("Professional work from %s %d to %s %d",
+		startDate.Format("Jan"), startDate.Day(),
+		endDate.Format("Jan"), endDate.Day())
 }
