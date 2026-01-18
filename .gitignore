@@ -34,6 +34,7 @@ fortress-api
 .mcp.json
 .mcp.bak.json
 .mcp.prod.json
+opencode.json
 
 # codex
 .mcp.toml

@@ -443,25 +443,37 @@ type PendingPayable struct {
 	PayoutItemPageIDs []string // From Payout Items relation (multiple)
 }
 
-// QueryPendingPayablesByPeriod queries all contractor payables with Payment Status="Pending" for a given period.
-// Period should be in YYYY-MM-DD format (e.g., "2025-01-01")
+// QueryPendingPayablesByPeriod queries all contractor payables with Payment Status="Pending" for a given month and batch.
+// Month should be in YYYY-MM format (e.g., "2025-01").
+// Batch is the PayDay (1 or 15) which determines the period start date:
+//   - batch 1: Period starts on 1st (YYYY-MM-01)
+//   - batch 15: Period starts on 15th (YYYY-MM-15)
 // Returns empty slice if no results found (not an error).
-func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Context, period string) ([]PendingPayable, error) {
+func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Context, month string, batch int) ([]PendingPayable, error) {
 	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
 	if payablesDBID == "" {
 		return nil, errors.New("contractor payables database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: querying pending payables period=%s", period))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: querying pending payables month=%s batch=%d", month, batch))
 
-	// Parse period date
-	periodTime, err := time.Parse("2006-01-02", period)
+	// Calculate period start date based on batch
+	// batch 1 → 1st of month, batch 15 → 15th of month
+	day := "01"
+	if batch == 15 {
+		day = "15"
+	}
+	periodStr := fmt.Sprintf("%s-%s", month, day)
+
+	periodStart, err := time.Parse("2006-01-02", periodStr)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to parse period=%s", period))
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payables: failed to parse period=%s", periodStr))
 		return nil, fmt.Errorf("invalid period format: %w", err)
 	}
 
-	// Build filter: Payment Status = Pending AND Period = period date
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: using Period start date filter=%s", periodStart.Format("2006-01-02")))
+
+	// Build filter: Payment Status = Pending AND Period start date equals the calculated date
 	filter := &nt.DatabaseQueryFilter{
 		And: []nt.DatabaseQueryFilter{
 			{
@@ -476,7 +488,7 @@ func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Con
 				Property: "Period",
 				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 					Date: &nt.DatePropertyFilter{
-						Equals: &periodTime,
+						Equals: &periodStart,
 					},
 				},
 			},
@@ -515,7 +527,7 @@ func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Con
 				ContractorPageID:  s.extractFirstRelationID(props, "Contractor"),
 				Total:             s.extractNumber(props, "Total"),
 				Currency:          s.extractSelect(props, "Currency"),
-				Period:            period,
+				Period:            periodStr,
 				PayoutItemPageIDs: s.extractAllRelationIDs(props, "Payout Items"),
 			}
 

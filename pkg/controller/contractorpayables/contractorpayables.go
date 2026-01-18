@@ -46,11 +46,8 @@ func (c *controller) PreviewCommit(ctx context.Context, month string, batch int,
 
 	l.Debug("querying pending payables")
 
-	// Convert month to period date (YYYY-MM-01)
-	period := month + "-01"
-
-	// Query all pending payables for the period
-	payables, err := c.service.Notion.ContractorPayables.QueryPendingPayablesByPeriod(ctx, period)
+	// Query all pending payables for the month and batch
+	payables, err := c.service.Notion.ContractorPayables.QueryPendingPayablesByPeriod(ctx, month, batch)
 	if err != nil {
 		l.Error(err, "failed to query pending payables")
 		return nil, fmt.Errorf("failed to query pending payables: %w", err)
@@ -120,11 +117,8 @@ func (c *controller) CommitPayables(ctx context.Context, month string, batch int
 
 	l.Debug("starting commit operation")
 
-	// Convert month to period date (YYYY-MM-01)
-	period := month + "-01"
-
-	// Query all pending payables for the period
-	payables, err := c.service.Notion.ContractorPayables.QueryPendingPayablesByPeriod(ctx, period)
+	// Query all pending payables for the month and batch
+	payables, err := c.service.Notion.ContractorPayables.QueryPendingPayablesByPeriod(ctx, month, batch)
 	if err != nil {
 		l.Error(err, "failed to query pending payables")
 		return nil, fmt.Errorf("failed to query pending payables: %w", err)
