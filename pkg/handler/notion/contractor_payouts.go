@@ -28,6 +28,45 @@ func formatMonthYear(month string) string {
 	return t.Format("January, 2006")
 }
 
+// generateServiceFeeDescription generates service fee description based on contractor positions.
+// Priority: design > operation executive > default (software development)
+// - Position contains "design" → "Design Consulting Services Rendered (Month Day-Day, Year)"
+// - Position contains "Operation Executive" → "Operational Consulting Services Rendered (Month Day-Day, Year)"
+// - Otherwise → "Software Development Services Rendered (Month Day-Day, Year)"
+func generateServiceFeeDescription(month string, positions []string) string {
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return "Software Development Services Rendered"
+	}
+
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, -1)
+	dateRange := fmt.Sprintf("(%s %d-%d, %d)",
+		startDate.Format("January"), startDate.Day(), endDate.Day(), startDate.Year())
+
+	hasDesign := false
+	hasOperationExecutive := false
+
+	for _, pos := range positions {
+		posLower := strings.ToLower(pos)
+		if strings.Contains(posLower, "design") {
+			hasDesign = true
+		}
+		if strings.Contains(posLower, "operation executive") {
+			hasOperationExecutive = true
+		}
+	}
+
+	if hasDesign {
+		return "Design Consulting Services Rendered " + dateRange
+	}
+	if hasOperationExecutive {
+		return "Operational Consulting Services Rendered " + dateRange
+	}
+
+	return "Software Development Services Rendered " + dateRange
+}
+
 // countWorkingDays counts working days (Mon-Fri) between two dates inclusive
 func countWorkingDays(start, end time.Time) int {
 	if start.After(end) {
@@ -349,9 +388,13 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 					continue
 				}
 
-				// Description is empty for Service Fee payout type
-				description := ""
-				l.Debug(fmt.Sprintf("[worker-%d] description set to empty for Service Fee payout", workerID))
+				// Generate description based on contractor positions
+				positions, posErr := contractorPayoutsService.GetContractorPositions(ctx, order.ContractorPageID)
+				if posErr != nil {
+					l.Debug(fmt.Sprintf("[worker-%d] failed to fetch contractor positions: %v", workerID, posErr))
+				}
+				description := generateServiceFeeDescription(month, positions)
+				l.Debug(fmt.Sprintf("[worker-%d] generated Service Fee description: %s", workerID, description))
 
 				// Create payout
 				payoutName := fmt.Sprintf("Development work on %s", formatMonthYear(month))

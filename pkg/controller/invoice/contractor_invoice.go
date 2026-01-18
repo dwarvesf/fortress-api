@@ -287,22 +287,27 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		var description string
 		switch payout.SourceType {
 		case notion.PayoutSourceTypeServiceFee:
-			// For Service Fee: generate description based on contractor positions
-			// Position contains "design" → "Design Consulting Services Rendered"
-			// Position contains "Operation Executive" → "Operational Consulting Services Rendered"
-			// Otherwise → "Software Development Services Rendered"
-			payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
-			if payoutsService != nil && payout.PersonPageID != "" {
-				positions, err := payoutsService.GetContractorPositions(ctx, payout.PersonPageID)
-				if err != nil {
-					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch contractor positions: %v", err))
-				}
-				description = generateServiceFeeDescription(month, positions)
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generated Service Fee description from positions: %s", description))
+			// For Service Fee: use payout.Description if available, otherwise generate based on positions
+			if payout.Description != "" {
+				description = payout.Description
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using existing Description for Service Fee: %s", description))
 			} else {
-				// Fallback to default description if service or PersonPageID unavailable
-				description = generateServiceFeeDescription(month, nil)
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using default Service Fee description (no positions): %s", description))
+				// Generate description based on contractor positions
+				// Position contains "design" → "Design Consulting Services Rendered"
+				// Position contains "Operation Executive" → "Operational Consulting Services Rendered"
+				// Otherwise → "Software Development Services Rendered"
+				payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+				if payoutsService != nil && payout.PersonPageID != "" {
+					positions, err := payoutsService.GetContractorPositions(ctx, payout.PersonPageID)
+					if err != nil {
+						l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch contractor positions: %v", err))
+					}
+					description = generateServiceFeeDescription(month, positions)
+					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generated Service Fee description from positions: %s", description))
+				} else {
+					description = generateServiceFeeDescription(month, nil)
+					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using default Service Fee description (no positions): %s", description))
+				}
 			}
 		case notion.PayoutSourceTypeRefund:
 			// For Refund: use Description field, fallback to Name if empty
