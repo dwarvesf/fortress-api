@@ -1175,3 +1175,42 @@ func (s *ContractorPayoutsService) QueryPayoutsWithInvoiceSplit(ctx context.Cont
 
 	return payouts, nil
 }
+
+// GetContractorPositions fetches the positions of a contractor from the Notion Contractors database.
+// The Position field is a multi-select property containing roles like "Frontend", "Backend", "Product Designer", etc.
+// Returns a slice of position names.
+func (s *ContractorPayoutsService) GetContractorPositions(ctx context.Context, contractorPageID string) ([]string, error) {
+	if contractorPageID == "" {
+		return nil, nil
+	}
+
+	// Fetch contractor page by ID
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch contractor page: %s", contractorPageID))
+		return nil, err
+	}
+
+	// Extract properties from page
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("failed to cast contractor page properties for pageID=%s", contractorPageID))
+		return nil, nil
+	}
+
+	// Extract Position multi-select property
+	positionProp, ok := props["Position"]
+	if !ok || positionProp.Type != nt.DBPropTypeMultiSelect {
+		s.logger.Debug(fmt.Sprintf("Position property not found or not multi-select for contractor pageID=%s", contractorPageID))
+		return nil, nil
+	}
+
+	var positions []string
+	for _, opt := range positionProp.MultiSelect {
+		positions = append(positions, opt.Name)
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d positions for contractor pageID=%s: %v", len(positions), contractorPageID, positions))
+
+	return positions, nil
+}

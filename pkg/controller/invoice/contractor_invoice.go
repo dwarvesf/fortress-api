@@ -287,24 +287,22 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		var description string
 		switch payout.SourceType {
 		case notion.PayoutSourceTypeServiceFee:
-			// For Service Fee: fetch proof of works from Task Order Log subitems
-			if payout.TaskOrderID != "" {
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: fetching proof of works from Task Order Log: taskOrderID=%s", payout.TaskOrderID))
-				formattedPOW, err := c.service.Notion.TaskOrderLog.FormatProofOfWorksByProject(ctx, []string{payout.TaskOrderID})
+			// For Service Fee: generate description based on contractor positions
+			// Position contains "design" → "Design Consulting Services Rendered"
+			// Position contains "Operation Executive" → "Operational Consulting Services Rendered"
+			// Otherwise → "Software Development Services Rendered"
+			payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+			if payoutsService != nil && payout.PersonPageID != "" {
+				positions, err := payoutsService.GetContractorPositions(ctx, payout.PersonPageID)
 				if err != nil {
-					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch proof of works from Task Order Log: %v", err))
-				} else if formattedPOW != "" {
-					description = formattedPOW
-					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using formatted proof of works from Task Order Log: length=%d", len(description)))
+					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch contractor positions: %v", err))
 				}
-			}
-			// Fallback to WorkDetails if Task Order lookup failed or returned empty
-			if description == "" && payout.WorkDetails != "" {
-				description = payout.WorkDetails
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using WorkDetails for Service Fee: length=%d", len(description)))
-			} else if description == "" {
-				description = payout.Description
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: WorkDetails empty, using Description for Service Fee: length=%d", len(description)))
+				description = generateServiceFeeDescription(month, positions)
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generated Service Fee description from positions: %s", description))
+			} else {
+				// Fallback to default description if service or PersonPageID unavailable
+				description = generateServiceFeeDescription(month, nil)
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using default Service Fee description (no positions): %s", description))
 			}
 		case notion.PayoutSourceTypeRefund:
 			// For Refund: use Description field, fallback to Name if empty
@@ -1260,6 +1258,50 @@ func generateServiceFeeTitle(month string) string {
 	return fmt.Sprintf("Service Fee (Development work from %s to %s)",
 		startDate.Format("2006-01-02"),
 		endDate.Format("2006-01-02"))
+}
+
+// generateServiceFeeDescription generates service fee description based on contractor positions.
+// Priority: design > operation executive > default (software development)
+// - Position contains "design" → "Design Consulting Services Rendered (Month Day-Day, Year)"
+// - Position contains "Operation Executive" → "Operational Consulting Services Rendered (Month Day-Day, Year)"
+// - Otherwise → "Software Development Services Rendered (Month Day-Day, Year)"
+func generateServiceFeeDescription(month string, positions []string) string {
+	// STEP 1: Parse month and calculate date range
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return "Software Development Services Rendered"
+	}
+
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, -1)
+	dateRange := fmt.Sprintf("(%s %d-%d, %d)",
+		startDate.Format("January"), startDate.Day(), endDate.Day(), startDate.Year())
+
+	// STEP 2: Check positions with priority (case-insensitive)
+	// Priority: design > operation executive > default
+	hasDesign := false
+	hasOperationExecutive := false
+
+	for _, pos := range positions {
+		posLower := strings.ToLower(pos)
+		if strings.Contains(posLower, "design") {
+			hasDesign = true
+		}
+		if strings.Contains(posLower, "operation executive") {
+			hasOperationExecutive = true
+		}
+	}
+
+	// Return based on priority
+	if hasDesign {
+		return "Design Consulting Services Rendered " + dateRange
+	}
+	if hasOperationExecutive {
+		return "Operational Consulting Services Rendered " + dateRange
+	}
+
+	// STEP 3: Default to software development
+	return "Software Development Services Rendered " + dateRange
 }
 
 // concatenateDescriptions joins descriptions with double line breaks, filtering empty strings.

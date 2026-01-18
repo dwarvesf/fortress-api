@@ -159,6 +159,70 @@ func TestHelper_GenerateServiceFeeTitle(t *testing.T) {
 	assert.Equal(t, "Service Fee", generateServiceFeeTitle("invalid"))
 }
 
+func TestHelper_GenerateServiceFeeDescription(t *testing.T) {
+	t.Run("Design Position", func(t *testing.T) {
+		// Position contains "design" (case-insensitive)
+		positions := []string{"Product Designer"}
+		result := generateServiceFeeDescription("2025-12", positions)
+		assert.Equal(t, "Design Consulting Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Design Position - Multiple positions including design", func(t *testing.T) {
+		positions := []string{"Frontend", "UI Designer"}
+		result := generateServiceFeeDescription("2025-12", positions)
+		// Should match "design" in "UI Designer"
+		assert.Equal(t, "Design Consulting Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Operation Executive Position", func(t *testing.T) {
+		positions := []string{"Operation Executive"}
+		result := generateServiceFeeDescription("2025-12", positions)
+		assert.Equal(t, "Operational Consulting Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Operation Executive Position - Case Insensitive", func(t *testing.T) {
+		positions := []string{"OPERATION EXECUTIVE"}
+		result := generateServiceFeeDescription("2025-12", positions)
+		assert.Equal(t, "Operational Consulting Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Software Development - Default", func(t *testing.T) {
+		positions := []string{"Backend", "Frontend"}
+		result := generateServiceFeeDescription("2025-12", positions)
+		assert.Equal(t, "Software Development Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Empty Positions", func(t *testing.T) {
+		positions := []string{}
+		result := generateServiceFeeDescription("2025-12", positions)
+		assert.Equal(t, "Software Development Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Nil Positions", func(t *testing.T) {
+		result := generateServiceFeeDescription("2025-12", nil)
+		assert.Equal(t, "Software Development Services Rendered (December 1-31, 2025)", result)
+	})
+
+	t.Run("Invalid Month Format", func(t *testing.T) {
+		result := generateServiceFeeDescription("invalid", nil)
+		assert.Equal(t, "Software Development Services Rendered", result)
+	})
+
+	t.Run("Different Month", func(t *testing.T) {
+		positions := []string{"Backend"}
+		result := generateServiceFeeDescription("2026-02", positions)
+		assert.Equal(t, "Software Development Services Rendered (February 1-28, 2026)", result)
+	})
+
+	t.Run("Design Priority Over Operation Executive", func(t *testing.T) {
+		// If contractor has both design and operation executive, design takes priority
+		positions := []string{"Operation Executive", "Product Designer"}
+		result := generateServiceFeeDescription("2025-12", positions)
+		// Since "Product Designer" contains "design", it should match design first
+		assert.Equal(t, "Design Consulting Services Rendered (December 1-31, 2025)", result)
+	})
+}
+
 func TestHelper_ConcatenateDescriptions(t *testing.T) {
 	input := []string{"A", "", "  ", "B"}
 	assert.Equal(t, "A\n\nB", concatenateDescriptions(input))
