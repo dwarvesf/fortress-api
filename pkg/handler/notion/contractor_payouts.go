@@ -749,6 +749,7 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 // @Produce json
 // @Param source query string true "Sync source: split (from Invoice Split)"
 // @Param fields query string false "Comma-separated fields to sync (default: description)"
+// @Param id query string false "Filter by payout short ID (e.g., JGSSC from Auto Name suffix)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
@@ -775,12 +776,15 @@ func (h *handler) SyncPayouts(c *gin.Context) {
 		fieldsParam = "description"
 	}
 
-	l.Debug(fmt.Sprintf("sync source=%s fields=%s", source, fieldsParam))
+	// Get optional id filter (short ID from Auto Name suffix, e.g., "JGSSC")
+	idFilter := c.Query("id")
+
+	l.Debug(fmt.Sprintf("sync source=%s fields=%s id=%s", source, fieldsParam, idFilter))
 
 	// Process based on source
 	switch source {
 	case "split":
-		h.syncPayoutsFromSplit(c, l, fieldsParam)
+		h.syncPayoutsFromSplit(c, l, fieldsParam, idFilter)
 	default:
 		err := fmt.Errorf("invalid source: %s (supported: split)", source)
 		l.Error(err, "invalid source parameter")
@@ -789,7 +793,8 @@ func (h *handler) SyncPayouts(c *gin.Context) {
 }
 
 // syncPayoutsFromSplit syncs payout fields from linked Invoice Split records
-func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsParam string) {
+// idFilter: optional filter by payout short ID (suffix of Auto Name, e.g., "JGSSC")
+func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsParam string, idFilter string) {
 	ctx := c.Request.Context()
 
 	// Parse fields to sync
@@ -798,7 +803,7 @@ func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsPa
 		fieldsToSync[field] = true
 	}
 
-	l.Debug(fmt.Sprintf("fields to sync: %v", fieldsToSync))
+	l.Debug(fmt.Sprintf("fields to sync: %v idFilter: %s", fieldsToSync, idFilter))
 
 	// Validate fields
 	validFields := map[string]bool{"description": true, "amount": true}
@@ -838,6 +843,21 @@ func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsPa
 	}
 
 	l.Info(fmt.Sprintf("found %d payouts with Invoice Split relation", len(payouts)))
+
+	// Filter by short ID (suffix of Auto Name) if provided
+	if idFilter != "" {
+		l.Debug(fmt.Sprintf("filtering payouts by short ID: %s", idFilter))
+		var filteredPayouts []notionsvc.PayoutEntry
+		for _, p := range payouts {
+			// Extract short ID from Auto Name (e.g., "JGSSC" from "PYT :: 202511 :: [...] :: JGSSC")
+			shortID := extractShortID(p.Name)
+			if shortID == idFilter {
+				filteredPayouts = append(filteredPayouts, p)
+			}
+		}
+		l.Debug(fmt.Sprintf("filtered from %d to %d payouts", len(payouts), len(filteredPayouts)))
+		payouts = filteredPayouts
+	}
 
 	if len(payouts) == 0 {
 		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
@@ -949,6 +969,16 @@ func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsPa
 		"fields_synced":   getFieldsList(fieldsToSync),
 		"details":         details,
 	}, nil, nil, nil, "ok"))
+}
+
+// extractShortID extracts the short ID suffix from Auto Name formula
+// e.g., "PYT :: 202512 :: [SPL :: RENAISS :: ooohminh] :: 79LUH" -> "79LUH"
+func extractShortID(name string) string {
+	parts := strings.Split(name, " :: ")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return ""
 }
 
 // splitFields splits a comma-separated string into a slice of trimmed strings

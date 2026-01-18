@@ -23,7 +23,7 @@ type ContractorPayoutsService struct {
 // PayoutEntry represents a single payout entry from the Contractor Payouts database
 type PayoutEntry struct {
 	PageID          string
-	Name            string           // Title/Name of the payout
+	Name            string           // Title/Name of the payout (Auto Name formula)
 	Description     string           // From Description rich_text field
 	PersonPageID    string           // From Person relation
 	SourceType      PayoutSourceType // Determined by which relation is set
