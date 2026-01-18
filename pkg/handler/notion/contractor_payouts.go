@@ -1,6 +1,7 @@
 package notion
 
 import (
+	"context"
 	"fmt"
 	"math"
 	"net/http"
@@ -871,7 +872,130 @@ func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsPa
 		return
 	}
 
-	// Process each payout
+	// Process payouts concurrently with worker pool
+	const maxWorkers = 5
+	l.Debug(fmt.Sprintf("processing %d payouts with %d workers", len(payouts), maxWorkers))
+
+	// Create context with timeout for workers
+	syncCtx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	type syncResult struct {
+		detail   map[string]any
+		updated  bool
+		skipped  bool
+		hasError bool
+	}
+
+	// Channels for work distribution
+	payoutsChan := make(chan notionsvc.PayoutEntry, len(payouts))
+	resultsChan := make(chan syncResult, len(payouts))
+
+	// Start workers
+	var wg sync.WaitGroup
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for payout := range payoutsChan {
+				// Check for context cancellation
+				select {
+				case <-syncCtx.Done():
+					l.Warn(fmt.Sprintf("[worker-%d] context cancelled, stopping", workerID))
+					return
+				default:
+				}
+
+				l.Debug(fmt.Sprintf("[worker-%d] processing payout pageID=%s splitID=%s", workerID, payout.PageID, payout.InvoiceSplitID))
+
+				detail := map[string]any{
+					"payout_id": payout.PageID,
+					"split_id":  payout.InvoiceSplitID,
+					"status":    "",
+					"changes":   map[string]any{},
+				}
+
+				// Fetch Invoice Split data
+				splitData, err := invoiceSplitService.GetInvoiceSplitSyncData(syncCtx, payout.InvoiceSplitID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to fetch Invoice Split data for payout=%s split=%s", workerID, payout.PageID, payout.InvoiceSplitID))
+					detail["status"] = "error"
+					detail["error"] = fmt.Sprintf("failed to fetch split data: %v", err)
+					resultsChan <- syncResult{detail: detail, hasError: true}
+					continue
+				}
+
+				// Compare and prepare updates
+				updates := notionsvc.PayoutFieldUpdates{}
+				changes := map[string]any{}
+				hasChanges := false
+
+				// Sync Description if requested
+				if fieldsToSync["description"] {
+					if payout.Description != splitData.Description {
+						updates.Description = &splitData.Description
+						changes["description"] = map[string]any{
+							"old": payout.Description,
+							"new": splitData.Description,
+						}
+						hasChanges = true
+						l.Debug(fmt.Sprintf("[worker-%d] payout %s: description change from '%s' to '%s'", workerID, payout.PageID, payout.Description, splitData.Description))
+					}
+				}
+
+				// Sync Amount if requested (for future use)
+				if fieldsToSync["amount"] {
+					if payout.Amount != splitData.Amount {
+						updates.Amount = &splitData.Amount
+						changes["amount"] = map[string]any{
+							"old": payout.Amount,
+							"new": splitData.Amount,
+						}
+						hasChanges = true
+						l.Debug(fmt.Sprintf("[worker-%d] payout %s: amount change from %.2f to %.2f", workerID, payout.PageID, payout.Amount, splitData.Amount))
+					}
+				}
+
+				detail["changes"] = changes
+
+				// Skip if no changes
+				if !hasChanges {
+					l.Debug(fmt.Sprintf("[worker-%d] payout %s: no changes needed", workerID, payout.PageID))
+					detail["status"] = "skipped"
+					resultsChan <- syncResult{detail: detail, skipped: true}
+					continue
+				}
+
+				// Update payout
+				err = contractorPayoutsService.UpdatePayoutFields(syncCtx, payout.PageID, updates)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to update payout %s", workerID, payout.PageID))
+					detail["status"] = "error"
+					detail["error"] = fmt.Sprintf("failed to update: %v", err)
+					resultsChan <- syncResult{detail: detail, hasError: true}
+					continue
+				}
+
+				l.Info(fmt.Sprintf("[worker-%d] updated payout %s", workerID, payout.PageID))
+				detail["status"] = "updated"
+				resultsChan <- syncResult{detail: detail, updated: true}
+			}
+		}(i)
+	}
+
+	// Send payouts to workers
+	for _, payout := range payouts {
+		payoutsChan <- payout
+	}
+	close(payoutsChan)
+
+	// Wait for all workers to complete
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
 	var (
 		updated = 0
 		skipped = 0
@@ -879,84 +1003,15 @@ func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsPa
 		details = []map[string]any{}
 	)
 
-	for _, payout := range payouts {
-		l.Debug(fmt.Sprintf("processing payout pageID=%s splitID=%s", payout.PageID, payout.InvoiceSplitID))
-
-		detail := map[string]any{
-			"payout_id": payout.PageID,
-			"split_id":  payout.InvoiceSplitID,
-			"status":    "",
-			"changes":   map[string]any{},
-		}
-
-		// Fetch Invoice Split data
-		splitData, err := invoiceSplitService.GetInvoiceSplitSyncData(ctx, payout.InvoiceSplitID)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to fetch Invoice Split data for payout=%s split=%s", payout.PageID, payout.InvoiceSplitID))
-			detail["status"] = "error"
-			detail["error"] = fmt.Sprintf("failed to fetch split data: %v", err)
-			errors++
-			details = append(details, detail)
-			continue
-		}
-
-		// Compare and prepare updates
-		updates := notionsvc.PayoutFieldUpdates{}
-		changes := map[string]any{}
-		hasChanges := false
-
-		// Sync Description if requested
-		if fieldsToSync["description"] {
-			if payout.Description != splitData.Description {
-				updates.Description = &splitData.Description
-				changes["description"] = map[string]any{
-					"old": payout.Description,
-					"new": splitData.Description,
-				}
-				hasChanges = true
-				l.Debug(fmt.Sprintf("payout %s: description change from '%s' to '%s'", payout.PageID, payout.Description, splitData.Description))
-			}
-		}
-
-		// Sync Amount if requested (for future use)
-		if fieldsToSync["amount"] {
-			if payout.Amount != splitData.Amount {
-				updates.Amount = &splitData.Amount
-				changes["amount"] = map[string]any{
-					"old": payout.Amount,
-					"new": splitData.Amount,
-				}
-				hasChanges = true
-				l.Debug(fmt.Sprintf("payout %s: amount change from %.2f to %.2f", payout.PageID, payout.Amount, splitData.Amount))
-			}
-		}
-
-		detail["changes"] = changes
-
-		// Skip if no changes
-		if !hasChanges {
-			l.Debug(fmt.Sprintf("payout %s: no changes needed", payout.PageID))
-			detail["status"] = "skipped"
+	for result := range resultsChan {
+		details = append(details, result.detail)
+		if result.updated {
+			updated++
+		} else if result.skipped {
 			skipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Update payout
-		err = contractorPayoutsService.UpdatePayoutFields(ctx, payout.PageID, updates)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to update payout %s", payout.PageID))
-			detail["status"] = "error"
-			detail["error"] = fmt.Sprintf("failed to update: %v", err)
+		} else if result.hasError {
 			errors++
-			details = append(details, detail)
-			continue
 		}
-
-		l.Info(fmt.Sprintf("updated payout %s", payout.PageID))
-		detail["status"] = "updated"
-		updated++
-		details = append(details, detail)
 	}
 
 	l.Info(fmt.Sprintf("sync complete: updated=%d skipped=%d errors=%d", updated, skipped, errors))
