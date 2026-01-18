@@ -325,6 +325,11 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 			notionChangelog.GET("/projects/available", conditionalAuthMW, conditionalPermMW(model.PermissionNotionRead), h.Notion.GetAvailableProjectsChangelog)
 			notionChangelog.POST("/project", conditionalAuthMW, conditionalPermMW(model.PermissionNotionSend), h.Notion.SendProjectChangelog)
 		}
+
+		contractorPayouts := notion.Group("/contractor-payouts")
+		{
+			contractorPayouts.POST("/sync", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.SyncPayouts)
+		}
 	}
 
 	dashboard := v1.Group("/dashboards")

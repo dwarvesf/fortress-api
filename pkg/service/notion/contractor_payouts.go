@@ -1027,3 +1027,151 @@ func (s *ContractorPayoutsService) UpdatePayoutStatus(ctx context.Context, pageI
 
 	return nil
 }
+
+// PayoutFieldUpdates contains fields that can be updated on a payout
+// Extensible struct - only non-nil fields are updated
+type PayoutFieldUpdates struct {
+	Description *string  // Update if not nil
+	Amount      *float64 // Future: Update if not nil
+}
+
+// UpdatePayoutFields updates specified fields on a payout
+// Only updates fields that have non-nil values in the updates struct
+func (s *ContractorPayoutsService) UpdatePayoutFields(ctx context.Context, pageID string, updates PayoutFieldUpdates) error {
+	if pageID == "" {
+		return errors.New("payout page ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: updating payout fields pageID=%s", pageID))
+
+	props := nt.DatabasePageProperties{}
+
+	// Add Description if provided
+	if updates.Description != nil {
+		props["Description"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: *updates.Description}},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: setting description=%s", *updates.Description))
+	}
+
+	// Add Amount if provided (for future use)
+	if updates.Amount != nil {
+		props["Amount"] = nt.DatabasePageProperty{
+			Number: updates.Amount,
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: setting amount=%.2f", *updates.Amount))
+	}
+
+	// If no fields to update, return early
+	if len(props) == 0 {
+		s.logger.Debug("[DEBUG] contractor_payouts: no fields to update")
+		return nil
+	}
+
+	params := nt.UpdatePageParams{
+		DatabasePageProperties: props,
+	}
+
+	_, err := s.client.UpdatePage(ctx, pageID, params)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to update payout fields pageID=%s: %v", pageID, err))
+		return fmt.Errorf("failed to update payout fields: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: updated payout fields pageID=%s successfully", pageID))
+
+	return nil
+}
+
+// QueryPayoutsWithInvoiceSplit queries payouts that have Invoice Split relation
+// and are of type Commission or Extra Payment
+func (s *ContractorPayoutsService) QueryPayoutsWithInvoiceSplit(ctx context.Context) ([]PayoutEntry, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug("[DEBUG] contractor_payouts: querying payouts with Invoice Split relation (Commission/Extra Payment)")
+
+	// Build filter:
+	// "02 Invoice Split" is not empty (has relation)
+	// We can't directly filter for "relation is not empty" in Notion API,
+	// but we can use "is_not_empty" filter
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "02 Invoice Split",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					IsNotEmpty: true,
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var payouts []PayoutEntry
+
+	// Query with pagination
+	for {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: executing query on database=%s", payoutsDBID))
+
+		resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to query database: %v", err))
+			return nil, fmt.Errorf("failed to query contractor payouts database: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: found %d payout entries", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("[DEBUG] contractor_payouts: failed to cast page properties")
+				continue
+			}
+
+			// Extract payout entry data
+			entry := PayoutEntry{
+				PageID:          page.ID,
+				Name:            s.extractTitle(props, "Name"),
+				Description:     s.extractRichText(props, "Description"),
+				PersonPageID:    s.extractFirstRelationID(props, "Person"),
+				Amount:          s.extractNumber(props, "Amount"),
+				Currency:        s.extractSelect(props, "Currency"),
+				Status:          s.extractStatus(props, "Status"),
+				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
+				ServiceRateID:   s.extractFirstRelationID(props, "00 Service Rate"),
+			}
+
+			// Determine source type based on which relation is set
+			entry.SourceType = s.determineSourceType(entry)
+
+			// Only include Commission or Extra Payment types
+			if entry.SourceType != PayoutSourceTypeCommission && entry.SourceType != PayoutSourceTypeExtraPayment {
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: skipping pageID=%s sourceType=%s (not Commission/Extra Payment)", entry.PageID, entry.SourceType))
+				continue
+			}
+
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: including entry pageID=%s name=%s sourceType=%s invoiceSplitID=%s",
+				entry.PageID, entry.Name, entry.SourceType, entry.InvoiceSplitID))
+
+			payouts = append(payouts, entry)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: fetching next page with cursor=%s", *resp.NextCursor))
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: total payouts with Invoice Split found=%d", len(payouts)))
+
+	return payouts, nil
+}

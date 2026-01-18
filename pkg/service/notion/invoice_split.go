@@ -40,7 +40,7 @@ type PendingCommissionSplit struct {
 	Type         string // Commission, Bonus, Fee
 	PersonPageID string // From Person relation
 	Month        string // Date in YYYY-MM-DD format from Month property
-	Notes        string // Notes field for additional context (used as Description in payout)
+	Description  string // Notes field for additional context (used as Description in payout)
 }
 
 // CreateCommissionSplitInput contains the data needed to create a commission split
@@ -365,11 +365,11 @@ func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]
 				Type:         s.extractSelect(props, "Type"),
 				PersonPageID: s.extractFirstRelationID(props, "Person"),
 				Month:        s.extractDate(props, "Month"),
-				Notes:        s.extractFormula(props, "Description"),
+				Description:  s.extractFormula(props, "Description"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: parsed invoice split pageID=%s name=%s type=%s amount=%.2f currency=%s role=%s personID=%s month=%s notes=%s",
-				split.PageID, split.Name, split.Type, split.Amount, split.Currency, split.Role, split.PersonPageID, split.Month, split.Notes))
+				split.PageID, split.Name, split.Type, split.Amount, split.Currency, split.Role, split.PersonPageID, split.Month, split.Description))
 
 			splits = append(splits, split)
 		}
@@ -417,4 +417,45 @@ func (s *InvoiceSplitService) UpdateInvoiceSplitStatus(ctx context.Context, page
 	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: updated pageID=%s status=%s successfully", pageID, status))
 
 	return nil
+}
+
+// InvoiceSplitSyncData represents syncable data from an Invoice Split record
+// Extensible struct - add more fields as needed for syncing
+type InvoiceSplitSyncData struct {
+	PageID      string
+	Description string  // From "Description" formula field
+	Amount      float64 // For future use
+}
+
+// GetInvoiceSplitSyncData fetches syncable data from an Invoice Split record
+// Returns struct with all syncable fields for use in payout syncing
+func (s *InvoiceSplitService) GetInvoiceSplitSyncData(ctx context.Context, pageID string) (*InvoiceSplitSyncData, error) {
+	if pageID == "" {
+		return nil, errors.New("invoice split page ID is empty")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: fetching sync data for pageID=%s", pageID))
+
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] invoice_split: failed to fetch page=%s: %v", pageID, err))
+		return nil, fmt.Errorf("failed to fetch invoice split page: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug("[DEBUG] invoice_split: failed to cast page properties")
+		return nil, errors.New("failed to cast invoice split page properties")
+	}
+
+	data := &InvoiceSplitSyncData{
+		PageID:      pageID,
+		Description: s.extractFormula(props, "Description"),
+		Amount:      s.extractNumber(props, "Amount"),
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: sync data pageID=%s description=%s amount=%.2f",
+		data.PageID, data.Description, data.Amount))
+
+	return data, nil
 }

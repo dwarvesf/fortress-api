@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -250,10 +251,10 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 	l.Debug(fmt.Sprintf("processing %d orders with %d workers", len(approvedOrders), maxWorkers))
 
 	type orderResult struct {
-		detail         map[string]any
-		payoutCreated  bool
-		skipped        bool
-		hasError       bool
+		detail        map[string]any
+		payoutCreated bool
+		skipped       bool
+		hasError      bool
 	}
 
 	// Channels for work distribution
@@ -697,7 +698,7 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 		}
 
 		// Create payout
-		l.Debug(fmt.Sprintf("creating payout for invoice split: %s name: %s notes: %s", split.PageID, split.Name, split.Notes))
+		l.Debug(fmt.Sprintf("creating payout for invoice split: %s name: %s notes: %s", split.PageID, split.Name, split.Description))
 
 		payoutInput := notionsvc.CreateCommissionPayoutInput{
 			Name:             split.Name,
@@ -706,7 +707,7 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 			Amount:           split.Amount,
 			Currency:         split.Currency,
 			Date:             split.Month,
-			Description:      split.Notes,
+			Description:      split.Description, // Notes field reads from Notion's Description formula
 		}
 
 		payoutPageID, err := contractorPayoutsService.CreateCommissionPayout(ctx, payoutInput)
@@ -738,4 +739,235 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 		"details":          details,
 		"type":             "Commission",
 	}, nil, nil, nil, "ok"))
+}
+
+// SyncPayouts godoc
+// @Summary Sync payout fields from their linked source records
+// @Description Syncs payout fields (description, amount) from linked Invoice Split records
+// @Tags Notion
+// @Accept json
+// @Produce json
+// @Param source query string true "Sync source: split (from Invoice Split)"
+// @Param fields query string false "Comma-separated fields to sync (default: description)"
+// @Security BearerAuth
+// @Success 200 {object} view.Response
+// @Failure 400 {object} view.Response
+// @Failure 500 {object} view.Response
+// @Router /notion/contractor-payouts/sync [post]
+func (h *handler) SyncPayouts(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "Notion",
+		"method":  "SyncPayouts",
+	})
+
+	// Get required source parameter
+	source := c.Query("source")
+	if source == "" {
+		err := fmt.Errorf("missing required parameter: source")
+		l.Error(err, "source parameter is required")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Get optional fields parameter (default: description)
+	fieldsParam := c.Query("fields")
+	if fieldsParam == "" {
+		fieldsParam = "description"
+	}
+
+	l.Debug(fmt.Sprintf("sync source=%s fields=%s", source, fieldsParam))
+
+	// Process based on source
+	switch source {
+	case "split":
+		h.syncPayoutsFromSplit(c, l, fieldsParam)
+	default:
+		err := fmt.Errorf("invalid source: %s (supported: split)", source)
+		l.Error(err, "invalid source parameter")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+	}
+}
+
+// syncPayoutsFromSplit syncs payout fields from linked Invoice Split records
+func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsParam string) {
+	ctx := c.Request.Context()
+
+	// Parse fields to sync
+	fieldsToSync := make(map[string]bool)
+	for _, field := range splitFields(fieldsParam) {
+		fieldsToSync[field] = true
+	}
+
+	l.Debug(fmt.Sprintf("fields to sync: %v", fieldsToSync))
+
+	// Validate fields
+	validFields := map[string]bool{"description": true, "amount": true}
+	for field := range fieldsToSync {
+		if !validFields[field] {
+			err := fmt.Errorf("invalid field: %s (supported: description, amount)", field)
+			l.Error(err, "invalid field parameter")
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+	}
+
+	// Get services
+	contractorPayoutsService := h.service.Notion.ContractorPayouts
+	if contractorPayoutsService == nil {
+		err := fmt.Errorf("contractor payouts service not configured")
+		l.Error(err, "contractor payouts service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	invoiceSplitService := h.service.Notion.InvoiceSplit
+	if invoiceSplitService == nil {
+		err := fmt.Errorf("invoice split service not configured")
+		l.Error(err, "invoice split service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Query payouts with Invoice Split relation
+	l.Debug("querying payouts with Invoice Split relation")
+	payouts, err := contractorPayoutsService.QueryPayoutsWithInvoiceSplit(ctx)
+	if err != nil {
+		l.Error(err, "failed to query payouts with Invoice Split")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Info(fmt.Sprintf("found %d payouts with Invoice Split relation", len(payouts)))
+
+	if len(payouts) == 0 {
+		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+			"total_processed": 0,
+			"updated":         0,
+			"skipped":         0,
+			"errors":          0,
+			"fields_synced":   getFieldsList(fieldsToSync),
+			"details":         []any{},
+		}, nil, nil, nil, "ok"))
+		return
+	}
+
+	// Process each payout
+	var (
+		updated = 0
+		skipped = 0
+		errors  = 0
+		details = []map[string]any{}
+	)
+
+	for _, payout := range payouts {
+		l.Debug(fmt.Sprintf("processing payout pageID=%s splitID=%s", payout.PageID, payout.InvoiceSplitID))
+
+		detail := map[string]any{
+			"payout_id": payout.PageID,
+			"split_id":  payout.InvoiceSplitID,
+			"status":    "",
+			"changes":   map[string]any{},
+		}
+
+		// Fetch Invoice Split data
+		splitData, err := invoiceSplitService.GetInvoiceSplitSyncData(ctx, payout.InvoiceSplitID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to fetch Invoice Split data for payout=%s split=%s", payout.PageID, payout.InvoiceSplitID))
+			detail["status"] = "error"
+			detail["error"] = fmt.Sprintf("failed to fetch split data: %v", err)
+			errors++
+			details = append(details, detail)
+			continue
+		}
+
+		// Compare and prepare updates
+		updates := notionsvc.PayoutFieldUpdates{}
+		changes := map[string]any{}
+		hasChanges := false
+
+		// Sync Description if requested
+		if fieldsToSync["description"] {
+			if payout.Description != splitData.Description {
+				updates.Description = &splitData.Description
+				changes["description"] = map[string]any{
+					"old": payout.Description,
+					"new": splitData.Description,
+				}
+				hasChanges = true
+				l.Debug(fmt.Sprintf("payout %s: description change from '%s' to '%s'", payout.PageID, payout.Description, splitData.Description))
+			}
+		}
+
+		// Sync Amount if requested (for future use)
+		if fieldsToSync["amount"] {
+			if payout.Amount != splitData.Amount {
+				updates.Amount = &splitData.Amount
+				changes["amount"] = map[string]any{
+					"old": payout.Amount,
+					"new": splitData.Amount,
+				}
+				hasChanges = true
+				l.Debug(fmt.Sprintf("payout %s: amount change from %.2f to %.2f", payout.PageID, payout.Amount, splitData.Amount))
+			}
+		}
+
+		detail["changes"] = changes
+
+		// Skip if no changes
+		if !hasChanges {
+			l.Debug(fmt.Sprintf("payout %s: no changes needed", payout.PageID))
+			detail["status"] = "skipped"
+			skipped++
+			details = append(details, detail)
+			continue
+		}
+
+		// Update payout
+		err = contractorPayoutsService.UpdatePayoutFields(ctx, payout.PageID, updates)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to update payout %s", payout.PageID))
+			detail["status"] = "error"
+			detail["error"] = fmt.Sprintf("failed to update: %v", err)
+			errors++
+			details = append(details, detail)
+			continue
+		}
+
+		l.Info(fmt.Sprintf("updated payout %s", payout.PageID))
+		detail["status"] = "updated"
+		updated++
+		details = append(details, detail)
+	}
+
+	l.Info(fmt.Sprintf("sync complete: updated=%d skipped=%d errors=%d", updated, skipped, errors))
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+		"total_processed": len(payouts),
+		"updated":         updated,
+		"skipped":         skipped,
+		"errors":          errors,
+		"fields_synced":   getFieldsList(fieldsToSync),
+		"details":         details,
+	}, nil, nil, nil, "ok"))
+}
+
+// splitFields splits a comma-separated string into a slice of trimmed strings
+func splitFields(s string) []string {
+	var result []string
+	for _, part := range strings.Split(s, ",") {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
+}
+
+// getFieldsList returns a slice of field names from the map
+func getFieldsList(fieldsMap map[string]bool) []string {
+	var result []string
+	for field := range fieldsMap {
+		result = append(result, field)
+	}
+	return result
 }
