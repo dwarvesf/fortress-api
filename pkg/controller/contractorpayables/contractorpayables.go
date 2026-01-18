@@ -15,14 +15,22 @@ import (
 )
 
 const (
-	maxRetries    = 3
-	retryInterval = 500 * time.Millisecond
+	maxRetries       = 3
+	retryInterval    = 500 * time.Millisecond
+	previewCacheTTL  = 5 * time.Minute // Cache preview for 5 minutes
 )
 
+// cachedPreview holds a preview response with expiration time
+type cachedPreview struct {
+	preview   *PreviewCommitResponse
+	expiresAt time.Time
+}
+
 type controller struct {
-	config  *config.Config
-	logger  logger.Logger
-	service *service.Service
+	config       *config.Config
+	logger       logger.Logger
+	service      *service.Service
+	previewCache sync.Map // map[string]*cachedPreview - key: "month:batch"
 }
 
 // New creates a new contractor payables controller
@@ -32,6 +40,46 @@ func New(service *service.Service, logger logger.Logger, cfg *config.Config) ICo
 		logger:  logger,
 		service: service,
 	}
+}
+
+// cacheKey generates cache key from month and batch
+func cacheKey(month string, batch int) string {
+	return fmt.Sprintf("%s:%d", month, batch)
+}
+
+// GetCachedPreview retrieves a cached preview if it exists and hasn't expired
+func (c *controller) GetCachedPreview(month string, batch int) (*PreviewCommitResponse, bool) {
+	key := cacheKey(month, batch)
+	if val, ok := c.previewCache.Load(key); ok {
+		cached := val.(*cachedPreview)
+		if time.Now().Before(cached.expiresAt) {
+			c.logger.Fields(logger.Fields{
+				"controller": "contractorpayables",
+				"method":     "GetCachedPreview",
+				"month":      month,
+				"batch":      batch,
+			}).Debug("returning cached preview")
+			return cached.preview, true
+		}
+		// Expired, delete from cache
+		c.previewCache.Delete(key)
+	}
+	return nil, false
+}
+
+// cachePreview stores preview in cache with TTL
+func (c *controller) cachePreview(month string, batch int, preview *PreviewCommitResponse) {
+	key := cacheKey(month, batch)
+	c.previewCache.Store(key, &cachedPreview{
+		preview:   preview,
+		expiresAt: time.Now().Add(previewCacheTTL),
+	})
+	c.logger.Fields(logger.Fields{
+		"controller": "contractorpayables",
+		"method":     "cachePreview",
+		"month":      month,
+		"batch":      batch,
+	}).Debug("preview cached")
 }
 
 // PreviewCommit queries pending payables and returns preview data
@@ -96,13 +144,21 @@ func (c *controller) PreviewCommit(ctx context.Context, month string, batch int,
 		filtered = []ContractorPreview{}
 	}
 
-	return &PreviewCommitResponse{
+	result := &PreviewCommitResponse{
 		Month:       month,
 		Batch:       batch,
 		Count:       len(filtered),
 		TotalAmount: totalAmount,
 		Contractors: filtered,
-	}, nil
+	}
+
+	// Cache the preview for quick retrieval on "View Details" button click
+	// Only cache if no contractor filter (full preview)
+	if contractor == "" {
+		c.cachePreview(month, batch, result)
+	}
+
+	return result, nil
 }
 
 // CommitPayables executes the cascade status update for all matching payables

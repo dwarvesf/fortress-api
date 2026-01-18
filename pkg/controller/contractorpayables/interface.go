@@ -8,6 +8,8 @@ import (
 type IController interface {
 	PreviewCommit(ctx context.Context, month string, batch int, contractor string) (*PreviewCommitResponse, error)
 	CommitPayables(ctx context.Context, month string, batch int, contractor string) (*CommitResponse, error)
+	// GetCachedPreview retrieves a cached preview (from PreviewCommit call)
+	GetCachedPreview(month string, batch int) (*PreviewCommitResponse, bool)
 }
 
 // PreviewCommitResponse contains the preview data
