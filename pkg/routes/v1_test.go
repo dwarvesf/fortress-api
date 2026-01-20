@@ -1323,3 +1323,7 @@ func (m *mockContractorPayablesController) PreviewCommit(ctx context.Context, mo
 func (m *mockContractorPayablesController) CommitPayables(ctx context.Context, month string, batch int, contractor string) (*contractorpayables.CommitResponse, error) {
 	return nil, nil
 }
+
+func (m *mockContractorPayablesController) GetCachedPreview(month string, batch int) (*contractorpayables.PreviewCommitResponse, bool) {
+	return nil, false
+}
