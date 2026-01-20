@@ -51,6 +51,7 @@ type IService interface {
 	SendInvoiceThankYouMail(invoice *model.Invoice) (err error)
 	SendPayrollPaidMail(p *model.Payroll) (err error)
 	SendOffboardingMail(offboarding *model.OffboardingEmail) (err error)
+	// Deprecated: Use SendTaskOrderRawContentMail instead for dynamic content from Order page
 	SendTaskOrderConfirmationMail(data *model.TaskOrderConfirmationEmail) error
 	SendTaskOrderRawContentMail(data *model.TaskOrderRawEmail) error
 

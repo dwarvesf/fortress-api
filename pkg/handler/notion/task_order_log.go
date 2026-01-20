@@ -491,40 +491,60 @@ func (h *handler) SendTaskOrderConfirmation(c *gin.Context) {
 
 		detail["clients"] = clientStrings
 
-		// Step 5c: Fetch contractor payday and calculate invoice due day
-		payday, err := taskOrderLogService.GetContractorPayday(ctx, contractorID)
+		// Step 5c: Get Order page ID for this contractor+month
+		orderExists, orderID, err := taskOrderLogService.CheckOrderExistsByContractor(ctx, contractorID, month)
 		if err != nil {
-			// Error already logged in service layer, continue with default
-			l.Debug(fmt.Sprintf("using default payday for contractor %s: %v", name, err))
-			payday = 0
+			l.Error(err, fmt.Sprintf("failed to check order existence for contractor %s", name))
+			detail["status"] = "failed"
+			detail["error"] = fmt.Sprintf("failed to check order: %v", err)
+			emailsFailed++
+			details = append(details, detail)
+			continue
 		}
 
-		// Calculate invoice due day based on payday
-		invoiceDueDay := "10th" // Default for Payday 1 or fallback
-		if payday == 15 {
-			invoiceDueDay = "25th"
+		if !orderExists {
+			l.Warn(fmt.Sprintf("skipping contractor %s: no order found for month %s", name, month))
+			detail["status"] = "failed"
+			detail["error"] = "no order found for month"
+			emailsFailed++
+			details = append(details, detail)
+			continue
 		}
 
-		l.Debug(fmt.Sprintf("contractor %s: payday=%d invoice_due_day=%s", name, payday, invoiceDueDay))
+		l.Debug(fmt.Sprintf("found order: %s for contractor: %s month: %s", orderID, name, month))
 
-		// Step 5d: Create mock milestones (TODO: Replace with real data source)
-		milestones := []string{
-			"Client 1 – Feature Y demo expected mid-month",
-			"Dwarves LLC – Sprint review scheduled end of month",
+		// Step 5d: Read email content from Order page
+		content, err := taskOrderLogService.GetOrderPageContent(ctx, orderID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to get order page content for %s", name))
+			detail["status"] = "failed"
+			detail["error"] = fmt.Sprintf("failed to read order content: %v", err)
+			emailsFailed++
+			details = append(details, detail)
+			continue
 		}
 
-		// Step 5e: Prepare email data
-		emailData := &model.TaskOrderConfirmationEmail{
+		if content == "" {
+			l.Warn(fmt.Sprintf("skipping contractor %s: order page has no content", name))
+			detail["status"] = "failed"
+			detail["error"] = "order page has no content"
+			emailsFailed++
+			details = append(details, detail)
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("read email content from order page: %d chars", len(content)))
+
+		// Step 5e: Prepare email data with raw content
+		emailData := &model.TaskOrderRawEmail{
 			ContractorName: name,
 			TeamEmail:      emailToSend,
 			Month:          month,
-			Clients:        clients,
-			InvoiceDueDay:  invoiceDueDay,
-			Milestones:     milestones,
+			RawContent:     content,
 		}
 
-		// Step 5d: Send email via Gmail using accounting refresh token
-		err = googleMailService.SendTaskOrderConfirmationMail(emailData)
+		// Step 5f: Send email via Gmail using accounting refresh token
+		err = googleMailService.SendTaskOrderRawContentMail(emailData)
 		if err != nil {
 			l.Error(err, fmt.Sprintf("failed to send email to %s (%s)", name, emailToSend))
 			detail["status"] = "failed"

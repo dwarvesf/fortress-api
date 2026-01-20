@@ -435,6 +435,9 @@ func (g *googleService) SendPayrollPaidMail(p *model.Payroll) (err error) {
 }
 
 // SendTaskOrderConfirmationMail sends a monthly task order confirmation email
+// Deprecated: SendTaskOrderConfirmationMail uses hardcoded milestones and template-based email.
+// Use SendTaskOrderRawContentMail instead, which uses dynamic content from Order page body.
+// TODO: Remove this method after verifying no other callers exist.
 func (g *googleService) SendTaskOrderConfirmationMail(data *model.TaskOrderConfirmationEmail) error {
 	// Use team refresh token (spawn@d.foundation)
 	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
