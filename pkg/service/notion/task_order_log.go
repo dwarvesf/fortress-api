@@ -2116,7 +2116,7 @@ func (s *TaskOrderLogService) GetContractorFromOrder(ctx context.Context, orderI
 		return "", "", "", fmt.Errorf("failed to cast subitem page properties")
 	}
 
-	deploymentID := s.extractFirstRelationID(subitemProps, "Deployment")
+	deploymentID := s.extractFirstRelationID(subitemProps, "Project Deployment")
 	if deploymentID == "" {
 		s.logger.Debug(fmt.Sprintf("no deployment found for subitem: %s", firstSubitem.PageID))
 		return "", "", "", fmt.Errorf("no deployment found for subitem: %s", firstSubitem.PageID)
