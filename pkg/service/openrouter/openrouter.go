@@ -117,25 +117,25 @@ func (s *OpenRouterService) SummarizeProofOfWorks(ctx context.Context, entries [
 
 	prompt := combinedText.String()
 
-	systemPrompt := `Role: You are a professional technical editor creating concise monthly work summaries for invoices.
+	systemPrompt := `Role: You are a technical account manager converting engineering logs into a "Proof of Deliverables" invoice summary.
 
-Task: Group work logs by scope/category, then list key activities as comma-separated items.
+Task: Synthesize work logs into specific, tangible outcomes or delivered features. Avoid describing the process; describe the result.
 
-Format: [Scope]: [activity 1], [activity 2], [activity 3]
+Format: [Scope]: [Deliverable 1], [Deliverable 2], [Deliverable 3]
 
 Guidelines:
-- Each entry includes hours spent - use hours as weight to prioritize more significant work
-- Entries with more hours should be featured more prominently in the summary
-- Group related tasks under clear scope labels (e.g., "Backend Infrastructure", "Invoice System", "API Development")
-- List only 3-4 key activities per scope (most significant ones based on hours)
-- Keep each activity to 2-3 words maximum
-- Use professional, client-facing language
-- Avoid technical jargon unless critical
-- Maximum 2 scopes total
+- **Outcome Focus:** Convert task descriptions into noun-based deliverables (e.g., instead of "fixing bugs," use "Stability patches"; instead of "researching DB," use "Database architectural plan").
+- **Weighting:** Use hours spent to determine the significance of the deliverable.
+- **Constraints:**
+    - Strictly NO process verbs (e.g., no "refactoring," "investigating," "writing," "testing").
+    - Maximum 2 scopes total.
+    - Select only the top 3-4 distinct results per scope.
+    - Keep items to 2-4 words maximum.
+- **Tone:** Professional, high-level, client-facing.
 
 Example:
-• Backend Infrastructure: Upload optimization, data retention, search capabilities
-• Invoice System: USDC support, email routing, discount logic
+• Backend Infrastructure: Search latency reduction, S3 data retention policy, PostgreSQL upgrade
+• Invoice System: USDC payment gateway, Automated tax calculation, PDF export module
 
 Output: Bullet points only (use •), no introduction or headers.`
 

@@ -60,8 +60,8 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 	}
 	// Use OnOrAfter with first day and OnOrBefore with last day of month
 	// This ensures we include exactly the days in the specified month
-	startDate := monthStart                                                             // First day of month (e.g., Nov 1)
-	endDate := monthStart.AddDate(0, 1, 0).AddDate(0, 0, -1)                             // Last day of month (e.g., Nov 30)
+	startDate := monthStart                                  // First day of month (e.g., Nov 1)
+	endDate := monthStart.AddDate(0, 1, 0).AddDate(0, 0, -1) // Last day of month (e.g., Nov 30)
 
 	s.logger.Debug(fmt.Sprintf("filtering timesheets by date range: on_or_after %s, on_or_before %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
 
@@ -295,7 +295,7 @@ func (s *TaskOrderLogService) CheckOrderExists(ctx context.Context, deploymentID
 					},
 				},
 				{
-					Property: "Deployment",
+					Property: "Project Deployment",
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Relation: &nt.RelationDatabaseQueryFilter{
 							Contains: deploymentID,
@@ -494,7 +494,7 @@ func (s *TaskOrderLogService) CheckLineItemExists(ctx context.Context, orderID, 
 					},
 				},
 				{
-					Property: "Deployment",
+					Property: "Project Deployment",
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Relation: &nt.RelationDatabaseQueryFilter{
 							Contains: deploymentID,
@@ -589,7 +589,7 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 					},
 				},
 			},
-			"Deployment": nt.DatabasePageProperty{
+			"Project Deployment": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeRelation,
 				Relation: []nt.Relation{
 					{ID: deploymentID},
@@ -680,7 +680,7 @@ func (s *TaskOrderLogService) CreateEmptyTimesheetLineItem(ctx context.Context, 
 				Type:   nt.DBPropTypeNumber,
 				Number: &hours,
 			},
-			"Deployment": nt.DatabasePageProperty{
+			"Project Deployment": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeRelation,
 				Relation: []nt.Relation{
 					{ID: deploymentID},
@@ -2187,4 +2187,3 @@ func (s *TaskOrderLogService) FetchTaskOrderHoursByPageID(ctx context.Context, p
 
 	return hours, nil
 }
-
