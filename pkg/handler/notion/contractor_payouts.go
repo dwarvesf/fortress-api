@@ -529,7 +529,139 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 		return
 	}
 
-	// Process each refund
+	// Process refunds concurrently with worker pool
+	maxWorkers := h.config.RefundProcessingWorkers
+	if maxWorkers <= 0 {
+		maxWorkers = 5
+	}
+	l.Debug(fmt.Sprintf("processing %d refunds with %d workers", len(approvedRefunds), maxWorkers))
+
+	type refundResult struct {
+		detail        map[string]any
+		payoutCreated bool
+		skipped       bool
+		hasError      bool
+	}
+
+	refundsChan := make(chan *notionsvc.ApprovedRefundData, len(approvedRefunds))
+	resultsChan := make(chan refundResult, len(approvedRefunds))
+
+	var wg sync.WaitGroup
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for refund := range refundsChan {
+				l.Debug(fmt.Sprintf("[worker-%d] processing refund: %s refundID: %s contractor: %s", workerID, refund.PageID, refund.RefundID, refund.ContractorPageID))
+
+				detail := map[string]any{
+					"refund_page_id":  refund.PageID,
+					"refund_id":       refund.RefundID,
+					"contractor_id":   refund.ContractorPageID,
+					"contractor_name": refund.ContractorName,
+					"amount":          refund.Amount,
+					"currency":        refund.Currency,
+					"reason":          refund.Reason,
+					"payout_page_id":  nil,
+					"status":          "",
+					"error_reason":    nil,
+				}
+
+				result := refundResult{
+					detail:        detail,
+					payoutCreated: false,
+					skipped:       false,
+					hasError:      false,
+				}
+
+				// Validate contractor
+				if refund.ContractorPageID == "" {
+					l.Warn(fmt.Sprintf("[worker-%d] skipping refund %s: no contractor found", workerID, refund.PageID))
+					detail["status"] = "skipped"
+					detail["error_reason"] = "contractor not found in relation"
+					result.skipped = true
+					resultsChan <- result
+					continue
+				}
+
+				// Check if payout exists (idempotency)
+				l.Debug(fmt.Sprintf("[worker-%d] checking if payout exists for refund: %s", workerID, refund.PageID))
+				exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByRefundRequest(ctx, refund.PageID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to check payout existence for refund %s", workerID, refund.PageID))
+					detail["status"] = "error"
+					detail["error_reason"] = "failed to check payout existence"
+					result.hasError = true
+					resultsChan <- result
+					continue
+				}
+
+				if exists {
+					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for refund %s: %s", workerID, refund.PageID, existingPayoutID))
+					detail["status"] = "skipped"
+					detail["error_reason"] = "payout already exists"
+					detail["payout_page_id"] = existingPayoutID
+					result.skipped = true
+					resultsChan <- result
+					continue
+				}
+
+				// Create payout
+				// Build payout name from reason
+				payoutName := refund.Reason
+				if payoutName == "" {
+					payoutName = "Refund"
+				}
+				if refund.Description != "" {
+					payoutName = fmt.Sprintf("%s - %s", payoutName, refund.Description)
+				}
+				l.Debug(fmt.Sprintf("[worker-%d] creating payout for refund: %s name: %s", workerID, refund.PageID, payoutName))
+
+				payoutInput := notionsvc.CreateRefundPayoutInput{
+					Name:             payoutName,
+					ContractorPageID: refund.ContractorPageID,
+					RefundRequestID:  refund.PageID,
+					Amount:           refund.Amount,
+					Currency:         refund.Currency,
+					Date:             refund.DateRequested,
+				}
+
+				payoutPageID, err := contractorPayoutsService.CreateRefundPayout(ctx, payoutInput)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to create payout for refund %s", workerID, refund.PageID))
+					detail["status"] = "error"
+					detail["error_reason"] = "failed to create payout"
+					result.hasError = true
+					resultsChan <- result
+					continue
+				}
+
+				l.Info(fmt.Sprintf("[worker-%d] created payout: %s for refund: %s", workerID, payoutPageID, refund.PageID))
+
+				// NOTE: Do NOT update refund status - leave as Approved
+				// Status update is handled separately
+
+				detail["status"] = "created"
+				detail["payout_page_id"] = payoutPageID
+				result.payoutCreated = true
+				resultsChan <- result
+			}
+		}(i)
+	}
+
+	// Send jobs
+	for _, refund := range approvedRefunds {
+		refundsChan <- refund
+	}
+	close(refundsChan)
+
+	// Wait and collect
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Aggregate results
 	var (
 		payoutsCreated = 0
 		refundsSkipped = 0
@@ -537,93 +669,17 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 		details        = []map[string]any{}
 	)
 
-	for _, refund := range approvedRefunds {
-		l.Debug(fmt.Sprintf("processing refund: %s refundID: %s contractor: %s", refund.PageID, refund.RefundID, refund.ContractorPageID))
-
-		detail := map[string]any{
-			"refund_page_id":  refund.PageID,
-			"refund_id":       refund.RefundID,
-			"contractor_id":   refund.ContractorPageID,
-			"contractor_name": refund.ContractorName,
-			"amount":          refund.Amount,
-			"currency":        refund.Currency,
-			"reason":          refund.Reason,
-			"payout_page_id":  nil,
-			"status":          "",
-			"error_reason":    nil,
+	for result := range resultsChan {
+		if result.payoutCreated {
+			payoutsCreated++
 		}
-
-		// Validate contractor
-		if refund.ContractorPageID == "" {
-			l.Warn(fmt.Sprintf("skipping refund %s: no contractor found", refund.PageID))
-			detail["status"] = "skipped"
-			detail["error_reason"] = "contractor not found in relation"
+		if result.skipped {
 			refundsSkipped++
-			details = append(details, detail)
-			continue
 		}
-
-		// Check if payout exists (idempotency)
-		l.Debug(fmt.Sprintf("checking if payout exists for refund: %s", refund.PageID))
-		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByRefundRequest(ctx, refund.PageID)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check payout existence for refund %s", refund.PageID))
-			detail["status"] = "error"
-			detail["error_reason"] = "failed to check payout existence"
+		if result.hasError {
 			errors++
-			details = append(details, detail)
-			continue
 		}
-
-		if exists {
-			l.Debug(fmt.Sprintf("payout already exists for refund %s: %s", refund.PageID, existingPayoutID))
-			detail["status"] = "skipped"
-			detail["error_reason"] = "payout already exists"
-			detail["payout_page_id"] = existingPayoutID
-			refundsSkipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Create payout
-		// Build payout name from reason
-		payoutName := refund.Reason
-		if payoutName == "" {
-			payoutName = "Refund"
-		}
-		if refund.Description != "" {
-			payoutName = fmt.Sprintf("%s - %s", payoutName, refund.Description)
-		}
-		l.Debug(fmt.Sprintf("creating payout for refund: %s name: %s", refund.PageID, payoutName))
-
-		payoutInput := notionsvc.CreateRefundPayoutInput{
-			Name:             payoutName,
-			ContractorPageID: refund.ContractorPageID,
-			RefundRequestID:  refund.PageID,
-			Amount:           refund.Amount,
-			Currency:         refund.Currency,
-			Date:             refund.DateRequested,
-		}
-
-		payoutPageID, err := contractorPayoutsService.CreateRefundPayout(ctx, payoutInput)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to create payout for refund %s", refund.PageID))
-			detail["status"] = "error"
-			detail["error_reason"] = "failed to create payout"
-			errors++
-			details = append(details, detail)
-			continue
-		}
-
-		l.Info(fmt.Sprintf("created payout: %s for refund: %s", payoutPageID, refund.PageID))
-
-		// NOTE: Do NOT update refund status - leave as Approved
-		// Status update is handled separately
-
-		detail["status"] = "created"
-		detail["payout_page_id"] = payoutPageID
-		payoutsCreated++
-		details = append(details, detail)
+		details = append(details, result.detail)
 	}
 
 	// Return response
@@ -685,7 +741,129 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 		return
 	}
 
-	// Process each split
+	// Process invoice splits concurrently with worker pool
+	maxWorkers := h.config.InvoiceSplitProcessingWorkers
+	if maxWorkers <= 0 {
+		maxWorkers = 5
+	}
+	l.Debug(fmt.Sprintf("processing %d invoice splits with %d workers", len(pendingSplits), maxWorkers))
+
+	type splitResult struct {
+		detail        map[string]any
+		payoutCreated bool
+		skipped       bool
+		hasError      bool
+	}
+
+	splitsChan := make(chan notionsvc.PendingCommissionSplit, len(pendingSplits))
+	resultsChan := make(chan splitResult, len(pendingSplits))
+
+	var wg sync.WaitGroup
+	for i := 0; i < maxWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for split := range splitsChan {
+				l.Debug(fmt.Sprintf("[worker-%d] processing invoice split: %s name: %s type: %s person: %s", workerID, split.PageID, split.Name, split.Type, split.PersonPageID))
+
+				detail := map[string]any{
+					"split_page_id":  split.PageID,
+					"split_name":     split.Name,
+					"split_type":     split.Type,
+					"person_id":      split.PersonPageID,
+					"amount":         split.Amount,
+					"currency":       split.Currency,
+					"role":           split.Role,
+					"payout_page_id": nil,
+					"status":         "",
+					"error_reason":   nil,
+				}
+
+				result := splitResult{
+					detail:        detail,
+					payoutCreated: false,
+					skipped:       false,
+					hasError:      false,
+				}
+
+				// Validate person
+				if split.PersonPageID == "" {
+					l.Warn(fmt.Sprintf("[worker-%d] skipping invoice split %s: no person found", workerID, split.PageID))
+					detail["status"] = "skipped"
+					detail["error_reason"] = "person not found in relation"
+					result.skipped = true
+					resultsChan <- result
+					continue
+				}
+
+				// Check if payout exists (idempotency)
+				l.Debug(fmt.Sprintf("[worker-%d] checking if payout exists for invoice split: %s", workerID, split.PageID))
+				exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByInvoiceSplit(ctx, split.PageID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to check payout existence for invoice split %s", workerID, split.PageID))
+					detail["status"] = "error"
+					detail["error_reason"] = "failed to check payout existence"
+					result.hasError = true
+					resultsChan <- result
+					continue
+				}
+
+				if exists {
+					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for invoice split %s: %s", workerID, split.PageID, existingPayoutID))
+					detail["status"] = "skipped"
+					detail["error_reason"] = "payout already exists"
+					detail["payout_page_id"] = existingPayoutID
+					result.skipped = true
+					resultsChan <- result
+					continue
+				}
+
+				// Create payout
+				l.Debug(fmt.Sprintf("[worker-%d] creating payout for invoice split: %s name: %s notes: %s", workerID, split.PageID, split.Name, split.Description))
+
+				payoutInput := notionsvc.CreateCommissionPayoutInput{
+					Name:             split.Name,
+					ContractorPageID: split.PersonPageID,
+					InvoiceSplitID:   split.PageID,
+					Amount:           split.Amount,
+					Currency:         split.Currency,
+					Date:             split.Month,
+					Description:      split.Description, // Notes field reads from Notion's Description formula
+				}
+
+				payoutPageID, err := contractorPayoutsService.CreateCommissionPayout(ctx, payoutInput)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("[worker-%d] failed to create payout for invoice split %s", workerID, split.PageID))
+					detail["status"] = "error"
+					detail["error_reason"] = "failed to create payout"
+					result.hasError = true
+					resultsChan <- result
+					continue
+				}
+
+				l.Info(fmt.Sprintf("[worker-%d] created payout: %s for invoice split: %s", workerID, payoutPageID, split.PageID))
+
+				detail["status"] = "created"
+				detail["payout_page_id"] = payoutPageID
+				result.payoutCreated = true
+				resultsChan <- result
+			}
+		}(i)
+	}
+
+	// Send jobs
+	for _, split := range pendingSplits {
+		splitsChan <- split
+	}
+	close(splitsChan)
+
+	// Wait and collect
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Aggregate results
 	var (
 		payoutsCreated = 0
 		splitsSkipped  = 0
@@ -693,83 +871,17 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 		details        = []map[string]any{}
 	)
 
-	for _, split := range pendingSplits {
-		l.Debug(fmt.Sprintf("processing invoice split: %s name: %s type: %s person: %s", split.PageID, split.Name, split.Type, split.PersonPageID))
-
-		detail := map[string]any{
-			"split_page_id":  split.PageID,
-			"split_name":     split.Name,
-			"split_type":     split.Type,
-			"person_id":      split.PersonPageID,
-			"amount":         split.Amount,
-			"currency":       split.Currency,
-			"role":           split.Role,
-			"payout_page_id": nil,
-			"status":         "",
-			"error_reason":   nil,
+	for result := range resultsChan {
+		if result.payoutCreated {
+			payoutsCreated++
 		}
-
-		// Validate person
-		if split.PersonPageID == "" {
-			l.Warn(fmt.Sprintf("skipping invoice split %s: no person found", split.PageID))
-			detail["status"] = "skipped"
-			detail["error_reason"] = "person not found in relation"
+		if result.skipped {
 			splitsSkipped++
-			details = append(details, detail)
-			continue
 		}
-
-		// Check if payout exists (idempotency)
-		l.Debug(fmt.Sprintf("checking if payout exists for invoice split: %s", split.PageID))
-		exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByInvoiceSplit(ctx, split.PageID)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check payout existence for invoice split %s", split.PageID))
-			detail["status"] = "error"
-			detail["error_reason"] = "failed to check payout existence"
+		if result.hasError {
 			errors++
-			details = append(details, detail)
-			continue
 		}
-
-		if exists {
-			l.Debug(fmt.Sprintf("payout already exists for invoice split %s: %s", split.PageID, existingPayoutID))
-			detail["status"] = "skipped"
-			detail["error_reason"] = "payout already exists"
-			detail["payout_page_id"] = existingPayoutID
-			splitsSkipped++
-			details = append(details, detail)
-			continue
-		}
-
-		// Create payout
-		l.Debug(fmt.Sprintf("creating payout for invoice split: %s name: %s notes: %s", split.PageID, split.Name, split.Description))
-
-		payoutInput := notionsvc.CreateCommissionPayoutInput{
-			Name:             split.Name,
-			ContractorPageID: split.PersonPageID,
-			InvoiceSplitID:   split.PageID,
-			Amount:           split.Amount,
-			Currency:         split.Currency,
-			Date:             split.Month,
-			Description:      split.Description, // Notes field reads from Notion's Description formula
-		}
-
-		payoutPageID, err := contractorPayoutsService.CreateCommissionPayout(ctx, payoutInput)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to create payout for invoice split %s", split.PageID))
-			detail["status"] = "error"
-			detail["error_reason"] = "failed to create payout"
-			errors++
-			details = append(details, detail)
-			continue
-		}
-
-		l.Info(fmt.Sprintf("created payout: %s for invoice split: %s", payoutPageID, split.PageID))
-
-		detail["status"] = "created"
-		detail["payout_page_id"] = payoutPageID
-		payoutsCreated++
-		details = append(details, detail)
+		details = append(details, result.detail)
 	}
 
 	// Return response
@@ -944,7 +1056,7 @@ func (h *handler) syncPayoutsFromSplit(c *gin.Context, l logger.Logger, fieldsPa
 				// Check for context cancellation
 				select {
 				case <-syncCtx.Done():
-					l.Warn(fmt.Sprintf("[worker-%d] context cancelled, stopping", workerID))
+					l.Warn(fmt.Sprintf("[worker-%d] context canceled, stopping", workerID))
 					return
 				default:
 				}

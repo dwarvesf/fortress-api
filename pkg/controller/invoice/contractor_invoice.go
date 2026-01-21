@@ -56,6 +56,9 @@ type ContractorInvoiceData struct {
 
 	// PayDay for Period calculation
 	PayDay int // Pay day of month (1 or 15)
+
+	// Invoice type for section filtering
+	InvoiceType string // "service_and_refund" | "extra_payment" | "" (full)
 }
 
 // ContractorInvoiceLineItem represents a line item in a contractor invoice
@@ -80,6 +83,9 @@ type ContractorInvoiceLineItem struct {
 	IsHourlyRate  bool   // Mark as hourly-rate Service Fee (for aggregation)
 	ServiceRateID string // Contractor Rate page ID (for logging/debugging)
 	TaskOrderID   string // Task Order Log page ID (for logging/debugging)
+
+	// Payout tracking
+	PayoutPageIDs []string // Notion Payout Item page IDs (multiple for aggregated items)
 }
 
 // ContractorInvoiceSection represents a section of line items in the invoice
@@ -93,14 +99,16 @@ type ContractorInvoiceSection struct {
 
 // ContractorInvoiceOptions contains options for generating contractor invoice
 type ContractorInvoiceOptions struct {
-	GroupFeeByProject bool // Group Fee (Commission) items by project (default true)
+	GroupFeeByProject bool   // Group Fee (Commission) items by project (default true)
+	InvoiceType       string // "service_and_refund" | "extra_payment" | "" (full invoice)
 }
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
 func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, month string, opts *ContractorInvoiceOptions) (*ContractorInvoiceData, error) {
 	// Default options
+	// GroupFeeByProject disabled: Commission items now in Extra Payment section with individual descriptions
 	if opts == nil {
-		opts = &ContractorInvoiceOptions{GroupFeeByProject: true}
+		opts = &ContractorInvoiceOptions{GroupFeeByProject: false}
 	}
 
 	// Default to current month if not provided
@@ -296,32 +304,50 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		var description string
 		switch payout.SourceType {
 		case notion.PayoutSourceTypeServiceFee:
-			// For Service Fee: use payout.Description if available, otherwise generate based on positions
-			if payout.Description != "" {
+			// For Service Fee from InvoiceSplit (Fee section): use payout.Description directly
+			if payout.InvoiceSplitID != "" && payout.TaskOrderID == "" {
 				description = payout.Description
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using existing Description for Service Fee: %s", description))
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description for ServiceFee from InvoiceSplit (Fee section): %s", description))
 			} else {
-				// Generate description based on contractor positions
-				// Position contains "design" → "Design Consulting Services Rendered"
-				// Position contains "Operation Executive" → "Operational Consulting Services Rendered"
-				// Otherwise → "Software Development Services Rendered"
-				payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
-				if payoutsService != nil && payout.PersonPageID != "" {
-					positions, err := payoutsService.GetContractorPositions(ctx, payout.PersonPageID)
+				// For Service Fee from TaskOrder (Development Work): query timesheet and format proof of works
+				// Uses FormatProofOfWorksByProject which:
+				// 1. Queries Type="Timesheet" subitems for the order
+				// 2. Extracts "Project Deployment" relation to get project names
+				// 3. Extracts "Key deliverables" rich text for proof of works
+				// 4. Groups by project with HTML bold tags: <b>Project Name</b>\nProofOfWork1\n...
+				if payout.TaskOrderID != "" && taskOrderService != nil {
+					formattedPOW, err := taskOrderService.FormatProofOfWorksByProject(ctx, []string{payout.TaskOrderID})
 					if err != nil {
-						l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch contractor positions: %v", err))
+						l.Error(err, fmt.Sprintf("failed to format proof of works for TaskOrderID=%s", payout.TaskOrderID))
+					} else if formattedPOW != "" {
+						description = formattedPOW
+						l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using formatted proof of works (timesheet data) for Service Fee: length=%d", len(description)))
 					}
-					description = generateServiceFeeDescription(month, positions)
-					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generated Service Fee description from positions: %s", description))
-				} else {
-					description = generateServiceFeeDescription(month, nil)
-					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using default Service Fee description (no positions): %s", description))
 				}
-			}
-			// Final fallback: generate default description from invoice month
-			if description == "" {
-				description = generateDefaultServiceFeeDescription(month)
-				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generating default description from month: %s", description))
+
+				// Fallback: generate description based on contractor positions
+				if description == "" {
+					// Position contains "design" → "Design Consulting Services Rendered"
+					// Position contains "Operation Executive" → "Operational Consulting Services Rendered"
+					// Otherwise → "Software Development Services Rendered"
+					payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+					if payoutsService != nil && payout.PersonPageID != "" {
+						positions, err := payoutsService.GetContractorPositions(ctx, payout.PersonPageID)
+						if err != nil {
+							l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: failed to fetch contractor positions: %v", err))
+						}
+						description = generateServiceFeeDescription(month, positions)
+						l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generated Service Fee description from positions: %s", description))
+					} else {
+						description = generateServiceFeeDescription(month, nil)
+						l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using default Service Fee description (no positions): %s", description))
+					}
+				}
+				// Final fallback: generate default description from invoice month
+				if description == "" {
+					description = generateDefaultServiceFeeDescription(month)
+					l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: generating default description from month: %s", description))
+				}
 			}
 		case notion.PayoutSourceTypeRefund:
 			// For Refund: use Description field, fallback to Name if empty
@@ -332,10 +358,24 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 				description = payout.Name
 				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Description empty, using Name for Refund: %s", payout.Name))
 			}
+		case notion.PayoutSourceTypeCommission:
+			// Commission from InvoiceSplit: use Description field, fallback to Name if empty
+			if payout.Description != "" {
+				description = payout.Description
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description for Commission: %s", description))
+			} else {
+				description = payout.Name
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Description empty, using Name for Commission: %s", payout.Name))
+			}
 		default:
-			// Commission and Other: use Description field
-			description = payout.Description
-			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description field: length=%d", len(description)))
+			// ExtraPayment and other types: use Description field, fallback to Name if empty
+			if payout.Description != "" {
+				description = payout.Description
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using Description field: length=%d", len(description)))
+			} else {
+				description = payout.Name
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: Description empty, using Name: %s", payout.Name))
+			}
 		}
 
 		// New: Attempt hourly rate display for Service Fees
@@ -349,8 +389,19 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 				l.Debug(fmt.Sprintf("[SUCCESS] payout %s: applying hourly rate display (hours=%.2f rate=%.2f)",
 					payout.PageID, hourlyData.Hours, hourlyData.HourlyRate))
 
+				// Set Title based on source:
+				// - TaskOrder (Development Work): use payout.Description
+				// - InvoiceSplit (Fee section): use payout.Name
+				title := payout.Name
+				if payout.TaskOrderID != "" {
+					title = payout.Description
+					l.Debug("[DEBUG] contractor_invoice: hourly ServiceFee from TaskOrder - using Description as Title")
+				} else {
+					l.Debug("[DEBUG] contractor_invoice: hourly ServiceFee from InvoiceSplit - using Name as Title")
+				}
+
 				lineItem = ContractorInvoiceLineItem{
-					Title:             payout.Description, // Use payout Description as section title
+					Title:             title,
 					Description:       description,
 					Hours:             hourlyData.Hours,
 					Rate:              hourlyData.HourlyRate,
@@ -364,6 +415,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 					IsHourlyRate:      true,
 					ServiceRateID:     payout.ServiceRateID,
 					TaskOrderID:       payout.TaskOrderID,
+					PayoutPageIDs:     []string{payout.PageID},
 				}
 				isHourlyProcessed = true
 			}
@@ -378,10 +430,18 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: %s - no title, only description", payout.SourceType))
 			}
 
-			// Set Title from payout.Description for Service Fee items (used as section name)
+			// Set Title based on source:
+			// - TaskOrder (Development Work): use payout.Description
+			// - InvoiceSplit (Fee section): use payout.Name
 			title := ""
 			if payout.SourceType == notion.PayoutSourceTypeServiceFee {
-				title = payout.Description
+				if payout.TaskOrderID != "" {
+					// From TaskOrder - use Description for aggregated section title
+					title = payout.Description
+				} else {
+					// From InvoiceSplit - use Name as line item title
+					title = payout.Name
+				}
 			}
 
 			lineItem = ContractorInvoiceLineItem{
@@ -400,6 +460,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 				IsHourlyRate:     false,
 				ServiceRateID:    payout.ServiceRateID,
 				TaskOrderID:      payout.TaskOrderID,
+				PayoutPageIDs:    []string{payout.PageID},
 			}
 		}
 
@@ -543,8 +604,8 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		bankAccount.AccountHolderName, bankAccount.BankName, bankAccount.AccountNumber))
 
 	// 7. Generate invoice number
-	invoiceNumber := c.generateContractorInvoiceNumber(month)
-	l.Debug(fmt.Sprintf("generated invoice number: %s", invoiceNumber))
+	invoiceNumber := c.generateContractorInvoiceNumber(month, rateData.TeamEmail)
+	l.Debug(fmt.Sprintf("generated invoice number: %s (teamEmail=%s)", invoiceNumber, rateData.TeamEmail))
 
 	// 8. Calculate due date (issueDate already calculated earlier for cutoff date)
 	dueDate := issueDate.AddDate(0, 0, 9) // Due in 9 days from issue date (Payday + 9)
@@ -585,6 +646,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 		// PayDay for Period calculation
 		PayDay: payDay,
+
+		// Invoice type for section filtering
+		InvoiceType: opts.InvoiceType,
 	}
 
 	// Collect payout page IDs from processed payouts
@@ -601,12 +665,23 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	return invoiceData, nil
 }
 
-// generateContractorInvoiceNumber generates invoice number in format CONTR-{YYYYMM}-{random-4-chars}
-func (c *controller) generateContractorInvoiceNumber(month string) string {
+// generateContractorInvoiceNumber generates invoice number in format INVC-{YYYYMM}-{TEAM_MAIL}-{random-4-chars}
+// teamEmail is the contractor's team email (e.g., quang@d.foundation)
+// TEAM_MAIL is extracted from the first part of the email before @ (uppercased)
+func (c *controller) generateContractorInvoiceNumber(month string, teamEmail string) string {
 	// Remove hyphen from month (2025-12 -> 202512)
 	monthPart := strings.ReplaceAll(month, "-", "")
+
+	// Extract TEAM_MAIL from email (first part before @, uppercased)
+	teamMail := "UNKNOWN"
+	if teamEmail != "" {
+		if atIdx := strings.Index(teamEmail, "@"); atIdx > 0 {
+			teamMail = strings.ToUpper(teamEmail[:atIdx])
+		}
+	}
+
 	randomChars := generateRandomAlphanumeric(4)
-	return fmt.Sprintf("CONTR-%s-%s", monthPart, randomChars)
+	return fmt.Sprintf("INVC-%s-%s-%s", monthPart, teamMail, randomChars)
 }
 
 // generateRandomAlphanumeric generates a random alphanumeric string of given length
@@ -726,7 +801,43 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 	l.Debug(fmt.Sprintf("line items: %d regular, %d merged", len(regularItems), len(mergedItems)))
 
 	// Group line items into sections (Development Work, Refund, Bonus)
-	sections := groupLineItemsIntoSections(regularItems, l)
+	sections := groupLineItemsIntoSections(regularItems, data.InvoiceType, l)
+
+	// Recalculate total and collect PayoutPageIDs from filtered sections if invoiceType is set
+	if data.InvoiceType != "" {
+		var filteredTotal float64
+		var filteredPayoutPageIDs []string
+		payoutIDSet := make(map[string]bool) // Dedupe
+
+		for _, section := range sections {
+			if section.IsAggregated {
+				filteredTotal += section.Total
+			} else {
+				for _, item := range section.Items {
+					filteredTotal += item.AmountUSD
+				}
+			}
+			// Collect PayoutPageIDs from all items in section
+			for _, item := range section.Items {
+				for _, pageID := range item.PayoutPageIDs {
+					if pageID != "" && !payoutIDSet[pageID] {
+						filteredPayoutPageIDs = append(filteredPayoutPageIDs, pageID)
+						payoutIDSet[pageID] = true
+					}
+				}
+			}
+		}
+		filteredTotal = math.Round(filteredTotal*100) / 100
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: recalculated for invoiceType=%s: total=%.2f->%.2f payoutItems=%d->%d",
+			data.InvoiceType, data.TotalUSD, filteredTotal, len(data.PayoutPageIDs), len(filteredPayoutPageIDs)))
+
+		// Update totals and payout IDs in data
+		data.Total = filteredTotal
+		data.TotalUSD = filteredTotal
+		data.SubtotalUSD = filteredTotal
+		data.PayoutPageIDs = filteredPayoutPageIDs
+	}
 
 	// Prepare template data
 	templateData := struct {
@@ -905,16 +1016,22 @@ func formatExchangeRate(rate float64) string {
 
 // groupLineItemsIntoSections groups line items into sections for display
 // Sections: Development Work (Service Fee) - aggregated with total, Refund - individual items, Bonus (Commission) - individual items
-func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, l logger.Logger) []ContractorInvoiceSection {
+// invoiceType filter:
+// - "service_and_refund": Development Work, Fee, Expense Reimbursement sections only
+// - "extra_payment": Extra Payment section only
+// - "" (empty): All sections (full invoice)
+func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, invoiceType string, l logger.Logger) []ContractorInvoiceSection {
 	var sections []ContractorInvoiceSection
 
-	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouping %d line items into sections", len(items)))
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouping %d line items into sections (invoiceType=%s)", len(items), invoiceType))
 
-	// Group Service Fee items (Development Work) - aggregated display
+	// Group Service Fee items from TaskOrder (Development Work) - aggregated display
+	// Only include items that have TaskOrderID (from 00 Task Order relation)
+	// InvoiceSplit ServiceFee items go to Fee section instead
 	var serviceFeeItems []ContractorInvoiceLineItem
 	for _, item := range items {
-		// Service Fee items are contractor payroll/work-related payouts
-		if item.Type == string(notion.PayoutSourceTypeServiceFee) {
+		// Service Fee items with TaskOrderID are contractor payroll/work-related payouts
+		if item.Type == string(notion.PayoutSourceTypeServiceFee) && item.TaskOrderID != "" {
 			serviceFeeItems = append(serviceFeeItems, item)
 		}
 	}
@@ -962,12 +1079,18 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, l logger.Logg
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Expense Reimbursement section with %d items", len(refundItems)))
 	}
 
-	// Group Bonus (Commission) items - individual display
+	// Fee section: Service Fee items from InvoiceSplit only
+	// These are items with "Delivery Lead" or "Account Management" in Description
 	var feeItems []ContractorInvoiceLineItem
-	for i, item := range items {
-		items[i].Description = strings.Replace(items[i].Description, "Bonus", "Fee", -1)
-		if item.Type == string(notion.PayoutSourceTypeCommission) {
-			feeItems = append(feeItems, item)
+	for _, item := range items {
+		// Include only Service Fee items that are NOT from TaskOrder
+		// (TaskOrder items go to Development Work section)
+		if item.Type == string(notion.PayoutSourceTypeServiceFee) {
+			// Verify it's from InvoiceSplit by checking TaskOrderID is empty
+			// and ServiceRateID is empty (ServiceRateID indicates Development Work)
+			if item.TaskOrderID == "" && item.ServiceRateID == "" {
+				feeItems = append(feeItems, item)
+			}
 		}
 	}
 
@@ -978,14 +1101,21 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, l logger.Logg
 			Items:        feeItems,
 		})
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Fee section with %d items", len(feeItems)))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Fee section with %d Service Fee items from InvoiceSplit", len(feeItems)))
 	}
 
-	// Group Extra Payment items - individual display
+	// Extra Payment section: Commission items + ExtraPayment items
 	var extraPaymentItems []ContractorInvoiceLineItem
-	for _, item := range items {
-		if item.Type == string(notion.PayoutSourceTypeExtraPayment) {
-			extraPaymentItems = append(extraPaymentItems, item)
+	for i, item := range items {
+		// Replace "Bonus" with "Fee" in descriptions for both types
+		items[i].Description = strings.ReplaceAll(items[i].Description, "Bonus", "Fee")
+
+		// Include:
+		// 1. Commission items (from InvoiceSplit without special Description keywords)
+		// 2. ExtraPayment source type items
+		if item.Type == string(notion.PayoutSourceTypeCommission) ||
+			item.Type == string(notion.PayoutSourceTypeExtraPayment) {
+			extraPaymentItems = append(extraPaymentItems, items[i])
 		}
 	}
 
@@ -996,10 +1126,47 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, l logger.Logg
 			Items:        extraPaymentItems,
 		})
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Extra Payment section with %d items", len(extraPaymentItems)))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Extra Payment section with %d items (Commission + ExtraPayment)", len(extraPaymentItems)))
 	}
 
-	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped into %d sections", len(sections)))
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: grouped into %d sections (before filtering)", len(sections)))
+
+	// Filter sections based on invoiceType
+	if invoiceType != "" {
+		var filteredSections []ContractorInvoiceSection
+		for _, section := range sections {
+			include := false
+
+			switch invoiceType {
+			case "service_and_refund":
+				// Include: Development Work (aggregated Service Fee), Fee, Expense Reimbursement
+				// Section names: dynamic (from payout.Description), "Fee", "Expense Reimbursement"
+				if section.IsAggregated {
+					// Development Work section (aggregated Service Fee from TaskOrder)
+					include = true
+				} else if section.Name == "Fee" || section.Name == "Expense Reimbursement" {
+					include = true
+				}
+			case "extra_payment":
+				// Include: Extra Payment only
+				if section.Name == "Extra Payment" {
+					include = true
+				}
+			default:
+				// Unknown type, include all
+				include = true
+			}
+
+			if include {
+				filteredSections = append(filteredSections, section)
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: included section '%s' for invoiceType=%s", section.Name, invoiceType))
+			} else {
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: excluded section '%s' for invoiceType=%s", section.Name, invoiceType))
+			}
+		}
+		sections = filteredSections
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: filtered to %d sections for invoiceType=%s", len(sections), invoiceType))
+	}
 
 	return sections
 }
@@ -1023,6 +1190,7 @@ type hourlyRateAggregation struct {
 	Currency       string
 	Descriptions   []string
 	TaskOrderIDs   []string
+	PayoutPageIDs  []string
 }
 
 // IContractorRatesService defines the interface for contractor rates operations needed by the invoice controller
@@ -1152,6 +1320,9 @@ func aggregateHourlyServiceFees(
 		if item.TaskOrderID != "" {
 			agg.TaskOrderIDs = append(agg.TaskOrderIDs, item.TaskOrderID)
 		}
+
+		// Collect payout page IDs
+		agg.PayoutPageIDs = append(agg.PayoutPageIDs, item.PayoutPageIDs...)
 	}
 
 	l.Debug(fmt.Sprintf("[AGGREGATE] totalHours=%.2f rate=%.2f totalAmount=%.2f totalAmountUSD=%.2f currency=%s",
@@ -1177,6 +1348,7 @@ func aggregateHourlyServiceFees(
 		IsHourlyRate:     false, // Already aggregated
 		ServiceRateID:    "",
 		TaskOrderID:      "",
+		PayoutPageIDs:    agg.PayoutPageIDs,
 	}
 
 	l.Debug(fmt.Sprintf("[AGGREGATE] created aggregated item with title: %s", title))

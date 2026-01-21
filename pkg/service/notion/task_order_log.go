@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -70,7 +71,7 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 			Property: "Status",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Status: &nt.StatusDatabaseQueryFilter{
-					Equals: "Approved",
+					Equals: "Reviewed",
 				},
 			},
 		},
@@ -578,7 +579,7 @@ func (s *TaskOrderLogService) CreateTimesheetLineItem(ctx context.Context, order
 				Type:   nt.DBPropTypeNumber,
 				Number: &hours,
 			},
-			"Key deliverables": nt.DatabasePageProperty{
+			"Proof of Works": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeRichText,
 				RichText: []nt.RichText{
 					{
@@ -729,7 +730,7 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 				Type:   nt.DBPropTypeNumber,
 				Number: &hours,
 			},
-			"Key deliverables": nt.DatabasePageProperty{
+			"Proof of Works": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeRichText,
 				RichText: []nt.RichText{
 					{
@@ -747,7 +748,7 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 			"Status": nt.DatabasePageProperty{
 				Type: nt.DBPropTypeSelect,
 				Select: &nt.SelectOptions{
-					Name: "Pending Feedback",
+					Name: "Pending Approval",
 				},
 			},
 		},
@@ -761,9 +762,9 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 
 	s.logger.Debug(fmt.Sprintf("successfully updated line item: %s", lineItemID))
 
-	// Also update parent Order status to "Pending Feedback"
+	// Also update parent Order status to "Pending Approval"
 	s.logger.Debug(fmt.Sprintf("updating parent order status: orderID=%s", orderID))
-	err = s.UpdateOrderStatus(ctx, orderID, "Pending Feedback")
+	err = s.UpdateOrderStatus(ctx, orderID, "Pending Approval")
 	if err != nil {
 		s.logger.Error(err, fmt.Sprintf("failed to update order status after line item update: orderID=%s", orderID))
 		// Don't fail the whole operation, just log the error
@@ -1348,16 +1349,64 @@ func (s *TaskOrderLogService) UpdateOrderAndSubitemsStatus(ctx context.Context, 
 
 	s.logger.Debug(fmt.Sprintf("updating %d subitems to status %s", len(subitems), newStatus))
 
+	// If no subitems, return early
+	if len(subitems) == 0 {
+		s.logger.Debug(fmt.Sprintf("successfully updated order %s (no subitems) to status %s", orderPageID, newStatus))
+		return nil
+	}
+
+	// Concurrent subitem updates with semaphore
+	type subitemResult struct {
+		pageID string
+		err    error
+	}
+
+	resultsChan := make(chan subitemResult, len(subitems))
+	var wg sync.WaitGroup
+
+	// Configurable concurrency limit (default: 10, prevents API overload)
+	maxConcurrent := s.cfg.TaskOrderLogSubitemConcurrency
+	if maxConcurrent <= 0 {
+		maxConcurrent = 10
+	}
+	sem := make(chan struct{}, maxConcurrent)
+
 	for _, subitem := range subitems {
-		s.logger.Debug(fmt.Sprintf("updating subitem status: pageID=%s newStatus=%s", subitem.PageID, newStatus))
-		err := s.UpdateOrderStatus(ctx, subitem.PageID, newStatus)
-		if err != nil {
-			s.logger.Error(err, fmt.Sprintf("failed to update subitem status: %s", subitem.PageID))
-			// Continue with other subitems even if one fails
+		wg.Add(1)
+		go func(pageID string) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			s.logger.Debug(fmt.Sprintf("updating subitem: %s", pageID))
+			err := s.UpdateOrderStatus(ctx, pageID, newStatus)
+
+			select {
+			case resultsChan <- subitemResult{pageID: pageID, err: err}:
+			case <-ctx.Done():
+				return
+			}
+		}(subitem.PageID)
+	}
+
+	// Wait for completion
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
+	errorCount := 0
+	for result := range resultsChan {
+		if result.err != nil {
+			s.logger.Error(result.err, fmt.Sprintf("failed to update subitem: %s", result.pageID))
+			errorCount++
 		}
 	}
 
-	s.logger.Debug(fmt.Sprintf("successfully updated order %s and %d subitems to status %s", orderPageID, len(subitems), newStatus))
+	s.logger.Debug(fmt.Sprintf("successfully updated order %s and %d subitems to status %s (%d errors)", orderPageID, len(subitems), newStatus, errorCount))
 	return nil
 }
 
@@ -1446,13 +1495,24 @@ func (s *TaskOrderLogService) FormatProofOfWorksByProject(ctx context.Context, o
 
 	// Build formatted string
 	var result strings.Builder
-	for i, projectName := range projectOrder {
-		if i > 0 {
+	firstProject := true
+	for _, projectName := range projectOrder {
+		proofs := projectMap[projectName]
+
+		// Skip projects with no proof of works
+		if len(proofs) == 0 {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: skipping project=%s (no proof of works)", projectName))
+			continue
+		}
+
+		// Add separator between projects
+		if !firstProject {
 			result.WriteString("\n\n")
 		}
+		firstProject = false
+
 		result.WriteString(fmt.Sprintf("<b>%s</b>\n", projectName))
 
-		proofs := projectMap[projectName]
 		for j, proof := range proofs {
 			if j > 0 {
 				result.WriteString("\n")

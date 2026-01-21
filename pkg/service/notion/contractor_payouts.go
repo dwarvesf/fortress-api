@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -367,10 +368,26 @@ func (s *ContractorPayoutsService) determineSourceType(entry PayoutEntry) Payout
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=ServiceFee (TaskOrderID=%s)", entry.TaskOrderID))
 		return PayoutSourceTypeServiceFee
 	}
+
+	// For InvoiceSplit items: check Description to determine type
 	if entry.InvoiceSplitID != "" {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Commission (InvoiceSplitID=%s)", entry.InvoiceSplitID))
+		// Add nil/empty check for safety
+		if entry.Description != "" {
+			desc := strings.ToLower(entry.Description)
+
+			// Service Fee: Delivery Lead or Account Management roles
+			// These keywords match the Notion formula logic
+			if strings.Contains(desc, "delivery lead") || strings.Contains(desc, "account management") {
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=ServiceFee (InvoiceSplitID=%s, keywords found in Description)", entry.InvoiceSplitID))
+				return PayoutSourceTypeServiceFee
+			}
+		}
+
+		// Otherwise: Commission
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Commission (InvoiceSplitID=%s, no keywords)", entry.InvoiceSplitID))
 		return PayoutSourceTypeCommission
 	}
+
 	if entry.RefundRequestID != "" {
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Refund (RefundRequestID=%s)", entry.RefundRequestID))
 		return PayoutSourceTypeRefund

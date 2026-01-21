@@ -205,3 +205,112 @@ func TestGenerate_ExpenseIntegration(t *testing.T) {
 		t.Fatalf("expected mapping for ops@example.com=456, got %s", exp.ApproverMapping["ops@example.com"])
 	}
 }
+
+func TestGenerate_TaskOrderLogWorkerPoolSize(t *testing.T) {
+	tests := []struct {
+		name          string
+		envValue      string
+		expectedSize  int
+		description   string
+	}{
+		{
+			name:          "default value when not set",
+			envValue:      "",
+			expectedSize:  5,
+			description:   "should default to 5 when env var not set",
+		},
+		{
+			name:          "custom valid value",
+			envValue:      "10",
+			expectedSize:  10,
+			description:   "should use custom value within valid range",
+		},
+		{
+			name:          "minimum boundary - valid 1",
+			envValue:      "1",
+			expectedSize:  1,
+			description:   "should accept minimum value of 1",
+		},
+		{
+			name:          "maximum boundary - valid 20",
+			envValue:      "20",
+			expectedSize:  20,
+			description:   "should accept maximum value of 20",
+		},
+		{
+			name:          "below minimum - clamp to 1",
+			envValue:      "0",
+			expectedSize:  1,
+			description:   "should clamp 0 to minimum of 1",
+		},
+		{
+			name:          "negative value - clamp to 1",
+			envValue:      "-5",
+			expectedSize:  1,
+			description:   "should clamp negative values to minimum of 1",
+		},
+		{
+			name:          "above maximum - clamp to 20",
+			envValue:      "25",
+			expectedSize:  20,
+			description:   "should clamp values above 20 to maximum of 20",
+		},
+		{
+			name:          "very large value - clamp to 20",
+			envValue:      "1000",
+			expectedSize:  20,
+			description:   "should clamp very large values to maximum of 20",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			env := &mockENV{
+				values: map[string]string{},
+				bools:  map[string]bool{},
+			}
+
+			if tt.envValue != "" {
+				env.values["TASK_ORDER_LOG_WORKER_POOL_SIZE"] = tt.envValue
+			}
+
+			cfg := Generate(env)
+
+			if cfg.TaskOrderLogWorkerPoolSize != tt.expectedSize {
+				t.Errorf("%s: Generate() TaskOrderLogWorkerPoolSize = %d, want %d",
+					tt.description, cfg.TaskOrderLogWorkerPoolSize, tt.expectedSize)
+			}
+		})
+	}
+}
+
+func TestGenerate_TaskOrderLogWorkerPoolSize_WithOtherConfig(t *testing.T) {
+	env := &mockENV{
+		values: map[string]string{
+			"TASK_ORDER_LOG_WORKER_POOL_SIZE": "15",
+			"LOG_LEVEL":                       "debug",
+			"ENV":                             "production",
+		},
+		bools: map[string]bool{
+			"DEBUG": true,
+		},
+	}
+
+	cfg := Generate(env)
+
+	// Verify TaskOrderLogWorkerPoolSize
+	if cfg.TaskOrderLogWorkerPoolSize != 15 {
+		t.Errorf("Generate() TaskOrderLogWorkerPoolSize = %d, want 15", cfg.TaskOrderLogWorkerPoolSize)
+	}
+
+	// Ensure other fields are still populated correctly
+	if cfg.Debug != true {
+		t.Errorf("Generate() Debug = %v, want true", cfg.Debug)
+	}
+	if cfg.Env != "production" {
+		t.Errorf("Generate() Env = %v, want production", cfg.Env)
+	}
+	if cfg.LogLevel != "debug" {
+		t.Errorf("Generate() LogLevel = %v, want debug", cfg.LogLevel)
+	}
+}

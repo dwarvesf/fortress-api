@@ -134,7 +134,7 @@ Guidelines:
 - **Tone:** Professional, high-level, client-facing.
 
 Example:
-• Backend Infrastructure: Search latency reduction, S3 data retention policy, PostgreSQL upgrade
+• Infrastructure: Search latency reduction, S3 data retention policy, PostgreSQL upgrade
 • Invoice System: USDC payment gateway, Automated tax calculation, PDF export module
 
 Output: Bullet points only (use •), no introduction or headers.`

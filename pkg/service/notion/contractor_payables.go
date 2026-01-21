@@ -59,14 +59,33 @@ type ExistingPayable struct {
 	Status string // "New", "Pending", etc.
 }
 
-// findExistingPayable searches for an existing payable record by contractor and period start date
-func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, contractorPageID, periodStart string) (*ExistingPayable, error) {
+// hasOverlap checks if any element in slice a exists in slice b
+func hasOverlap(a, b []string) bool {
+	if len(a) == 0 || len(b) == 0 {
+		return false
+	}
+	bSet := make(map[string]bool, len(b))
+	for _, id := range b {
+		bSet[id] = true
+	}
+	for _, id := range a {
+		if bSet[id] {
+			return true
+		}
+	}
+	return false
+}
+
+// findExistingPayable searches for an existing payable record by contractor, period start date, and payout item overlap.
+// It queries all payables for the contractor/period and returns the first one with overlapping payout items.
+// If no overlap is found, returns nil (indicating a new payable should be created).
+func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, contractorPageID, periodStart string, payoutItemIDs []string) (*ExistingPayable, error) {
 	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
 	if payablesDBID == "" {
 		return nil, errors.New("contractor payables database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching for existing payable contractor=%s periodStart=%s", contractorPageID, periodStart))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching for existing payable contractor=%s periodStart=%s payoutItemCount=%d", contractorPageID, periodStart, len(payoutItemIDs)))
 
 	// Build filter: Contractor relation contains contractorPageID AND Period start equals periodStart date
 	filter := &nt.DatabaseQueryFilter{
@@ -96,37 +115,51 @@ func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, con
 		},
 	}
 
+	// Query all payables for contractor + period (no PageSize limit to get all matches)
 	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
-		Filter:   filter,
-		PageSize: 1,
+		Filter: filter,
 	})
 	if err != nil {
 		s.logger.Error(err, "[DEBUG] contractor_payables: failed to query existing payables")
 		return nil, fmt.Errorf("failed to query existing payables: %w", err)
 	}
 
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found %d payables for contractor=%s periodStart=%s", len(resp.Results), contractorPageID, periodStart))
+
 	if len(resp.Results) == 0 {
 		s.logger.Debug("[DEBUG] contractor_payables: no existing payable found")
 		return nil, nil
 	}
 
-	page := resp.Results[0]
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found existing payable pageID=%s", page.ID))
+	// Check each payable for payout item overlap
+	for _, page := range resp.Results {
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: failed to cast properties for pageID=%s", page.ID))
+			continue
+		}
 
-	// Extract status
-	status := ""
-	if props, ok := page.Properties.(nt.DatabasePageProperties); ok {
-		if statusProp, exists := props["Payment Status"]; exists && statusProp.Status != nil {
-			status = statusProp.Status.Name
+		existingPayoutIDs := s.extractAllRelationIDs(props, "Payout Items")
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: checking payable pageID=%s existingPayoutItemCount=%d", page.ID, len(existingPayoutIDs)))
+
+		// Check for overlap between input payout items and existing payable's payout items
+		if hasOverlap(payoutItemIDs, existingPayoutIDs) {
+			status := ""
+			if statusProp, exists := props["Payment Status"]; exists && statusProp.Status != nil {
+				status = statusProp.Status.Name
+			}
+
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found matching payable with overlap pageID=%s status=%s", page.ID, status))
+
+			return &ExistingPayable{
+				PageID: page.ID,
+				Status: status,
+			}, nil
 		}
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: existing payable status=%s", status))
-
-	return &ExistingPayable{
-		PageID: page.ID,
-		Status: status,
-	}, nil
+	s.logger.Debug("[DEBUG] contractor_payables: no payable found with overlapping payout items")
+	return nil, nil
 }
 
 // CreatePayable creates a new payable record or updates existing one in the Contractor Payables database
@@ -143,8 +176,8 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: creating payable contractor=%s total=%.2f currency=%s invoiceID=%s payoutItems=%d",
 		input.ContractorPageID, input.Total, input.Currency, input.InvoiceID, len(input.PayoutItemIDs)))
 
-	// Check for existing payable
-	existing, err := s.findExistingPayable(ctx, input.ContractorPageID, input.PeriodStart)
+	// Check for existing payable with overlapping payout items
+	existing, err := s.findExistingPayable(ctx, input.ContractorPageID, input.PeriodStart, input.PayoutItemIDs)
 	if err != nil {
 		s.logger.Error(err, "[DEBUG] contractor_payables: failed to check existing payable - proceeding with create")
 		// Continue with creation on error

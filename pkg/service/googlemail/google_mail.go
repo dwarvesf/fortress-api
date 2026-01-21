@@ -498,7 +498,7 @@ func (g *googleService) SendTaskOrderRawContentMail(data *model.TaskOrderRawEmai
 	content := fmt.Sprintf(`Mime-Version: 1.0
 From: "Spawn @ Dwarves LLC" <spawn@d.foundation>
 To: %s
-Subject: Monthly Task Order - %s
+Subject: Monthly Client Assignment - %s
 Content-Type: multipart/mixed; boundary=main
 
 --main

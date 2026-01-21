@@ -106,7 +106,7 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	contractorGroups := groupTimesheetsByContractor(timesheets)
 	l.Debug(fmt.Sprintf("grouped into %d contractors", len(contractorGroups)))
 
-	// Step 3: Process each contractor
+	// Step 3: Process each contractor concurrently
 	var (
 		ordersCreated        = 0
 		lineItemsCreated     = 0
@@ -115,170 +115,66 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		details              = []map[string]any{}
 	)
 
-	for contractorID, contractorTimesheets := range contractorGroups {
-		contractorDetails := map[string]any{
-			"contractor_id": contractorID,
-			"projects":      []map[string]any{},
+	// Get worker pool size from config
+	numWorkers := h.config.TaskOrderLogWorkerPoolSize
+	if numWorkers == 0 {
+		numWorkers = 5 // fallback default
+	}
+	if numWorkers > len(contractorGroups) {
+		numWorkers = len(contractorGroups) // don't spawn more workers than contractors
+	}
+
+	l.Info(fmt.Sprintf("processing %d contractors with %d workers (concurrent)", len(contractorGroups), numWorkers))
+
+	// Create channels
+	jobs := make(chan contractorJob, len(contractorGroups))
+	results := make(chan contractorSyncResult, len(contractorGroups))
+
+	// Spawn workers
+	var wg sync.WaitGroup
+	for i := 0; i < numWorkers; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for job := range jobs {
+				l.Debug(fmt.Sprintf("[Worker %d] processing contractor: %s", workerID, job.contractorID))
+
+				result := h.processContractorSync(ctx, job.contractorID, job.timesheets, month)
+
+				l.Debug(fmt.Sprintf("[Worker %d] finished contractor: %s", workerID, job.contractorID))
+
+				results <- result
+			}
+		}(i)
+	}
+
+	// Send jobs
+	for contractorID, timesheets := range contractorGroups {
+		jobs <- contractorJob{
+			contractorID: contractorID,
+			timesheets:   timesheets,
 		}
+	}
+	close(jobs)
 
-		l.Debug(fmt.Sprintf("processing contractor: %s (%d timesheets)", contractorID, len(contractorTimesheets)))
+	// Close results when all workers done
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
 
-		// Step 3a: Group timesheets by project
-		projectGroups := groupTimesheetsByProject(contractorTimesheets)
-		l.Debug(fmt.Sprintf("contractor %s has %d projects", contractorID, len(projectGroups)))
-
-		// Step 3b: Check if order already exists for contractor+month
-		orderExists, orderID, err := taskOrderLogService.CheckOrderExistsByContractor(ctx, contractorID, month)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to check order existence for contractor: %s", contractorID))
+	// Collect results
+	for result := range results {
+		if result.err != nil {
+			l.Error(result.err, fmt.Sprintf("error processing contractor: %s", result.contractorID))
 			continue
 		}
 
-		if !orderExists {
-			// Create new Order entry (without Deployment - ADR-002)
-			l.Debug(fmt.Sprintf("creating new order for contractor: %s", contractorID))
-			orderID, err = taskOrderLogService.CreateOrder(ctx, month)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to create order for contractor: %s", contractorID))
-				continue
-			}
-			ordersCreated++
-			l.Info(fmt.Sprintf("created order: %s for contractor: %s", orderID, contractorID))
-		} else {
-			l.Debug(fmt.Sprintf("order already exists: %s for contractor: %s", orderID, contractorID))
-		}
-
-		contractorDetails["order_page_id"] = orderID
-
-		totalHours := 0.0
-
-		// Step 3d: Create line items for each project
-		for projectID, projectTimesheets := range projectGroups {
-			l.Debug(fmt.Sprintf("processing project: %s (%d timesheets)", projectID, len(projectTimesheets)))
-
-			// Get deployment for this contractor+project
-			deploymentID, err := taskOrderLogService.GetDeploymentByContractorAndProject(ctx, contractorID, projectID)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("skipping project %s for contractor %s: no deployment found", projectID, contractorID))
-				continue
-			}
-
-			l.Debug(fmt.Sprintf("found deployment: %s for contractor: %s project: %s", deploymentID, contractorID, projectID))
-
-			// Aggregate hours
-			var (
-				hours        = 0.0
-				proofOfWorks = []openrouter.ProofOfWorkEntry{}
-				timesheetIDs = []string{}
-			)
-
-			for _, ts := range projectTimesheets {
-				hours += ts.ApproxEffort
-				if ts.Title != "" { // Title contains Key deliverables from query
-					proofOfWorks = append(proofOfWorks, openrouter.ProofOfWorkEntry{
-						Text:  ts.Title,
-						Hours: ts.ApproxEffort,
-					})
-				}
-				timesheetIDs = append(timesheetIDs, ts.PageID)
-			}
-
-			totalHours += hours
-
-			l.Debug(fmt.Sprintf("project %s: %.1f hours, %d proof of works", projectID, hours, len(proofOfWorks)))
-
-			// Summarize proof of works using LLM
-			var summarizedPoW string
-			if len(proofOfWorks) > 0 {
-				l.Debug(fmt.Sprintf("summarizing %d proof of works for project: %s", len(proofOfWorks), projectID))
-				summarizedPoW, err = openRouterService.SummarizeProofOfWorks(ctx, proofOfWorks)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to summarize proof of works, using original text: project=%s", projectID))
-					// Fallback: use concatenated original text
-					var texts []string
-					for _, pow := range proofOfWorks {
-						texts = append(texts, pow.Text)
-					}
-					summarizedPoW = strings.Join(texts, "\n\n")
-				} else if strings.TrimSpace(summarizedPoW) == "" {
-					// OpenRouter returned empty summary, use original text
-					l.Debug(fmt.Sprintf("OpenRouter returned empty summary, using original text for project: %s", projectID))
-					var texts []string
-					for _, pow := range proofOfWorks {
-						texts = append(texts, pow.Text)
-					}
-					summarizedPoW = strings.Join(texts, "\n\n")
-				}
-			}
-
-			// Check if line item already exists
-			lineItemExists, lineItemID, err := taskOrderLogService.CheckLineItemExists(ctx, orderID, deploymentID)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to check line item existence: order=%s deployment=%s", orderID, deploymentID))
-				continue
-			}
-
-			if !lineItemExists {
-				// Create timesheet line item
-				l.Debug(fmt.Sprintf("creating line item: project=%s hours=%.1f deployment=%s", projectID, hours, deploymentID))
-				lineItemID, err = taskOrderLogService.CreateTimesheetLineItem(ctx, orderID, deploymentID, projectID, hours, summarizedPoW, timesheetIDs, month)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to create line item: project=%s", projectID))
-					continue
-				}
-
-				lineItemsCreated++
-				l.Info(fmt.Sprintf("created line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
-			} else {
-				// Line item exists - check if update is needed (upsert logic)
-				l.Debug(fmt.Sprintf("line item exists: %s, checking for changes", lineItemID))
-
-				existingDetails, err := taskOrderLogService.GetLineItemDetails(ctx, lineItemID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to get line item details: %s", lineItemID))
-					continue
-				}
-
-				// Compare: hours changed OR timesheet IDs changed
-				hoursChanged := existingDetails.Hours != hours
-				timesheetsChanged := !equalStringSlices(existingDetails.TimesheetIDs, timesheetIDs)
-
-				l.Debug(fmt.Sprintf("line item comparison: hoursChanged=%v (%.2f->%.2f) timesheetsChanged=%v (%d->%d)",
-					hoursChanged, existingDetails.Hours, hours,
-					timesheetsChanged, len(existingDetails.TimesheetIDs), len(timesheetIDs)))
-
-				if hoursChanged || timesheetsChanged {
-					l.Debug(fmt.Sprintf("line item changed, updating: hours %.2f->%.2f, timesheets %d->%d",
-						existingDetails.Hours, hours,
-						len(existingDetails.TimesheetIDs), len(timesheetIDs)))
-
-					// Update line item
-					err = taskOrderLogService.UpdateTimesheetLineItem(ctx, lineItemID, orderID, hours, summarizedPoW, timesheetIDs)
-					if err != nil {
-						l.Error(err, fmt.Sprintf("failed to update line item: %s", lineItemID))
-						continue
-					}
-
-					lineItemsUpdated++
-					l.Info(fmt.Sprintf("updated line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
-				} else {
-					l.Debug(fmt.Sprintf("line item unchanged, skipping update: %s", lineItemID))
-				}
-			}
-
-			// Add to project details
-			projectDetails := map[string]any{
-				"project_id":            projectID,
-				"line_item_page_id":     lineItemID,
-				"hours":                 hours,
-				"timesheets_aggregated": len(timesheetIDs),
-			}
-			contractorDetails["projects"] = append(contractorDetails["projects"].([]map[string]any), projectDetails)
-		}
-
-		contractorDetails["total_hours"] = totalHours
+		ordersCreated += result.ordersCreated
+		lineItemsCreated += result.lineItemsCreated
+		lineItemsUpdated += result.lineItemsUpdated
 		contractorsProcessed++
-		details = append(details, contractorDetails)
+		details = append(details, result.detail)
 	}
 
 	l.Info(fmt.Sprintf("sync complete: orders_created=%d line_items_created=%d line_items_updated=%d contractors_processed=%d", ordersCreated, lineItemsCreated, lineItemsUpdated, contractorsProcessed))
@@ -646,6 +542,221 @@ type contractorProcessResult struct {
 	Skipped              int
 	Detail               map[string]any
 	Error                error
+}
+
+// contractorJob represents a job to process timesheets for a single contractor
+type contractorJob struct {
+	contractorID string
+	timesheets   []*notion.TimesheetEntry
+}
+
+// contractorSyncResult holds the result of syncing timesheets for a single contractor
+type contractorSyncResult struct {
+	contractorID     string
+	ordersCreated    int
+	lineItemsCreated int
+	lineItemsUpdated int
+	detail           map[string]any
+	err              error
+}
+
+// processContractorSync processes timesheets for a single contractor and returns the result
+func (h *handler) processContractorSync(
+	ctx context.Context,
+	contractorID string,
+	contractorTimesheets []*notion.TimesheetEntry,
+	month string,
+) contractorSyncResult {
+	l := h.logger.Fields(logger.Fields{
+		"handler":      "Notion",
+		"method":       "processContractorSync",
+		"contractorID": contractorID,
+	})
+
+	result := contractorSyncResult{
+		contractorID: contractorID,
+		detail: map[string]any{
+			"contractor_id": contractorID,
+			"projects":      []map[string]any{},
+		},
+	}
+
+	// Check context cancellation at start
+	if ctx.Err() != nil {
+		l.Debug(fmt.Sprintf("context canceled, stopping processing for contractor: %s", contractorID))
+		result.err = ctx.Err()
+		return result
+	}
+
+	taskOrderLogService := h.service.Notion.TaskOrderLog
+	openRouterService := h.service.OpenRouter
+
+	l.Debug(fmt.Sprintf("processing contractor: %s (%d timesheets)", contractorID, len(contractorTimesheets)))
+
+	// Step 3a: Group timesheets by project
+	projectGroups := groupTimesheetsByProject(contractorTimesheets)
+	l.Debug(fmt.Sprintf("contractor %s has %d projects", contractorID, len(projectGroups)))
+
+	// Step 3b: Check if order already exists for contractor+month
+	orderExists, orderID, err := taskOrderLogService.CheckOrderExistsByContractor(ctx, contractorID, month)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to check order existence for contractor: %s", contractorID))
+		result.err = err
+		return result
+	}
+
+	if !orderExists {
+		// Create new Order entry (without Deployment - ADR-002)
+		l.Debug(fmt.Sprintf("creating new order for contractor: %s", contractorID))
+		orderID, err = taskOrderLogService.CreateOrder(ctx, month)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to create order for contractor: %s", contractorID))
+			result.err = err
+			return result
+		}
+		result.ordersCreated++
+		l.Info(fmt.Sprintf("created order: %s for contractor: %s", orderID, contractorID))
+	} else {
+		l.Debug(fmt.Sprintf("order already exists: %s for contractor: %s", orderID, contractorID))
+	}
+
+	result.detail["order_page_id"] = orderID
+
+	totalHours := 0.0
+
+	// Step 3d: Create line items for each project
+	for projectID, projectTimesheets := range projectGroups {
+		l.Debug(fmt.Sprintf("processing project: %s (%d timesheets)", projectID, len(projectTimesheets)))
+
+		// Get deployment for this contractor+project
+		deploymentID, err := taskOrderLogService.GetDeploymentByContractorAndProject(ctx, contractorID, projectID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("skipping project %s for contractor %s: no deployment found", projectID, contractorID))
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("found deployment: %s for contractor: %s project: %s", deploymentID, contractorID, projectID))
+
+		// Aggregate hours
+		var (
+			hours        = 0.0
+			proofOfWorks = []openrouter.ProofOfWorkEntry{}
+			timesheetIDs = []string{}
+		)
+
+		for _, ts := range projectTimesheets {
+			hours += ts.ApproxEffort
+			if ts.Title != "" { // Title contains Key deliverables from query
+				proofOfWorks = append(proofOfWorks, openrouter.ProofOfWorkEntry{
+					Text:  ts.Title,
+					Hours: ts.ApproxEffort,
+				})
+			}
+			timesheetIDs = append(timesheetIDs, ts.PageID)
+		}
+
+		totalHours += hours
+
+		l.Debug(fmt.Sprintf("project %s: %.1f hours, %d proof of works", projectID, hours, len(proofOfWorks)))
+
+		// Check context before expensive LLM call
+		if ctx.Err() != nil {
+			l.Debug(fmt.Sprintf("context canceled, stopping processing for contractor: %s", contractorID))
+			result.err = ctx.Err()
+			return result
+		}
+
+		// Summarize proof of works using LLM
+		var summarizedPoW string
+		if len(proofOfWorks) > 0 {
+			l.Debug(fmt.Sprintf("summarizing %d proof of works for project: %s", len(proofOfWorks), projectID))
+			summarizedPoW, err = openRouterService.SummarizeProofOfWorks(ctx, proofOfWorks)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to summarize proof of works, using original text: project=%s", projectID))
+				// Fallback: use concatenated original text
+				var texts []string
+				for _, pow := range proofOfWorks {
+					texts = append(texts, pow.Text)
+				}
+				summarizedPoW = strings.Join(texts, "\n\n")
+			} else if strings.TrimSpace(summarizedPoW) == "" {
+				// OpenRouter returned empty summary, use original text
+				l.Debug(fmt.Sprintf("OpenRouter returned empty summary, using original text for project: %s", projectID))
+				var texts []string
+				for _, pow := range proofOfWorks {
+					texts = append(texts, pow.Text)
+				}
+				summarizedPoW = strings.Join(texts, "\n\n")
+			}
+		}
+
+		// Check if line item already exists
+		lineItemExists, lineItemID, err := taskOrderLogService.CheckLineItemExists(ctx, orderID, deploymentID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to check line item existence: order=%s deployment=%s", orderID, deploymentID))
+			continue
+		}
+
+		if !lineItemExists {
+			// Create timesheet line item
+			l.Debug(fmt.Sprintf("creating line item: project=%s hours=%.1f deployment=%s", projectID, hours, deploymentID))
+			lineItemID, err = taskOrderLogService.CreateTimesheetLineItem(ctx, orderID, deploymentID, projectID, hours, summarizedPoW, timesheetIDs, month)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to create line item: project=%s", projectID))
+				continue
+			}
+
+			result.lineItemsCreated++
+			l.Info(fmt.Sprintf("created line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
+		} else {
+			// Line item exists - check if update is needed (upsert logic)
+			l.Debug(fmt.Sprintf("line item exists: %s, checking for changes", lineItemID))
+
+			existingDetails, err := taskOrderLogService.GetLineItemDetails(ctx, lineItemID)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to get line item details: %s", lineItemID))
+				continue
+			}
+
+			// Compare: hours changed OR timesheet IDs changed
+			hoursChanged := existingDetails.Hours != hours
+			timesheetsChanged := !equalStringSlices(existingDetails.TimesheetIDs, timesheetIDs)
+
+			l.Debug(fmt.Sprintf("line item comparison: hoursChanged=%v (%.2f->%.2f) timesheetsChanged=%v (%d->%d)",
+				hoursChanged, existingDetails.Hours, hours,
+				timesheetsChanged, len(existingDetails.TimesheetIDs), len(timesheetIDs)))
+
+			if hoursChanged || timesheetsChanged {
+				l.Debug(fmt.Sprintf("line item changed, updating: hours %.2f->%.2f, timesheets %d->%d",
+					existingDetails.Hours, hours,
+					len(existingDetails.TimesheetIDs), len(timesheetIDs)))
+
+				// Update line item
+				err = taskOrderLogService.UpdateTimesheetLineItem(ctx, lineItemID, orderID, hours, summarizedPoW, timesheetIDs)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to update line item: %s", lineItemID))
+					continue
+				}
+
+				result.lineItemsUpdated++
+				l.Info(fmt.Sprintf("updated line item: %s for project: %s (%.1f hours)", lineItemID, projectID, hours))
+			} else {
+				l.Debug(fmt.Sprintf("line item unchanged, skipping update: %s", lineItemID))
+			}
+		}
+
+		// Add to project details
+		projectDetails := map[string]any{
+			"project_id":            projectID,
+			"line_item_page_id":     lineItemID,
+			"hours":                 hours,
+			"timesheets_aggregated": len(timesheetIDs),
+		}
+		result.detail["projects"] = append(result.detail["projects"].([]map[string]any), projectDetails)
+	}
+
+	result.detail["total_hours"] = totalHours
+	return result
 }
 
 // InitTaskOrderLogs godoc

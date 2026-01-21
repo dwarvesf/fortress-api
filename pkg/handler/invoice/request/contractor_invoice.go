@@ -6,8 +6,10 @@ import "regexp"
 type GenerateContractorInvoiceRequest struct {
 	Contractor        string `json:"contractor" binding:"required"`
 	Month             string `json:"month"`             // YYYY-MM format (optional, if empty fetches all pending)
-	SkipUpload        bool   `json:"skipUpload"`        // Skip uploading to Google Drive (optional, default false)
 	GroupFeeByProject *bool  `json:"groupFeeByProject"` // Group Fee items by project (optional, default true)
+	InvoiceType       string `json:"invoiceType"`       // "service_and_refund" | "extra_payment" | "" (full invoice)
+	SkipUpload        bool   `json:"skipUpload"`        // Skip Google Drive upload, save PDF locally
+	DryRun            bool   `json:"dryRun"`            // Skip Notion payable record creation (implies skipUpload)
 } // @name GenerateContractorInvoiceRequest
 
 // Validate validates the request

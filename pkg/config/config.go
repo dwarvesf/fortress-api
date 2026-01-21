@@ -59,13 +59,20 @@ type Config struct {
 
 	OpenRouter OpenRouter
 
-	APIKey              string
-	Debug               bool
-	DBMonitoringEnabled bool
-	Env                 string
-	JWTSecretKey string
-	FortressURL  string
-	LogLevel     string
+	APIKey                     string
+	Debug                      bool
+	DBMonitoringEnabled        bool
+	Env                        string
+	JWTSecretKey               string
+	FortressURL                string
+	LogLevel                   string
+	TaskOrderLogWorkerPoolSize int
+
+	// Concurrency controls for contractor payouts
+	TaskOrderLogSubitemConcurrency int  // Max concurrent subitem updates (default: 10, max: 20)
+	RefundProcessingWorkers        int  // Worker pool for refunds (default: 5, max: 20)
+	InvoiceSplitProcessingWorkers  int  // Worker pool for splits (default: 5, max: 20)
+	EnableOrderAPIConcurrency      bool // Feature flag for TIER 3 (default: true)
 }
 
 func getIntWithDefault(v ENV, key string, fallback int) int {
@@ -457,14 +464,53 @@ func Generate(v ENV) *Config {
 	notionContractorDBID := v.GetString("NOTION_CONTRACTOR_DB_ID")
 	logLevel := validateLogLevel(v.GetString("LOG_LEVEL"))
 
+	// Parse and validate TaskOrderLogWorkerPoolSize
+	workerPoolSize := getIntWithDefault(v, "TASK_ORDER_LOG_WORKER_POOL_SIZE", 5)
+	if workerPoolSize < 1 {
+		workerPoolSize = 1
+	}
+	if workerPoolSize > 20 {
+		workerPoolSize = 20
+	}
+
+	// Parse and validate concurrency parameters
+	subitemConcurrency := getIntWithDefault(v, "TASK_ORDER_LOG_SUBITEM_CONCURRENCY", 10)
+	if subitemConcurrency < 1 {
+		subitemConcurrency = 1
+	}
+	if subitemConcurrency > 20 {
+		subitemConcurrency = 20
+	}
+
+	refundWorkers := getIntWithDefault(v, "REFUND_PROCESSING_WORKERS", 5)
+	if refundWorkers < 1 {
+		refundWorkers = 1
+	}
+	if refundWorkers > 20 {
+		refundWorkers = 20
+	}
+
+	invoiceSplitWorkers := getIntWithDefault(v, "INVOICE_SPLIT_PROCESSING_WORKERS", 5)
+	if invoiceSplitWorkers < 1 {
+		invoiceSplitWorkers = 1
+	}
+	if invoiceSplitWorkers > 20 {
+		invoiceSplitWorkers = 20
+	}
+
 	return &Config{
-		Debug:               v.GetBool("DEBUG"),
-		DBMonitoringEnabled: getBoolWithDefault(v, "DB_MONITORING_ENABLED", false),
-		APIKey:              v.GetString("API_KEY"),
-		Env:                 v.GetString("ENV"),
-		JWTSecretKey:        v.GetString("JWT_SECRET_KEY"),
-		FortressURL:         v.GetString("FORTRESS_URL"),
-		LogLevel:            logLevel,
+		Debug:                          v.GetBool("DEBUG"),
+		DBMonitoringEnabled:            getBoolWithDefault(v, "DB_MONITORING_ENABLED", false),
+		APIKey:                         v.GetString("API_KEY"),
+		Env:                            v.GetString("ENV"),
+		JWTSecretKey:                   v.GetString("JWT_SECRET_KEY"),
+		FortressURL:                    v.GetString("FORTRESS_URL"),
+		LogLevel:                       logLevel,
+		TaskOrderLogWorkerPoolSize:     workerPoolSize,
+		TaskOrderLogSubitemConcurrency: subitemConcurrency,
+		RefundProcessingWorkers:        refundWorkers,
+		InvoiceSplitProcessingWorkers:  invoiceSplitWorkers,
+		EnableOrderAPIConcurrency:      getBoolWithDefault(v, "ENABLE_ORDER_API_CONCURRENCY", true),
 
 		ApiServer: ApiServer{
 			Port:           v.GetString("PORT"),

@@ -19,7 +19,6 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
-	googleSvc "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -45,17 +44,6 @@ type NotionLeaveWebhookEntity struct {
 // NotionLeaveWebhookData contains additional webhook data
 type NotionLeaveWebhookData struct {
 	Status string `json:"status"` // Current status
-}
-
-
-// getNotionContractorEmail fetches the email from a Notion contractor page
-func (h *handler) getNotionContractorEmail(ctx context.Context, leaveService *notion.LeaveService, contractorPageID string) (string, error) {
-	// Fetch contractor page from Notion
-	leave, err := leaveService.GetLeaveRequest(ctx, contractorPageID)
-	if err != nil {
-		return "", err
-	}
-	return leave.Email, nil
 }
 
 // getDiscordMentionFromUsername converts Discord username to mention format
@@ -252,18 +240,6 @@ func (h *handler) sendNotionLeaveDiscordNotification(ctx context.Context, title,
 	}
 
 	h.logger.Debug(fmt.Sprintf("sent discord embed notification to auditlog: %s", title))
-}
-
-// mapNotionLeaveType maps Notion leave type to internal type
-func mapNotionLeaveType(notionType string) string {
-	switch notionType {
-	case "Off":
-		return "off"
-	case "Remote":
-		return "remote"
-	default:
-		return "off"
-	}
 }
 
 // formatShortDateRange formats a date range in compact format
@@ -807,72 +783,6 @@ func (h *handler) updateUnavailabilityType(ctx context.Context, l logger.Logger,
 
 	l.Debug(fmt.Sprintf("notion API response - page ID: %s, URL: %s", updatedPage.ID, updatedPage.URL))
 	l.Debug(fmt.Sprintf("successfully updated unavailability type on leave request page: %s", leavePageID))
-	return nil
-}
-
-// createLeaveCalendarEvent creates a Google Calendar event for the approved leave
-func (h *handler) createLeaveCalendarEvent(ctx context.Context, l logger.Logger, employee *model.Employee, leave *notion.LeaveRequest) error {
-	l.Debug(fmt.Sprintf("creating calendar event for: employee=%s start=%s end=%s", employee.FullName, leave.StartDate, leave.EndDate))
-
-	// Create Google Calendar service
-	calService := googleSvc.NewCalendarService(h.config, h.logger)
-
-	// Determine if this is an all-day event
-	isAllDay := leave.Shift == "Full day" || leave.Shift == ""
-
-	// Build event summary
-	summary := fmt.Sprintf("%s - %s", employee.FullName, leave.UnavailabilityType)
-	if leave.Shift != "" && leave.Shift != "Full day" {
-		summary += fmt.Sprintf(" (%s)", leave.Shift)
-	}
-
-	// Build description
-	description := fmt.Sprintf("Employee: %s\nEmail: %s\nType: %s\nShift: %s\nRequest: %s\nDetails: %s",
-		employee.FullName,
-		employee.TeamEmail,
-		leave.UnavailabilityType,
-		leave.Shift,
-		leave.LeaveRequestTitle,
-		leave.AdditionalContext,
-	)
-
-	// Set start and end times based on shift
-	startTime := *leave.StartDate
-	endTime := *leave.EndDate
-
-	switch leave.Shift {
-	case "Morning":
-		// Morning shift: 9AM to 12PM
-		startTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 9, 0, 0, 0, leave.StartDate.Location())
-		endTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 12, 0, 0, 0, leave.StartDate.Location())
-		isAllDay = false
-	case "Afternoon":
-		// Afternoon shift: 1PM to 6PM
-		startTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 13, 0, 0, 0, leave.StartDate.Location())
-		endTime = time.Date(leave.StartDate.Year(), leave.StartDate.Month(), leave.StartDate.Day(), 18, 0, 0, 0, leave.StartDate.Location())
-		isAllDay = false
-	}
-
-	// Create calendar event
-	event := googleSvc.CalendarEvent{
-		Summary:     summary,
-		Description: description,
-		StartDate:   startTime,
-		EndDate:     endTime,
-		AllDay:      isAllDay,
-		Email:       employee.TeamEmail,
-	}
-
-	l.Debug(fmt.Sprintf("calling Google Calendar API: summary=%s allDay=%v", summary, isAllDay))
-
-	createdEvent, err := calService.CreateLeaveEvent(ctx, event)
-	if err != nil {
-		l.Error(err, "failed to create Google Calendar event")
-		return fmt.Errorf("failed to create calendar event: %w", err)
-	}
-
-	l.Debug(fmt.Sprintf("successfully created Google Calendar event: id=%s link=%s", createdEvent.Id, createdEvent.HtmlLink))
-
 	return nil
 }
 

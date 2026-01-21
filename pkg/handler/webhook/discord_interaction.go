@@ -1396,82 +1396,13 @@ func (h *handler) updatePayoutInteractionResponse(l logger.Logger, appID, intera
 	l.Debugf("successfully updated payout interaction response")
 }
 
-// sendPayoutResultToChannel sends the commit result to the Discord channel (unused, kept for reference)
-func (h *handler) sendPayoutResultToChannel(l logger.Logger, channelID, month string, batch int, result interface{}, errorMsg, actionBy string) {
-	l.Debugf("sending payout result to channel: channelID=%s month=%s batch=%d", channelID, month, batch)
-
-	var embed *discordgo.MessageEmbed
-
-	if errorMsg != "" {
-		embed = &discordgo.MessageEmbed{
-			Title:       "❌ Payout Commit Failed",
-			Description: fmt.Sprintf("**Month:** %s\n**Batch:** %d\n**Error:** %s\n\nCommitted by: %s", month, batch, errorMsg, actionBy),
-			Color:       15158332, // Red
-			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
-		}
-	} else if commitResult, ok := result.(*ctrlcontractorpayables.CommitResponse); ok {
-		var title string
-		var description string
-		var color int
-
-		if commitResult.Failed == 0 {
-			title = "✅ Payout Commit Successful"
-			description = fmt.Sprintf("**Month:** %s\n**Batch:** %d\n**Updated:** %d contractors\n\nAll payables have been successfully committed.\n\nCommitted by: %s",
-				commitResult.Month, commitResult.Batch, commitResult.Updated, actionBy)
-			color = 3066993 // Green
-		} else {
-			title = "⚠️ Payout Commit Completed with Errors"
-			description = fmt.Sprintf("**Month:** %s\n**Batch:** %d\n**Updated:** %d contractors\n**Failed:** %d contractors\n\n",
-				commitResult.Month, commitResult.Batch, commitResult.Updated, commitResult.Failed)
-
-			// Show error details (limit to 5)
-			if len(commitResult.Errors) > 0 {
-				description += "**Errors:**\n"
-				displayCount := len(commitResult.Errors)
-				if displayCount > 5 {
-					displayCount = 5
-				}
-				for i := 0; i < displayCount; i++ {
-					err := commitResult.Errors[i]
-					description += fmt.Sprintf("• Payable ID `%s`: %s\n", err.PayableID, err.Error)
-				}
-				if len(commitResult.Errors) > 5 {
-					description += fmt.Sprintf("... and %d more errors\n", len(commitResult.Errors)-5)
-				}
-			}
-			description += fmt.Sprintf("\nCommitted by: %s", actionBy)
-			color = 16776960 // Orange
-		}
-
-		embed = &discordgo.MessageEmbed{
-			Title:       title,
-			Description: description,
-			Color:       color,
-			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
-		}
-	}
-
-	if embed == nil {
-		l.Warnf("no embed to send for payout result")
-		return
-	}
-
-	// Send message to channel
-	_, err := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{embed}, nil)
-	if err != nil {
-		l.Errorf(err, "failed to send payout result to channel")
-	} else {
-		l.Debugf("successfully sent payout result to channel: channelID=%s", channelID)
-	}
-}
-
 // handlePayoutCommitCancelButton handles cancellation of payout commit
 func (h *handler) handlePayoutCommitCancelButton(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, month string, batch int, channelID string) {
 	l.Debugf("handling payout commit cancel: month=%s batch=%d channelID=%s user=%s", month, batch, channelID, interaction.Member.User.Username)
 
 	cancelEmbed := &discordgo.MessageEmbed{
-		Title:       "Payout Commit Cancelled",
-		Description: fmt.Sprintf("Payout commit for **%s** (batch %d) has been cancelled.", month, batch),
+		Title:       "Payout Commit Canceled",
+		Description: fmt.Sprintf("Payout commit for **%s** (batch %d) has been canceled.", month, batch),
 		Color:       5793266, // Blue
 		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}

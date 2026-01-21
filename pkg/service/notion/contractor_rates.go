@@ -25,6 +25,7 @@ type ContractorRateData struct {
 	ContractorPageID string
 	ContractorName   string
 	Discord          string
+	TeamEmail        string  // Team email from Contractor relation (e.g., quang@d.foundation)
 	BillingType      string  // "Monthly Fixed", "Hourly Rate", etc.
 	MonthlyFixed     float64 // From formula
 	HourlyRate       float64 // From number field
@@ -152,11 +153,13 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 			contractorPageID := s.extractFirstRelationID(props, "Contractor")
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: contractorPageID=%s", contractorPageID))
 
-			// Fetch contractor name from Contractor page
+			// Fetch contractor name and team email from Contractor page
 			contractorName := ""
+			teamEmail := ""
 			if contractorPageID != "" {
 				contractorName = s.getContractorName(ctx, contractorPageID)
-				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: fetched contractorName=%s", contractorName))
+				teamEmail = s.getContractorTeamEmail(ctx, contractorPageID)
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: fetched contractorName=%s teamEmail=%s", contractorName, teamEmail))
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
@@ -173,6 +176,7 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 				ContractorPageID: contractorPageID,
 				ContractorName:   contractorName,
 				Discord:          s.extractRollupRichText(props, "Discord"),
+				TeamEmail:        teamEmail,
 				BillingType:      s.extractSelect(props, "Billing Type"),
 				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
 				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
@@ -234,6 +238,31 @@ func (s *ContractorRatesService) getContractorName(ctx context.Context, pageID s
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: no Full Name or Name property found for page %s", pageID))
+	return ""
+}
+
+// getContractorTeamEmail fetches the Team Email from a Contractor page
+func (s *ContractorRatesService) getContractorTeamEmail(ctx context.Context, pageID string) string {
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: failed to fetch contractor page %s: %v", pageID, err))
+		return ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: failed to cast page properties for %s", pageID))
+		return ""
+	}
+
+	// Get Team Email property (email type)
+	if prop, ok := props["Team Email"]; ok && prop.Email != nil {
+		email := *prop.Email
+		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: found Team Email: %s", email))
+		return email
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: no Team Email property found for page %s", pageID))
 	return ""
 }
 

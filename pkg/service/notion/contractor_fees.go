@@ -75,7 +75,7 @@ func (s *ContractorFeesService) GetContractorFeesByID(ctx context.Context, feesP
 		HourlyRate:       s.extractRollupNumber(props, "Hourly Rate"),
 		FixedFee:         s.extractRollupNumber(props, "Fixed Fee"),
 		BillingType:      s.extractRollupSelect(props, "Billing Type"),
-		ProofOfWorks:     s.extractRollupRichText(props, "Key deliverables"),
+		ProofOfWorks:     s.extractRollupRichText(props, "Proof of Works"),
 		TotalAmount:      s.extractFormulaNumber(props, "Total Amount"),
 		Currency:         s.extractRollupSelect(props, "Currency"),
 	}

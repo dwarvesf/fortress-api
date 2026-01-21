@@ -369,7 +369,7 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v", req.Contractor, req.Month, req.SkipUpload))
+	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v dryRun=%v invoiceType=%s", req.Contractor, req.Month, req.SkipUpload, req.DryRun, req.InvoiceType))
 
 	// 2. Validate month format (YYYY-MM) - only if month is provided
 	if req.Month != "" && !isValidMonthFormat(req.Month) {
@@ -380,7 +380,8 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 
 	// 3. Build options from request
 	opts := &invoiceCtrl.ContractorInvoiceOptions{
-		GroupFeeByProject: true, // default
+		GroupFeeByProject: false,           // default: Commission items displayed individually in Extra Payment section
+		InvoiceType:       req.InvoiceType, // "service_and_refund" | "extra_payment" | "" (full)
 	}
 	if req.GroupFeeByProject != nil {
 		opts.GroupFeeByProject = *req.GroupFeeByProject
@@ -416,7 +417,7 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 	var fileURL string
 	fileName := fmt.Sprintf("%s.pdf", invoiceData.InvoiceNumber)
 
-	if req.SkipUpload {
+	if req.SkipUpload || req.DryRun {
 		l.Debug("[DEBUG] skipping Google Drive upload, saving to local file")
 
 		// Save to local file
@@ -449,47 +450,51 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		l.Debug(fmt.Sprintf("PDF uploaded: url=%s", fileURL))
 	}
 
-	// 5.5 Create Contractor Payables record in Notion
-	l.Debug("[DEBUG] creating contractor payables record in Notion")
-
-	// Calculate period dates based on payday from invoice data
-	// PeriodStart: payday of invoice month
-	// PeriodEnd: payday of next month
-	monthTime, _ := time.Parse("2006-01", invoiceData.Month)
-	payday := invoiceData.PayDay
-	if payday == 0 {
-		payday = 15 // Default to 15 if not set
-	}
-	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payday, 0, 0, 0, 0, time.UTC)
-	nextMonth := monthTime.AddDate(0, 1, 0)
-	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
-
-	l.Debug(fmt.Sprintf("[DEBUG] calculated period: payday=%d start=%s end=%s",
-		payday, periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
-
-	payableInput := notion.CreatePayableInput{
-		ContractorPageID: invoiceData.ContractorPageID,
-		Total:            invoiceData.TotalUSD,
-		Currency:         "USD",
-		PeriodStart:      periodStart.Format("2006-01-02"),
-		PeriodEnd:        periodEnd.Format("2006-01-02"),
-		InvoiceDate:      time.Now().Format("2006-01-02"),
-		InvoiceID:        invoiceData.InvoiceNumber,
-		PayoutItemIDs:    invoiceData.PayoutPageIDs,
-		ContractorType:   "Individual",           // Default to Individual
-		ExchangeRate:     invoiceData.ExchangeRate,
-		PDFBytes:         pdfBytes,               // Upload PDF to Notion
-	}
-
-	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
-		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs), payableInput.PeriodStart, payableInput.PeriodEnd))
-
-	payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(c.Request.Context(), payableInput)
-	if payableErr != nil {
-		l.Error(payableErr, "[DEBUG] failed to create contractor payables record - continuing with response")
-		// Non-fatal: continue with response
+	// 5.5 Create Contractor Payables record in Notion (skip in dry-run mode)
+	if req.DryRun {
+		l.Debug("[DEBUG] dry-run mode: skipping contractor payables record creation")
 	} else {
-		l.Debug(fmt.Sprintf("[DEBUG] contractor payables record created: pageID=%s", payablePageID))
+		l.Debug("[DEBUG] creating contractor payables record in Notion")
+
+		// Calculate period dates based on payday from invoice data
+		// PeriodStart: payday of invoice month
+		// PeriodEnd: payday of next month
+		monthTime, _ := time.Parse("2006-01", invoiceData.Month)
+		payday := invoiceData.PayDay
+		if payday == 0 {
+			payday = 15 // Default to 15 if not set
+		}
+		periodStart := time.Date(monthTime.Year(), monthTime.Month(), payday, 0, 0, 0, 0, time.UTC)
+		nextMonth := monthTime.AddDate(0, 1, 0)
+		periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
+
+		l.Debug(fmt.Sprintf("[DEBUG] calculated period: payday=%d start=%s end=%s",
+			payday, periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
+
+		payableInput := notion.CreatePayableInput{
+			ContractorPageID: invoiceData.ContractorPageID,
+			Total:            invoiceData.TotalUSD,
+			Currency:         "USD",
+			PeriodStart:      periodStart.Format("2006-01-02"),
+			PeriodEnd:        periodEnd.Format("2006-01-02"),
+			InvoiceDate:      time.Now().Format("2006-01-02"),
+			InvoiceID:        invoiceData.InvoiceNumber,
+			PayoutItemIDs:    invoiceData.PayoutPageIDs,
+			ContractorType:   "Individual", // Default to Individual
+			ExchangeRate:     invoiceData.ExchangeRate,
+			PDFBytes:         pdfBytes, // Upload PDF to Notion
+		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
+			payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs), payableInput.PeriodStart, payableInput.PeriodEnd))
+
+		payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(c.Request.Context(), payableInput)
+		if payableErr != nil {
+			l.Error(payableErr, "[DEBUG] failed to create contractor payables record - continuing with response")
+			// Non-fatal: continue with response
+		} else {
+			l.Debug(fmt.Sprintf("[DEBUG] contractor payables record created: pageID=%s", payablePageID))
+		}
 	}
 
 	// 6. Build response
