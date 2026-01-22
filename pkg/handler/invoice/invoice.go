@@ -1,6 +1,7 @@
 package invoice
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -8,8 +9,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
@@ -35,6 +38,24 @@ type handler struct {
 	logger     logger.Logger
 	repo       store.DBRepo
 	config     *config.Config
+}
+
+// Concurrency constants for batch invoice processing
+const (
+	maxConcurrentInvoiceWorkers = 3 // Number of parallel workers for batch processing
+)
+
+// invoiceJob represents a job for the invoice worker pool
+type invoiceJob struct {
+	index      int
+	contractor notion.ContractorRateData
+}
+
+// invoiceResult represents the result of processing a single contractor
+type invoiceResult struct {
+	index  int
+	result view.BatchInvoiceResult
+	total  float64
 }
 
 // New returns a handler
@@ -369,7 +390,8 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v dryRun=%v invoiceType=%s", req.Contractor, req.Month, req.SkipUpload, req.DryRun, req.InvoiceType))
+	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v dryRun=%v invoiceType=%s batch=%d channelID=%s messageID=%s",
+		req.Contractor, req.Month, req.SkipUpload, req.DryRun, req.InvoiceType, req.Batch, req.ChannelID, req.MessageID))
 
 	// 2. Validate month format (YYYY-MM) - only if month is provided
 	if req.Month != "" && !isValidMonthFormat(req.Month) {
@@ -378,7 +400,23 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	// 3. Build options from request
+	// 3. Handle batch processing for "all" contractors
+	if req.Contractor == "all" && req.Batch > 0 && !req.DryRun {
+		l.Debug(fmt.Sprintf("batch processing mode: batch=%d channelID=%s messageID=%s", req.Batch, req.ChannelID, req.MessageID))
+
+		// Return 200 OK immediately and process asynchronously
+		c.JSON(http.StatusOK, view.CreateResponse(view.BatchInvoiceResponse{
+			Message: "Invoice generation started",
+			Batch:   req.Batch,
+			Month:   req.Month,
+		}, nil, nil, req, ""))
+
+		// Process batch asynchronously
+		go h.processBatchInvoices(l, req)
+		return
+	}
+
+	// 4. Build options from request (single contractor flow)
 	opts := &invoiceCtrl.ContractorInvoiceOptions{
 		GroupFeeByProject: false,           // default: Commission items displayed individually in Extra Payment section
 		InvoiceType:       req.InvoiceType, // "service_and_refund" | "extra_payment" | "" (full)
@@ -387,7 +425,7 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		opts.GroupFeeByProject = *req.GroupFeeByProject
 	}
 
-	// 4. Generate invoice data
+	// 5. Generate invoice data
 	l.Debug("calling controller to generate contractor invoice data")
 	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.Contractor, req.Month, opts)
 	if err != nil {
@@ -522,7 +560,487 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 	}
 
 	l.Info(fmt.Sprintf("contractor invoice generated successfully: invoice_number=%s", response.InvoiceNumber))
+
+	// Update Discord message if channelID and messageID are provided
+	if req.ChannelID != "" && req.MessageID != "" {
+		l.Debug(fmt.Sprintf("updating Discord message: channelID=%s messageID=%s", req.ChannelID, req.MessageID))
+		h.updateDiscordWithSingleInvoiceSuccess(l, req.ChannelID, req.MessageID, invoiceData, fileURL)
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse(response, nil, nil, req, ""))
+}
+
+// updateDiscordWithSingleInvoiceSuccess updates the Discord embed with single invoice success
+func (h *handler) updateDiscordWithSingleInvoiceSuccess(l logger.Logger, channelID, messageID string, invoiceData interface{}, fileURL string) {
+	// Type assert to get invoice data
+	data, ok := invoiceData.(*invoiceCtrl.ContractorInvoiceData)
+	if !ok {
+		l.Error(nil, "failed to cast invoice data for Discord update")
+		return
+	}
+
+	displayMonth := formatMonthDisplay(data.Month)
+
+	description := fmt.Sprintf("**Month:** %s\n", displayMonth)
+	description += fmt.Sprintf("**Contractor:** %s\n", data.ContractorName)
+	description += fmt.Sprintf("**Invoice Number:** %s\n", data.InvoiceNumber)
+	description += fmt.Sprintf("**Total:** USD %.2f\n", data.TotalUSD)
+	description += fmt.Sprintf("**Line Items:** %d\n", len(data.LineItems))
+
+	if fileURL != "" {
+		description += fmt.Sprintf("\n[View Invoice](%s)", fileURL)
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "✅ Invoice Generation Successful",
+		Description: description,
+		Color:       5763719, // Green
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Error(err, "failed to update discord with single invoice success")
+	} else {
+		l.Debug("discord message updated successfully")
+	}
+}
+
+// processBatchInvoices handles async batch invoice generation for all contractors in a batch
+// Uses a worker pool pattern for concurrent processing
+func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateContractorInvoiceRequest) {
+	ctx := context.Background()
+
+	l.Debug(fmt.Sprintf("starting batch invoice processing: batch=%d month=%s workers=%d",
+		req.Batch, req.Month, maxConcurrentInvoiceWorkers))
+
+	// 1. Get list of contractors for this batch
+	ratesService := notion.NewContractorRatesService(h.config, h.logger)
+	if ratesService == nil {
+		l.Error(nil, "failed to create contractor rates service")
+		h.updateDiscordWithError(l, req.ChannelID, req.MessageID, "Failed to initialize contractor rates service")
+		return
+	}
+
+	contractors, err := ratesService.ListActiveContractorsByBatch(ctx, req.Month, req.Batch)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to list contractors for batch %d", req.Batch))
+		h.updateDiscordWithError(l, req.ChannelID, req.MessageID, fmt.Sprintf("Failed to list contractors: %v", err))
+		return
+	}
+
+	if len(contractors) == 0 {
+		l.Debug(fmt.Sprintf("no contractors found for batch %d", req.Batch))
+		h.updateDiscordWithNoContractors(l, req.ChannelID, req.MessageID, req.Month, req.Batch)
+		return
+	}
+
+	l.Debug(fmt.Sprintf("found %d contractors for batch %d", len(contractors), req.Batch))
+
+	// 2. Process contractors concurrently using worker pool
+	opts := &invoiceCtrl.ContractorInvoiceOptions{
+		GroupFeeByProject: false,
+		InvoiceType:       req.InvoiceType,
+	}
+
+	// Create channels for job distribution and result collection
+	jobs := make(chan invoiceJob, len(contractors))
+	resultsChan := make(chan invoiceResult, len(contractors))
+
+	// Start worker pool
+	var wg sync.WaitGroup
+	numWorkers := maxConcurrentInvoiceWorkers
+	if len(contractors) < numWorkers {
+		numWorkers = len(contractors) // Don't spawn more workers than jobs
+	}
+
+	l.Debug(fmt.Sprintf("starting %d invoice workers", numWorkers))
+
+	for w := 0; w < numWorkers; w++ {
+		wg.Add(1)
+		go h.invoiceWorker(l, ctx, req.Month, opts, &wg, jobs, resultsChan)
+	}
+
+	// Send jobs to workers
+	for i, contractor := range contractors {
+		jobs <- invoiceJob{
+			index:      i,
+			contractor: contractor,
+		}
+	}
+	close(jobs)
+
+	// Close results channel when all workers are done
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results and update Discord progressively
+	allResults := make([]view.BatchInvoiceResult, len(contractors))
+	var successCount int
+	var totalAmount float64
+	completed := 0
+
+	for r := range resultsChan {
+		allResults[r.index] = r.result
+		completed++
+
+		if r.result.Success {
+			successCount++
+			totalAmount += r.total
+		}
+
+		// Update Discord progress every 3 completions or at the end
+		if completed%3 == 0 || completed == len(contractors) {
+			// Build current results slice (only completed ones)
+			var currentResults []view.BatchInvoiceResult
+			for _, res := range allResults {
+				if res.Contractor != "" {
+					currentResults = append(currentResults, res)
+				}
+			}
+			h.updateDiscordWithProgress(l, req.ChannelID, req.MessageID, req.Month, req.Batch,
+				completed, len(contractors), fmt.Sprintf("%d completed", completed), currentResults)
+		}
+
+		l.Debug(fmt.Sprintf("batch progress: %d/%d completed, %d success, total=%.2f",
+			completed, len(contractors), successCount, totalAmount))
+	}
+
+	// Convert to final results slice
+	results := make([]view.BatchInvoiceResult, 0, len(contractors))
+	for _, r := range allResults {
+		if r.Contractor != "" {
+			results = append(results, r)
+		}
+	}
+
+	// 3. Send final summary
+	h.updateDiscordWithBatchComplete(l, req.ChannelID, req.MessageID, req.Month, req.Batch,
+		successCount, len(contractors), totalAmount, results)
+
+	l.Info(fmt.Sprintf("batch invoice processing completed: batch=%d success=%d/%d total=%.2f workers=%d",
+		req.Batch, successCount, len(contractors), totalAmount, numWorkers))
+}
+
+// invoiceWorker processes invoice jobs from the jobs channel and sends results to resultsChan
+func (h *handler) invoiceWorker(l logger.Logger, ctx context.Context, month string,
+	opts *invoiceCtrl.ContractorInvoiceOptions, wg *sync.WaitGroup, jobs <-chan invoiceJob, resultsChan chan<- invoiceResult) {
+	defer wg.Done()
+
+	for job := range jobs {
+		result := h.processContractorInvoice(l, ctx, month, opts, job.contractor)
+		resultsChan <- invoiceResult{
+			index:  job.index,
+			result: result,
+			total:  result.Total,
+		}
+	}
+}
+
+// processContractorInvoice handles the complete invoice generation for a single contractor
+func (h *handler) processContractorInvoice(l logger.Logger, ctx context.Context, month string,
+	opts *invoiceCtrl.ContractorInvoiceOptions, contractor notion.ContractorRateData) view.BatchInvoiceResult {
+
+	l.Debug(fmt.Sprintf("processing contractor: %s", contractor.Discord))
+
+	// Generate invoice data
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, contractor.Discord, month, opts)
+	if err != nil {
+		// Check if this is a "no pending payouts" case - treat as skipped, not error
+		if strings.Contains(err.Error(), "no pending payouts") {
+			l.Debug(fmt.Sprintf("skipping contractor %s: no pending payouts", contractor.Discord))
+			return view.BatchInvoiceResult{
+				Contractor: contractor.Discord,
+				Success:    false,
+				Skipped:    true,
+				SkipReason: "no pending payouts",
+			}
+		}
+
+		l.Error(err, fmt.Sprintf("failed to generate invoice for contractor %s", contractor.Discord))
+		return view.BatchInvoiceResult{
+			Contractor: contractor.Discord,
+			Success:    false,
+			Error:      err.Error(),
+		}
+	}
+
+	// Generate PDF
+	pdfBytes, err := h.controller.Invoice.GenerateContractorInvoicePDF(l, invoiceData)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to generate PDF for contractor %s", contractor.Discord))
+		return view.BatchInvoiceResult{
+			Contractor: contractor.Discord,
+			Success:    false,
+			Error:      fmt.Sprintf("PDF generation failed: %v", err),
+		}
+	}
+
+	// Upload to Google Drive
+	fileName := fmt.Sprintf("%s.pdf", invoiceData.InvoiceNumber)
+	fileURL, err := h.service.GoogleDrive.UploadContractorInvoicePDF(invoiceData.ContractorName, fileName, pdfBytes)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to upload PDF for contractor %s", contractor.Discord))
+		return view.BatchInvoiceResult{
+			Contractor: contractor.Discord,
+			Success:    false,
+			Error:      fmt.Sprintf("Upload failed: %v", err),
+		}
+	}
+
+	l.Debug(fmt.Sprintf("uploaded PDF for %s: %s", contractor.Discord, fileURL))
+
+	// Create Contractor Payables record in Notion
+	monthTime, _ := time.Parse("2006-01", invoiceData.Month)
+	payday := invoiceData.PayDay
+	if payday == 0 {
+		payday = 15
+	}
+	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payday, 0, 0, 0, 0, time.UTC)
+	nextMonth := monthTime.AddDate(0, 1, 0)
+	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
+
+	payableInput := notion.CreatePayableInput{
+		ContractorPageID: invoiceData.ContractorPageID,
+		Total:            invoiceData.TotalUSD,
+		Currency:         "USD",
+		PeriodStart:      periodStart.Format("2006-01-02"),
+		PeriodEnd:        periodEnd.Format("2006-01-02"),
+		InvoiceDate:      time.Now().Format("2006-01-02"),
+		InvoiceID:        invoiceData.InvoiceNumber,
+		PayoutItemIDs:    invoiceData.PayoutPageIDs,
+		ContractorType:   "Individual",
+		ExchangeRate:     invoiceData.ExchangeRate,
+		PDFBytes:         pdfBytes,
+	}
+
+	_, payableErr := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)
+	if payableErr != nil {
+		l.Error(payableErr, fmt.Sprintf("failed to create payable record for %s - continuing", contractor.Discord))
+		// Non-fatal: continue with success
+	}
+
+	l.Debug(fmt.Sprintf("invoice generation completed for %s: total=%.2f", contractor.Discord, invoiceData.TotalUSD))
+
+	return view.BatchInvoiceResult{
+		Contractor: contractor.Discord,
+		Success:    true,
+		Total:      invoiceData.TotalUSD,
+		Currency:   "USD",
+	}
+}
+
+// updateDiscordWithProgress updates the Discord embed with current progress
+func (h *handler) updateDiscordWithProgress(l logger.Logger, channelID, messageID string, month string, batch int,
+	current, total int, currentContractor string, results []view.BatchInvoiceResult) {
+
+	if channelID == "" || messageID == "" {
+		return
+	}
+
+	displayMonth := formatMonthDisplay(month)
+
+	// Build progress description
+	description := fmt.Sprintf("Processing invoices for **%s**...\n\n", displayMonth)
+	description += fmt.Sprintf("**Progress:** %d/%d contractors\n", current, total)
+	description += fmt.Sprintf("**Current:** %s\n\n", currentContractor)
+
+	// Show recent results (last 5)
+	startIdx := 0
+	if len(results) > 5 {
+		startIdx = len(results) - 5
+	}
+	for _, r := range results[startIdx:] {
+		if r.Success {
+			description += fmt.Sprintf("✓ %s - USD %.2f\n", r.Contractor, r.Total)
+		} else if r.Skipped {
+			description += fmt.Sprintf("⊘ %s - skipped\n", r.Contractor)
+		} else {
+			description += fmt.Sprintf("✗ %s - %s\n", r.Contractor, r.Error)
+		}
+	}
+	description += fmt.Sprintf("→ %s (processing...)", currentContractor)
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "⏳ Generating Contractor Invoices",
+		Description: description,
+		Color:       5793266, // Blue
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: fmt.Sprintf("Processing contractor %d of %d...", current, total),
+		},
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Error(err, "failed to update discord progress")
+	}
+}
+
+// updateDiscordWithBatchComplete sends the final success/partial failure embed
+func (h *handler) updateDiscordWithBatchComplete(l logger.Logger, channelID, messageID string, month string, batch int,
+	successCount, totalCount int, totalAmount float64, results []view.BatchInvoiceResult) {
+
+	if channelID == "" || messageID == "" {
+		return
+	}
+
+	displayMonth := formatMonthDisplay(month)
+
+	// Count skipped and failed separately
+	var skippedCount, failedCount int
+	var skippedContractors, failedContractors []string
+	for _, r := range results {
+		if r.Skipped {
+			skippedCount++
+			skippedContractors = append(skippedContractors, r.Contractor)
+		} else if !r.Success {
+			failedCount++
+			failedContractors = append(failedContractors, r.Contractor)
+		}
+	}
+
+	var title string
+	var color int
+
+	// Determine title and color based on actual errors (not skipped)
+	if failedCount == 0 {
+		title = "✅ Invoice Generation Completed"
+		color = 5763719 // Green
+	} else if successCount > 0 {
+		title = "⚠️ Invoice Generation Completed with Errors"
+		color = 16776960 // Orange
+	} else {
+		title = "❌ Invoice Generation Failed"
+		color = 15548997 // Red
+	}
+
+	description := fmt.Sprintf("**Month:** %s\n", displayMonth)
+	description += fmt.Sprintf("**Batch:** %d (payday %dth)\n\n", batch, batch)
+	description += "**Summary:**\n"
+	description += fmt.Sprintf("• Generated: %d invoices\n", successCount)
+	if skippedCount > 0 {
+		description += fmt.Sprintf("• Skipped: %d contractors\n", skippedCount)
+	}
+	if failedCount > 0 {
+		description += fmt.Sprintf("• Failed: %d invoices\n", failedCount)
+	}
+	description += fmt.Sprintf("• Total Amount: USD %.2f\n\n", totalAmount)
+
+	// List successful contractors (limit to 15)
+	if successCount > 0 {
+		var successContractors []string
+		for _, r := range results {
+			if r.Success {
+				successContractors = append(successContractors, r.Contractor)
+			}
+		}
+		description += "**Contractors:**\n"
+		displayCount := len(successContractors)
+		if displayCount > 15 {
+			displayCount = 15
+		}
+		description += strings.Join(successContractors[:displayCount], ", ")
+		if len(successContractors) > 15 {
+			description += fmt.Sprintf("\n... and %d more", len(successContractors)-15)
+		}
+	}
+
+	// List skipped contractors (informational, not errors)
+	if skippedCount > 0 {
+		description += "\n\n**Skipped** (no pending payouts):\n"
+		displayCount := len(skippedContractors)
+		if displayCount > 15 {
+			displayCount = 15
+		}
+		description += strings.Join(skippedContractors[:displayCount], ", ")
+		if len(skippedContractors) > 15 {
+			description += fmt.Sprintf("\n... and %d more", len(skippedContractors)-15)
+		}
+	}
+
+	// List actual errors if any
+	if failedCount > 0 {
+		description += "\n\n**Errors:**\n"
+		for _, r := range results {
+			if !r.Success && !r.Skipped {
+				description += fmt.Sprintf("• %s: %s\n", r.Contractor, r.Error)
+			}
+		}
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       title,
+		Description: description,
+		Color:       color,
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Error(err, "failed to update discord with batch complete")
+	}
+}
+
+// updateDiscordWithError updates the Discord embed with an error message
+func (h *handler) updateDiscordWithError(l logger.Logger, channelID, messageID, errorMsg string) {
+	if channelID == "" || messageID == "" {
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "❌ Invoice Generation Failed",
+		Description: fmt.Sprintf("**Error:** %s", errorMsg),
+		Color:       15548997, // Red
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "Please try again or contact support",
+		},
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Error(err, "failed to update discord with error")
+	}
+}
+
+// updateDiscordWithNoContractors updates the Discord embed when no contractors found
+func (h *handler) updateDiscordWithNoContractors(l logger.Logger, channelID, messageID, month string, batch int) {
+	if channelID == "" || messageID == "" {
+		return
+	}
+
+	displayMonth := formatMonthDisplay(month)
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "ℹ️ No Contractors Found",
+		Description: fmt.Sprintf("No active contractors found for **%s** with payday batch **%d**.", displayMonth, batch),
+		Color:       5793266, // Blue
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Error(err, "failed to update discord with no contractors")
+	}
+}
+
+// formatMonthDisplay converts "2026-01" to "January 2026"
+func formatMonthDisplay(month string) string {
+	parts := strings.Split(month, "-")
+	if len(parts) != 2 {
+		return month
+	}
+
+	monthNames := []string{
+		"January", "February", "March", "April", "May", "June",
+		"July", "August", "September", "October", "November", "December",
+	}
+
+	monthNum := 0
+	fmt.Sscanf(parts[1], "%d", &monthNum)
+	if monthNum < 1 || monthNum > 12 {
+		return month
+	}
+
+	return fmt.Sprintf("%s %s", monthNames[monthNum-1], parts[0])
 }
 
 // isValidMonthFormat validates that the month string is in YYYY-MM format

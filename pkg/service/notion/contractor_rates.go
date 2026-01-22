@@ -503,3 +503,138 @@ func (s *ContractorRatesService) FetchContractorRateByPageID(ctx context.Context
 
 	return rateData, nil
 }
+
+// ListActiveContractorsByBatch returns all contractors with active rates matching the given payday batch
+// Filters: Status=Active AND Payday=batch (as select field "01" or "15")
+func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Context, month string, batch int) ([]ContractorRateData, error) {
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		return nil, errors.New("contractor rates database ID not configured")
+	}
+
+	// Format batch for Notion select field (e.g., "01", "15")
+	batchStr := fmt.Sprintf("%02d", batch)
+	s.logger.Debug(fmt.Sprintf("listing active contractors: batch=%s month=%s", batchStr, month))
+
+	// Parse month to get date range for filtering
+	monthTime, err := time.Parse("2006-01", month)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to parse month: %s", month))
+		return nil, fmt.Errorf("invalid month format: %w", err)
+	}
+
+	startOfMonth := time.Date(monthTime.Year(), monthTime.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endOfMonth := startOfMonth.AddDate(0, 1, -1)
+
+	// Build filter: Status=Active AND Payday=batch
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							Equals: "Active",
+						},
+					},
+				},
+				{
+					Property: "Payday",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Select: &nt.SelectDatabaseQueryFilter{
+							Equals: batchStr,
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var contractors []ContractorRateData
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query contractor rates: batch=%s", batchStr))
+			return nil, fmt.Errorf("failed to query contractor rates: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("found %d contractor rates entries for batch %s", len(resp.Results), batchStr))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("failed to cast page properties")
+				continue
+			}
+
+			// Extract Start Date and End Date for filtering
+			startDate := s.extractDate(props, "Start Date")
+			endDate := s.extractDate(props, "End Date")
+
+			// Check date range: Start Date <= month AND (End Date >= month OR End Date is empty)
+			if startDate != nil && startDate.After(endOfMonth) {
+				// Start date is after the month we're looking for
+				s.logger.Debug(fmt.Sprintf("skipping rate: start date after month, pageID=%s", page.ID))
+				continue
+			}
+
+			if endDate != nil && endDate.Before(startOfMonth) {
+				// End date is before the month we're looking for
+				s.logger.Debug(fmt.Sprintf("skipping rate: end date before month, pageID=%s", page.ID))
+				continue
+			}
+
+			// Extract contractor page ID
+			contractorPageID := s.extractFirstRelationID(props, "Contractor")
+
+			// Fetch contractor name and team email from Contractor page
+			contractorName := ""
+			teamEmail := ""
+			if contractorPageID != "" {
+				contractorName = s.getContractorName(ctx, contractorPageID)
+				teamEmail = s.getContractorTeamEmail(ctx, contractorPageID)
+			}
+
+			// Extract Payday (Select type with values like "01", "15")
+			payDayStr := s.extractSelect(props, "Payday")
+			payDay := 0
+			if payDayStr != "" {
+				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
+			}
+
+			// Extract rate data
+			rateData := ContractorRateData{
+				PageID:           page.ID,
+				ContractorPageID: contractorPageID,
+				ContractorName:   contractorName,
+				Discord:          s.extractRollupRichText(props, "Discord"),
+				TeamEmail:        teamEmail,
+				BillingType:      s.extractSelect(props, "Billing Type"),
+				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
+				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
+				Currency:         s.extractSelect(props, "Currency"),
+				StartDate:        startDate,
+				EndDate:          endDate,
+				PayDay:           payDay,
+			}
+
+			s.logger.Debug(fmt.Sprintf("found contractor: pageID=%s name=%s discord=%s payday=%d",
+				rateData.PageID, rateData.ContractorName, rateData.Discord, rateData.PayDay))
+
+			contractors = append(contractors, rateData)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("total active contractors for batch %s: %d", batchStr, len(contractors)))
+	return contractors, nil
+}

@@ -21,3 +21,21 @@ type ContractorInvoiceLineItem struct {
 	Rate        float64 `json:"rate,omitempty"`
 	Amount      float64 `json:"amount,omitempty"`
 } // @name ContractorInvoiceLineItem
+
+// BatchInvoiceResponse represents the response for batch invoice generation (async)
+type BatchInvoiceResponse struct {
+	Message string `json:"message"`
+	Batch   int    `json:"batch"`
+	Month   string `json:"month"`
+} // @name BatchInvoiceResponse
+
+// BatchInvoiceResult represents the result of processing a single contractor in batch mode
+type BatchInvoiceResult struct {
+	Contractor string  `json:"contractor"`
+	Success    bool    `json:"success"`
+	Skipped    bool    `json:"skipped,omitempty"`    // true if contractor was skipped (e.g., no pending payouts)
+	SkipReason string  `json:"skipReason,omitempty"` // reason for skipping
+	Total      float64 `json:"total,omitempty"`
+	Currency   string  `json:"currency,omitempty"`
+	Error      string  `json:"error,omitempty"`
+}

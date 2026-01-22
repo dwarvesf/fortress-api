@@ -10,6 +10,9 @@ type GenerateContractorInvoiceRequest struct {
 	InvoiceType       string `json:"invoiceType"`       // "service_and_refund" | "extra_payment" | "" (full invoice)
 	SkipUpload        bool   `json:"skipUpload"`        // Skip Google Drive upload, save PDF locally
 	DryRun            bool   `json:"dryRun"`            // Skip Notion payable record creation (implies skipUpload)
+	Batch             int    `json:"batch"`             // Filter by payday batch (1 or 15) for "all" contractors
+	ChannelID         string `json:"channelId"`         // Discord channel ID for progress updates
+	MessageID         string `json:"messageId"`         // Discord message ID to edit for progress
 } // @name GenerateContractorInvoiceRequest
 
 // Validate validates the request
