@@ -27,7 +27,6 @@ type LeaveRequest struct {
 	UnavailabilityType  string     // "Personal Time", "Health / Illness", "Family / Emergency", "Travel / Vacation", "Other"
 	StartDate           *time.Time
 	EndDate             *time.Time
-	Shift               string     // "Full day", "Morning", "Afternoon"
 	Status              string     // "New", "Acknowledged", "Not Applicable", "Withdrawn"
 	ReviewedByID        string     // Relation page ID - person who reviewed/approved
 	DateApproved        *time.Time
@@ -88,7 +87,6 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 		LeaveRequestTitle:  s.extractTitle(props, "Leave Request"),
 		UnavailabilityType: s.extractSelect(props, "Unavailability Type"),
 		AdditionalContext:  s.extractRichText(props, "Additional Context"),
-		Shift:              s.extractSelect(props, "Shift"),
 		Status:             s.extractSelect(props, "Status"),
 	}
 
@@ -244,7 +242,6 @@ func (s *LeaveService) QueryPendingLeaveRequests(ctx context.Context) ([]LeaveRe
 			LeaveRequestTitle:  s.extractTitle(props, "Leave Request"),
 			UnavailabilityType: s.extractSelect(props, "Unavailability Type"),
 			AdditionalContext:  s.extractRichText(props, "Additional Context"),
-			Shift:              s.extractSelect(props, "Shift"),
 			Status:             s.extractSelect(props, "Status"),
 			StartDate:          s.extractDate(props, "Start Date"),
 			EndDate:            s.extractDate(props, "End Date"),

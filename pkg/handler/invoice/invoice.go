@@ -741,7 +741,6 @@ func (h *handler) invoiceWorker(l logger.Logger, ctx context.Context, month stri
 // processContractorInvoice handles the complete invoice generation for a single contractor
 func (h *handler) processContractorInvoice(l logger.Logger, ctx context.Context, month string,
 	opts *invoiceCtrl.ContractorInvoiceOptions, contractor notion.ContractorRateData) view.BatchInvoiceResult {
-
 	l.Debug(fmt.Sprintf("processing contractor: %s", contractor.Discord))
 
 	// Generate invoice data
@@ -834,7 +833,6 @@ func (h *handler) processContractorInvoice(l logger.Logger, ctx context.Context,
 // updateDiscordWithProgress updates the Discord embed with current progress
 func (h *handler) updateDiscordWithProgress(l logger.Logger, channelID, messageID string, month string, batch int,
 	current, total int, currentContractor string, results []view.BatchInvoiceResult) {
-
 	if channelID == "" || messageID == "" {
 		return
 	}
@@ -880,7 +878,6 @@ func (h *handler) updateDiscordWithProgress(l logger.Logger, channelID, messageI
 // updateDiscordWithBatchComplete sends the final success/partial failure embed
 func (h *handler) updateDiscordWithBatchComplete(l logger.Logger, channelID, messageID string, month string, batch int,
 	successCount, totalCount int, totalAmount float64, results []view.BatchInvoiceResult) {
-
 	if channelID == "" || messageID == "" {
 		return
 	}
@@ -889,14 +886,13 @@ func (h *handler) updateDiscordWithBatchComplete(l logger.Logger, channelID, mes
 
 	// Count skipped and failed separately
 	var skippedCount, failedCount int
-	var skippedContractors, failedContractors []string
+	var skippedContractors []string
 	for _, r := range results {
 		if r.Skipped {
 			skippedCount++
 			skippedContractors = append(skippedContractors, r.Contractor)
 		} else if !r.Success {
 			failedCount++
-			failedContractors = append(failedContractors, r.Contractor)
 		}
 	}
 
@@ -1035,7 +1031,9 @@ func formatMonthDisplay(month string) string {
 	}
 
 	monthNum := 0
-	fmt.Sscanf(parts[1], "%d", &monthNum)
+	if _, err := fmt.Sscanf(parts[1], "%d", &monthNum); err != nil {
+		return month
+	}
 	if monthNum < 1 || monthNum > 12 {
 		return month
 	}
