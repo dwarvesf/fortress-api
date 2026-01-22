@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	nt "github.com/dstotijn/go-notion"
@@ -153,13 +154,12 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 			contractorPageID := s.extractFirstRelationID(props, "Contractor")
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: contractorPageID=%s", contractorPageID))
 
-			// Fetch contractor name and team email from Contractor page
+			// Fetch contractor name and team email from Contractor page (single API call)
 			contractorName := ""
 			teamEmail := ""
 			if contractorPageID != "" {
-				contractorName = s.getContractorName(ctx, contractorPageID)
-				teamEmail = s.getContractorTeamEmail(ctx, contractorPageID)
-				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: fetched contractorName=%s teamEmail=%s", contractorName, teamEmail))
+				contractorName, teamEmail = s.getContractorDetails(ctx, contractorPageID)
+				s.logger.Debug(fmt.Sprintf("contractor_rates: fetched contractorName=%s teamEmail=%s", contractorName, teamEmail))
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
@@ -209,61 +209,35 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 	return matchedRate, nil
 }
 
-// getContractorName fetches the Full Name from a Contractor page
-func (s *ContractorRatesService) getContractorName(ctx context.Context, pageID string) string {
+// getContractorDetails fetches the contractor page once and returns both name and email
+// This reduces API calls from 2 to 1 per contractor
+func (s *ContractorRatesService) getContractorDetails(ctx context.Context, pageID string) (name, email string) {
 	page, err := s.client.FindPageByID(ctx, pageID)
 	if err != nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: failed to fetch contractor page %s: %v", pageID, err))
-		return ""
+		s.logger.Debug(fmt.Sprintf("getContractorDetails: failed to fetch contractor page %s: %v", pageID, err))
+		return "", ""
 	}
 
 	props, ok := page.Properties.(nt.DatabasePageProperties)
 	if !ok {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: failed to cast page properties for %s", pageID))
-		return ""
+		s.logger.Debug(fmt.Sprintf("getContractorDetails: failed to cast page properties for %s", pageID))
+		return "", ""
 	}
 
-	// Try to get Full Name from Title property
+	// Extract name: try Full Name first, then Name as fallback
 	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
-		name := prop.Title[0].PlainText
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: found Full Name in Title: %s", name))
-		return name
+		name = prop.Title[0].PlainText
+	} else if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		name = prop.Title[0].PlainText
 	}
 
-	// Try Name property as fallback
-	if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
-		name := prop.Title[0].PlainText
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: found Name in Title: %s", name))
-		return name
-	}
-
-	s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorName: no Full Name or Name property found for page %s", pageID))
-	return ""
-}
-
-// getContractorTeamEmail fetches the Team Email from a Contractor page
-func (s *ContractorRatesService) getContractorTeamEmail(ctx context.Context, pageID string) string {
-	page, err := s.client.FindPageByID(ctx, pageID)
-	if err != nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: failed to fetch contractor page %s: %v", pageID, err))
-		return ""
-	}
-
-	props, ok := page.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: failed to cast page properties for %s", pageID))
-		return ""
-	}
-
-	// Get Team Email property (email type)
+	// Extract email from Team Email property
 	if prop, ok := props["Team Email"]; ok && prop.Email != nil {
-		email := *prop.Email
-		s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: found Team Email: %s", email))
-		return email
+		email = *prop.Email
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] getContractorTeamEmail: no Team Email property found for page %s", pageID))
-	return ""
+	s.logger.Debug(fmt.Sprintf("getContractorDetails: pageID=%s name=%s email=%s", pageID, name, email))
+	return name, email
 }
 
 // Helper functions for extracting properties
@@ -408,7 +382,7 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 			// Fetch contractor name from Contractor page
 			contractorName := ""
 			if contractorID != "" {
-				contractorName = s.getContractorName(ctx, contractorID)
+				contractorName, _ = s.getContractorDetails(ctx, contractorID)
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
@@ -479,7 +453,7 @@ func (s *ContractorRatesService) FetchContractorRateByPageID(ctx context.Context
 	// Step 4: Fetch contractor name if contractor page ID available
 	contractorName := ""
 	if contractorPageID != "" {
-		contractorName = s.getContractorName(ctx, contractorPageID)
+		contractorName, _ = s.getContractorDetails(ctx, contractorPageID)
 	}
 
 	// Step 5: Extract all rate data fields
@@ -506,6 +480,7 @@ func (s *ContractorRatesService) FetchContractorRateByPageID(ctx context.Context
 
 // ListActiveContractorsByBatch returns all contractors with active rates matching the given payday batch
 // Filters: Status=Active AND Payday=batch (as select field "01" or "15")
+// Uses parallel fetching to reduce Notion API call time
 func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Context, month string, batch int) ([]ContractorRateData, error) {
 	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
 	if contractorRatesDBID == "" {
@@ -551,7 +526,22 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 		PageSize: 100,
 	}
 
-	var contractors []ContractorRateData
+	// First pass: collect all valid entries with basic data (no contractor detail API calls yet)
+	type pendingContractor struct {
+		index            int
+		pageID           string
+		contractorPageID string
+		discord          string
+		billingType      string
+		monthlyFixed     float64
+		hourlyRate       float64
+		grossFixed       float64
+		currency         string
+		startDate        *time.Time
+		endDate          *time.Time
+		payDay           int
+	}
+	var pending []pendingContractor
 
 	// Query with pagination
 	for {
@@ -576,26 +566,13 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 
 			// Check date range: Start Date <= month AND (End Date >= month OR End Date is empty)
 			if startDate != nil && startDate.After(endOfMonth) {
-				// Start date is after the month we're looking for
 				s.logger.Debug(fmt.Sprintf("skipping rate: start date after month, pageID=%s", page.ID))
 				continue
 			}
 
 			if endDate != nil && endDate.Before(startOfMonth) {
-				// End date is before the month we're looking for
 				s.logger.Debug(fmt.Sprintf("skipping rate: end date before month, pageID=%s", page.ID))
 				continue
-			}
-
-			// Extract contractor page ID
-			contractorPageID := s.extractFirstRelationID(props, "Contractor")
-
-			// Fetch contractor name and team email from Contractor page
-			contractorName := ""
-			teamEmail := ""
-			if contractorPageID != "" {
-				contractorName = s.getContractorName(ctx, contractorPageID)
-				teamEmail = s.getContractorTeamEmail(ctx, contractorPageID)
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
@@ -605,27 +582,20 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
 			}
 
-			// Extract rate data
-			rateData := ContractorRateData{
-				PageID:           page.ID,
-				ContractorPageID: contractorPageID,
-				ContractorName:   contractorName,
-				Discord:          s.extractRollupRichText(props, "Discord"),
-				TeamEmail:        teamEmail,
-				BillingType:      s.extractSelect(props, "Billing Type"),
-				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
-				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
-				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
-				Currency:         s.extractSelect(props, "Currency"),
-				StartDate:        startDate,
-				EndDate:          endDate,
-				PayDay:           payDay,
-			}
-
-			s.logger.Debug(fmt.Sprintf("found contractor: pageID=%s name=%s discord=%s payday=%d",
-				rateData.PageID, rateData.ContractorName, rateData.Discord, rateData.PayDay))
-
-			contractors = append(contractors, rateData)
+			pending = append(pending, pendingContractor{
+				index:            len(pending),
+				pageID:           page.ID,
+				contractorPageID: s.extractFirstRelationID(props, "Contractor"),
+				discord:          s.extractRollupRichText(props, "Discord"),
+				billingType:      s.extractSelect(props, "Billing Type"),
+				monthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
+				hourlyRate:       s.extractNumber(props, "Hourly Rate"),
+				grossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
+				currency:         s.extractSelect(props, "Currency"),
+				startDate:        startDate,
+				endDate:          endDate,
+				payDay:           payDay,
+			})
 		}
 
 		if !resp.HasMore || resp.NextCursor == nil {
@@ -635,6 +605,56 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 		query.StartCursor = *resp.NextCursor
 	}
 
-	s.logger.Debug(fmt.Sprintf("total active contractors for batch %s: %d", batchStr, len(contractors)))
-	return contractors, nil
+	if len(pending) == 0 {
+		s.logger.Debug(fmt.Sprintf("no active contractors for batch %s", batchStr))
+		return []ContractorRateData{}, nil
+	}
+
+	// Second pass: fetch contractor details in parallel with semaphore
+	const maxConcurrentNotionCalls = 5 // Respect Notion rate limits
+	s.logger.Debug(fmt.Sprintf("fetching contractor details for %d contractors in parallel (max %d concurrent)", len(pending), maxConcurrentNotionCalls))
+
+	results := make([]ContractorRateData, len(pending))
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, maxConcurrentNotionCalls)
+
+	for _, p := range pending {
+		wg.Add(1)
+		go func(pc pendingContractor) {
+			defer wg.Done()
+			sem <- struct{}{}        // Acquire semaphore
+			defer func() { <-sem }() // Release semaphore
+
+			// Fetch contractor name and team email from Contractor page (single API call)
+			contractorName := ""
+			teamEmail := ""
+			if pc.contractorPageID != "" {
+				contractorName, teamEmail = s.getContractorDetails(ctx, pc.contractorPageID)
+			}
+
+			results[pc.index] = ContractorRateData{
+				PageID:           pc.pageID,
+				ContractorPageID: pc.contractorPageID,
+				ContractorName:   contractorName,
+				Discord:          pc.discord,
+				TeamEmail:        teamEmail,
+				BillingType:      pc.billingType,
+				MonthlyFixed:     pc.monthlyFixed,
+				HourlyRate:       pc.hourlyRate,
+				GrossFixed:       pc.grossFixed,
+				Currency:         pc.currency,
+				StartDate:        pc.startDate,
+				EndDate:          pc.endDate,
+				PayDay:           pc.payDay,
+			}
+
+			s.logger.Debug(fmt.Sprintf("found contractor: pageID=%s name=%s discord=%s payday=%d",
+				pc.pageID, contractorName, pc.discord, pc.payDay))
+		}(p)
+	}
+
+	wg.Wait()
+
+	s.logger.Debug(fmt.Sprintf("total active contractors for batch %s: %d", batchStr, len(results)))
+	return results, nil
 }
