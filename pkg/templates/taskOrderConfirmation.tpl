@@ -1,7 +1,7 @@
 Mime-Version: 1.0
 From: "Spawn @ Dwarves LLC" <spawn@d.foundation>
 To: {{.TeamEmail}}
-Subject: Monthly Client Assignment - {{formattedMonth}}
+Subject: Invoice reminder & client milestones - {{formattedMonth}}
 Content-Type: multipart/mixed; boundary=main
 
 --main
