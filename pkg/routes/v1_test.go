@@ -892,6 +892,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.MarkPaid-fm",
 			},
 		},
+		"/api/v1/invoices/generate-splits": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoice.IHandler.GenerateSplits-fm",
+			},
+		},
 		"/api/v1/clients": {
 			"GET": {
 				Method:  "GET",
@@ -932,6 +938,12 @@ func Test_loadV1Routes(t *testing.T) {
 			"POST": {
 				Method:  "POST",
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SendProjectChangelog-fm",
+			},
+		},
+		"/api/v1/notion/contractor-payouts/sync": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.SyncPayouts-fm",
 			},
 		},
 		"/api/v1/notion/df-updates/:id/send": {
