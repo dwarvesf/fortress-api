@@ -753,14 +753,15 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, id
 
 	l.Info(fmt.Sprintf("found %d pending invoice splits", len(pendingSplits)))
 
-	// Filter by Name (Auto Name formula) if specified (case-insensitive contains match)
+	// Filter by Auto Name (formula field) if specified (case-insensitive contains match)
+	// Auto Name contains the formatted name with ID suffix (e.g., "SPL :: 202511 :: ... :: HJR4Z")
 	if idFilter != "" {
-		l.Debug(fmt.Sprintf("filtering splits by Name containing: %s", idFilter))
+		l.Debug(fmt.Sprintf("filtering splits by Auto Name containing: %s", idFilter))
 		idFilterLower := strings.ToLower(idFilter)
 		var filteredSplits []notionsvc.PendingCommissionSplit
 		for _, split := range pendingSplits {
-			if strings.Contains(strings.ToLower(split.Name), idFilterLower) {
-				l.Debug(fmt.Sprintf("split %s matches id filter (Name=%s)", split.PageID, split.Name))
+			if strings.Contains(strings.ToLower(split.AutoName), idFilterLower) {
+				l.Debug(fmt.Sprintf("split %s matches id filter (AutoName=%s)", split.PageID, split.AutoName))
 				filteredSplits = append(filteredSplits, split)
 			}
 		}

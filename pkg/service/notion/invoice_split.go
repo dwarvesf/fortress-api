@@ -34,6 +34,7 @@ type InvoiceSplitData struct {
 type PendingCommissionSplit struct {
 	PageID       string
 	Name         string
+	AutoName     string // Auto Name formula field containing formatted name with ID suffix (e.g., "SPL :: 202511 :: ... :: HJR4Z")
 	Amount       float64
 	Currency     string
 	Role         string
@@ -247,6 +248,21 @@ func (s *InvoiceSplitService) extractTitle(props nt.DatabasePageProperties, prop
 	return result
 }
 
+// extractRichText extracts rich text property value
+func (s *InvoiceSplitService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || len(prop.RichText) == 0 {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: rich_text property %s not found or empty", propName))
+		return ""
+	}
+	var result string
+	for _, rt := range prop.RichText {
+		result += rt.PlainText
+	}
+	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: rich_text %s value=%s", propName, result))
+	return result
+}
+
 // extractFirstRelationID extracts the first relation ID from a relation property
 func (s *InvoiceSplitService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
 	prop, ok := props[propName]
@@ -286,11 +302,11 @@ func (s *InvoiceSplitService) extractFormula(props nt.DatabasePageProperties, pr
 	return ""
 }
 
-// QueryPendingInvoiceSplits queries invoice splits with Status=Pending and Type in (Commission, Bonus, Fee)
+// QueryPendingInvoiceSplits queries invoice splits with Status=Pending and Type in (Commission, Bonus, Fee, Service Fee)
 func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]PendingCommissionSplit, error) {
-	s.logger.Debug("[DEBUG] invoice_split: querying pending invoice splits (Commission, Bonus, Fee)")
+	s.logger.Debug("[DEBUG] invoice_split: querying pending invoice splits (Commission, Bonus, Fee, Service Fee)")
 
-	// Build filter: Status=Pending AND (Type=Commission OR Type=Bonus OR Type=Fee)
+	// Build filter: Status=Pending AND (Type=Commission OR Type=Bonus OR Type=Fee OR Type=Service Fee)
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
 			And: []nt.DatabaseQueryFilter{
@@ -328,6 +344,14 @@ func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]
 								},
 							},
 						},
+						{
+							Property: "Type",
+							DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+								Select: &nt.SelectDatabaseQueryFilter{
+									Equals: "Service Fee",
+								},
+							},
+						},
 					},
 				},
 			},
@@ -359,6 +383,7 @@ func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]
 			split := PendingCommissionSplit{
 				PageID:       page.ID,
 				Name:         s.extractTitle(props, "Name"),
+				AutoName:     s.extractFormula(props, "Auto Name"),
 				Amount:       s.extractNumber(props, "Amount"),
 				Currency:     s.extractSelect(props, "Currency"),
 				Role:         s.extractSelect(props, "Role"),
