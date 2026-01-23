@@ -645,6 +645,7 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 					Amount:           refund.Amount,
 					Currency:         refund.Currency,
 					Date:             refund.DateRequested,
+					Description:      refund.DescriptionFormatted,
 				}
 
 				payoutPageID, err := contractorPayoutsService.CreateRefundPayout(ctx, payoutInput)

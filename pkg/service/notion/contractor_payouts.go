@@ -636,6 +636,7 @@ type CreateRefundPayoutInput struct {
 	Amount           float64 // Payment amount
 	Currency         string  // Currency (e.g., "VND", "USD")
 	Date             string  // Date in YYYY-MM-DD format
+	Description      string  // Description (from refund's Description Formatted)
 }
 
 // CheckPayoutExistsByRefundRequest checks if a payout already exists for a given refund request
@@ -744,6 +745,16 @@ func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input
 		} else {
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: failed to parse date=%s: %v", input.Date, err))
 		}
+	}
+
+	// Add Description if provided
+	if input.Description != "" {
+		props["Description"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Description}},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: set description=%s", input.Description))
 	}
 
 	params := nt.CreatePageParams{

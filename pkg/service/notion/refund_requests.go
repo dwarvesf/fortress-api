@@ -20,15 +20,16 @@ type RefundRequestsService struct {
 
 // ApprovedRefundData represents an approved refund request from Notion
 type ApprovedRefundData struct {
-	PageID           string
-	RefundID         string  // Title: Refund ID
-	Amount           float64 // Number
-	Currency         string  // Select: VND, USD
-	ContractorPageID string  // From Contractor relation
-	ContractorName   string  // Rollup from Contractor
-	Reason           string  // Select: Advance Return, Deduction Reversal, etc.
-	Description      string  // Rich text
-	DateRequested    string  // Date
+	PageID               string
+	RefundID             string  // Title: Refund ID
+	Amount               float64 // Number
+	Currency             string  // Select: VND, USD
+	ContractorPageID     string  // From Contractor relation
+	ContractorName       string  // Rollup from Contractor
+	Reason               string  // Select: Advance Return, Deduction Reversal, etc.
+	Description          string  // Rich text
+	DescriptionFormatted string  // Formula: Description Formatted (for payout description)
+	DateRequested        string  // Date
 }
 
 // NewRefundRequestsService creates a new Notion refund requests service
@@ -92,15 +93,16 @@ func (s *RefundRequestsService) QueryApprovedRefunds(ctx context.Context) ([]*Ap
 
 			// Extract refund data
 			refund := &ApprovedRefundData{
-				PageID:           page.ID,
-				RefundID:         s.extractTitle(props, "Refund ID"),
-				Amount:           s.extractNumber(props, "Amount"),
-				Currency:         s.extractSelect(props, "Currency"),
-				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
-				ContractorName:   s.extractRollupText(props, "Person"),
-				Reason:           s.extractSelect(props, "Reason"),
-				Description:      s.extractRichText(props, "Description"),
-				DateRequested:    s.extractDate(props, "Date Requested"),
+				PageID:               page.ID,
+				RefundID:             s.extractTitle(props, "Refund ID"),
+				Amount:               s.extractNumber(props, "Amount"),
+				Currency:             s.extractSelect(props, "Currency"),
+				ContractorPageID:     s.extractFirstRelationID(props, "Contractor"),
+				ContractorName:       s.extractRollupText(props, "Person"),
+				Reason:               s.extractSelect(props, "Reason"),
+				Description:          s.extractRichText(props, "Description"),
+				DescriptionFormatted: s.extractFormulaString(props, "Description Formatted"),
+				DateRequested:        s.extractDate(props, "Date Requested"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: parsed refund pageID=%s refundID=%s amount=%.2f currency=%s contractor=%s reason=%s",
@@ -207,6 +209,17 @@ func (s *RefundRequestsService) extractRollupText(props nt.DatabasePagePropertie
 		}
 	}
 
+	return ""
+}
+
+func (s *RefundRequestsService) extractFormulaString(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Formula == nil {
+		return ""
+	}
+	if prop.Formula.String != nil {
+		return *prop.Formula.String
+	}
 	return ""
 }
 

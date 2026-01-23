@@ -40,10 +40,18 @@ None
 - Tests and linting pass for all changes
 - fortress-discord builds successfully with go build ./...
 
+## Post-Implementation Fixes
+- Fixed 404 error by removing `/api/v1` prefix from cronjobs endpoint URL
+- Added payout description from origin records:
+  - Refunds: Use `DescriptionFormatted` formula field from Refund Requests
+  - Invoice splits: Already uses `Description` field (no changes needed)
+
 ## Files Modified
 
 ### fortress-api
-- pkg/handler/notion/contractor_payouts.go - Added id query param filtering
+- pkg/handler/notion/contractor_payouts.go - Added id query param filtering, pass DescriptionFormatted to refund payout creation
+- pkg/service/notion/refund_requests.go - Added DescriptionFormatted field and extractFormulaString helper
+- pkg/service/notion/contractor_payouts.go - Added Description field to CreateRefundPayoutInput and CreateRefundPayout
 
 ### fortress-discord
 - pkg/model/payout.go - Added GeneratePayoutResult struct
