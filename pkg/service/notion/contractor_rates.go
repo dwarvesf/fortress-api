@@ -658,3 +658,154 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 	s.logger.Debug(fmt.Sprintf("total active contractors for batch %s: %d", batchStr, len(results)))
 	return results, nil
 }
+
+// FindActiveRatesByContractors finds active contractor rates for multiple contractors at once.
+// Returns a map of contractorPageID -> ContractorRateData for all contractors with valid rates.
+// This is a batch operation that reduces N individual queries to a single query.
+func (s *ContractorRatesService) FindActiveRatesByContractors(ctx context.Context, contractorPageIDs []string, orderDate time.Time) (map[string]*ContractorRateData, error) {
+	if len(contractorPageIDs) == 0 {
+		return make(map[string]*ContractorRateData), nil
+	}
+
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		return nil, errors.New("contractor rates database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_RATES] finding active rates for %d contractors, orderDate=%s", len(contractorPageIDs), orderDate.Format("2006-01-02")))
+
+	// Create a set for quick lookup
+	contractorSet := make(map[string]bool)
+	for _, id := range contractorPageIDs {
+		contractorSet[id] = true
+	}
+
+	// Build filter: Status=Active only (we filter by contractor IDs in memory for efficiency)
+	// Note: Notion API doesn't support OR filters for multiple relation values efficiently
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "Active",
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	results := make(map[string]*ContractorRateData)
+	var foundCount int
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+		if err != nil {
+			s.logger.Error(err, "[BATCH_RATES] failed to query contractor rates database")
+			return nil, fmt.Errorf("failed to query contractor rates: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[BATCH_RATES] processing page with %d entries", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			// Extract contractor page ID from relation
+			contractorPageID := s.extractFirstRelationID(props, "Contractor")
+			if contractorPageID == "" || !contractorSet[contractorPageID] {
+				continue // Not in our target set
+			}
+
+			// Check if we already have a rate for this contractor (take first valid one)
+			if _, exists := results[contractorPageID]; exists {
+				continue
+			}
+
+			// Extract Start Date and End Date for filtering
+			startDate := s.extractDate(props, "Start Date")
+			endDate := s.extractDate(props, "End Date")
+
+			// Check date range: Start Date <= orderDate AND (orderDate <= End Date OR End Date is nil)
+			if startDate != nil && startDate.After(orderDate) {
+				continue // Start date is after order date
+			}
+			if endDate != nil && endDate.Before(orderDate) {
+				continue // End date is before order date
+			}
+
+			// Extract Payday
+			payDayStr := s.extractSelect(props, "Payday")
+			payDay := 0
+			if payDayStr != "" {
+				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
+			}
+
+			// Build rate data (without fetching contractor details yet - we'll do that in parallel)
+			rate := &ContractorRateData{
+				PageID:           page.ID,
+				ContractorPageID: contractorPageID,
+				Discord:          s.extractRollupRichText(props, "Discord"),
+				BillingType:      s.extractSelect(props, "Billing Type"),
+				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
+				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
+				Currency:         s.extractSelect(props, "Currency"),
+				StartDate:        startDate,
+				EndDate:          endDate,
+				PayDay:           payDay,
+			}
+
+			results[contractorPageID] = rate
+			foundCount++
+
+			s.logger.Debug(fmt.Sprintf("[BATCH_RATES] found rate for contractor=%s pageID=%s billingType=%s currency=%s",
+				contractorPageID, rate.PageID, rate.BillingType, rate.Currency))
+
+			// Early exit if we found all contractors
+			if foundCount == len(contractorPageIDs) {
+				s.logger.Debug(fmt.Sprintf("[BATCH_RATES] found all %d contractors, stopping pagination early", foundCount))
+				goto done
+			}
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+done:
+	s.logger.Debug(fmt.Sprintf("[BATCH_RATES] completed: found rates for %d/%d contractors", len(results), len(contractorPageIDs)))
+
+	// Fetch contractor names in parallel for found rates
+	if len(results) > 0 {
+		s.logger.Debug(fmt.Sprintf("[BATCH_RATES] fetching contractor details for %d rates in parallel", len(results)))
+
+		const maxConcurrent = 5
+		var wg sync.WaitGroup
+		sem := make(chan struct{}, maxConcurrent)
+		var mu sync.Mutex
+
+		for contractorID, rate := range results {
+			wg.Add(1)
+			go func(cID string, r *ContractorRateData) {
+				defer wg.Done()
+				sem <- struct{}{}
+				defer func() { <-sem }()
+
+				name, email := s.getContractorDetails(ctx, cID)
+				mu.Lock()
+				r.ContractorName = name
+				r.TeamEmail = email
+				mu.Unlock()
+			}(contractorID, rate)
+		}
+		wg.Wait()
+		s.logger.Debug("[BATCH_RATES] contractor details fetch completed")
+	}
+
+	return results, nil
+}

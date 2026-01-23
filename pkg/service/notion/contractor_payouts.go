@@ -508,6 +508,89 @@ func (s *ContractorPayoutsService) CheckPayoutExistsByContractorFee(ctx context.
 	return false, "", nil
 }
 
+// CheckPayoutsExistByContractorFees checks if payouts already exist for multiple task orders at once.
+// Returns a map of taskOrderPageID -> existingPayoutPageID for all orders that have payouts.
+// This is a batch operation that reduces N individual queries to fewer queries.
+func (s *ContractorPayoutsService) CheckPayoutsExistByContractorFees(ctx context.Context, taskOrderPageIDs []string) (map[string]string, error) {
+	if len(taskOrderPageIDs) == 0 {
+		return make(map[string]string), nil
+	}
+
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_PAYOUT_CHECK] checking payout existence for %d task orders", len(taskOrderPageIDs)))
+
+	// Create a set for quick lookup
+	taskOrderSet := make(map[string]bool)
+	for _, id := range taskOrderPageIDs {
+		taskOrderSet[id] = true
+	}
+
+	// Query payouts that have "00 Task Order" relation set (non-empty)
+	// We'll filter by our target IDs in memory
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "00 Task Order",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					IsNotEmpty: true,
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	results := make(map[string]string) // taskOrderID -> payoutPageID
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+		if err != nil {
+			s.logger.Error(err, "[BATCH_PAYOUT_CHECK] failed to query contractor payouts database")
+			return nil, fmt.Errorf("failed to check payout existence: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[BATCH_PAYOUT_CHECK] processing page with %d entries", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			// Extract task order ID from relation
+			taskOrderID := s.extractFirstRelationID(props, "00 Task Order")
+			if taskOrderID == "" || !taskOrderSet[taskOrderID] {
+				continue // Not in our target set
+			}
+
+			// Only record the first payout found for each task order
+			if _, exists := results[taskOrderID]; !exists {
+				results[taskOrderID] = page.ID
+				s.logger.Debug(fmt.Sprintf("[BATCH_PAYOUT_CHECK] found payout=%s for taskOrder=%s", page.ID, taskOrderID))
+			}
+
+			// Early exit if we found all task orders
+			if len(results) == len(taskOrderPageIDs) {
+				s.logger.Debug(fmt.Sprintf("[BATCH_PAYOUT_CHECK] found all %d task orders, stopping early", len(results)))
+				goto done
+			}
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+done:
+	s.logger.Debug(fmt.Sprintf("[BATCH_PAYOUT_CHECK] completed: found payouts for %d/%d task orders", len(results), len(taskOrderPageIDs)))
+	return results, nil
+}
+
 // CreatePayoutInput contains the input data for creating a new payout
 type CreatePayoutInput struct {
 	Name             string  // Title/Name of the payout
@@ -678,6 +761,88 @@ func (s *ContractorPayoutsService) CheckPayoutExistsByRefundRequest(ctx context.
 	return false, "", nil
 }
 
+// CheckPayoutsExistByRefundRequests checks if payouts already exist for multiple refund requests at once.
+// Returns a map of refundRequestPageID -> existingPayoutPageID for all refunds that have payouts.
+// This is a batch operation that reduces N individual queries to fewer queries.
+func (s *ContractorPayoutsService) CheckPayoutsExistByRefundRequests(ctx context.Context, refundRequestPageIDs []string) (map[string]string, error) {
+	if len(refundRequestPageIDs) == 0 {
+		return make(map[string]string), nil
+	}
+
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_REFUND_CHECK] checking payout existence for %d refund requests", len(refundRequestPageIDs)))
+
+	// Create a set for quick lookup
+	refundSet := make(map[string]bool)
+	for _, id := range refundRequestPageIDs {
+		refundSet[id] = true
+	}
+
+	// Query payouts that have "01 Refund" relation set (non-empty)
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "01 Refund",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					IsNotEmpty: true,
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	results := make(map[string]string) // refundRequestID -> payoutPageID
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+		if err != nil {
+			s.logger.Error(err, "[BATCH_REFUND_CHECK] failed to query contractor payouts database")
+			return nil, fmt.Errorf("failed to check payout existence: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[BATCH_REFUND_CHECK] processing page with %d entries", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			// Extract refund request ID from relation
+			refundRequestID := s.extractFirstRelationID(props, "01 Refund")
+			if refundRequestID == "" || !refundSet[refundRequestID] {
+				continue // Not in our target set
+			}
+
+			// Only record the first payout found for each refund
+			if _, exists := results[refundRequestID]; !exists {
+				results[refundRequestID] = page.ID
+				s.logger.Debug(fmt.Sprintf("[BATCH_REFUND_CHECK] found payout=%s for refundRequest=%s", page.ID, refundRequestID))
+			}
+
+			// Early exit if we found all refund requests
+			if len(results) == len(refundRequestPageIDs) {
+				s.logger.Debug(fmt.Sprintf("[BATCH_REFUND_CHECK] found all %d refund requests, stopping early", len(results)))
+				goto done
+			}
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+done:
+	s.logger.Debug(fmt.Sprintf("[BATCH_REFUND_CHECK] completed: found payouts for %d/%d refund requests", len(results), len(refundRequestPageIDs)))
+	return results, nil
+}
+
 // CreateRefundPayout creates a new refund payout entry in the Contractor Payouts database
 // Returns the created page ID
 func (s *ContractorPayoutsService) CreateRefundPayout(ctx context.Context, input CreateRefundPayoutInput) (string, error) {
@@ -813,6 +978,88 @@ func (s *ContractorPayoutsService) CheckPayoutExistsByInvoiceSplit(ctx context.C
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout exists for invoice split: %s", invoiceSplitPageID))
 	return false, "", nil
+}
+
+// CheckPayoutsExistByInvoiceSplits checks if payouts already exist for multiple invoice splits at once.
+// Returns a map of invoiceSplitPageID -> existingPayoutPageID for all splits that have payouts.
+// This is a batch operation that reduces N individual queries to fewer queries.
+func (s *ContractorPayoutsService) CheckPayoutsExistByInvoiceSplits(ctx context.Context, invoiceSplitPageIDs []string) (map[string]string, error) {
+	if len(invoiceSplitPageIDs) == 0 {
+		return make(map[string]string), nil
+	}
+
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_SPLIT_CHECK] checking payout existence for %d invoice splits", len(invoiceSplitPageIDs)))
+
+	// Create a set for quick lookup
+	splitSet := make(map[string]bool)
+	for _, id := range invoiceSplitPageIDs {
+		splitSet[id] = true
+	}
+
+	// Query payouts that have "02 Invoice Split" relation set (non-empty)
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "02 Invoice Split",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					IsNotEmpty: true,
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	results := make(map[string]string) // invoiceSplitID -> payoutPageID
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+		if err != nil {
+			s.logger.Error(err, "[BATCH_SPLIT_CHECK] failed to query contractor payouts database")
+			return nil, fmt.Errorf("failed to check payout existence: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[BATCH_SPLIT_CHECK] processing page with %d entries", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			// Extract invoice split ID from relation
+			invoiceSplitID := s.extractFirstRelationID(props, "02 Invoice Split")
+			if invoiceSplitID == "" || !splitSet[invoiceSplitID] {
+				continue // Not in our target set
+			}
+
+			// Only record the first payout found for each split
+			if _, exists := results[invoiceSplitID]; !exists {
+				results[invoiceSplitID] = page.ID
+				s.logger.Debug(fmt.Sprintf("[BATCH_SPLIT_CHECK] found payout=%s for invoiceSplit=%s", page.ID, invoiceSplitID))
+			}
+
+			// Early exit if we found all splits
+			if len(results) == len(invoiceSplitPageIDs) {
+				s.logger.Debug(fmt.Sprintf("[BATCH_SPLIT_CHECK] found all %d invoice splits, stopping early", len(results)))
+				goto done
+			}
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+done:
+	s.logger.Debug(fmt.Sprintf("[BATCH_SPLIT_CHECK] completed: found payouts for %d/%d invoice splits", len(results), len(invoiceSplitPageIDs)))
+	return results, nil
 }
 
 // CreateCommissionPayoutInput contains the input data for creating a commission payout
@@ -1241,4 +1488,54 @@ func (s *ContractorPayoutsService) GetContractorPositions(ctx context.Context, c
 	s.logger.Debug(fmt.Sprintf("found %d positions for contractor pageID=%s: %v", len(positions), contractorPageID, positions))
 
 	return positions, nil
+}
+
+// GetContractorPositionsBatch fetches positions for multiple contractors at once.
+// Returns a map of contractorPageID -> []positions.
+// This is a batch operation that runs queries in parallel to reduce total time.
+func (s *ContractorPayoutsService) GetContractorPositionsBatch(ctx context.Context, contractorPageIDs []string) map[string][]string {
+	if len(contractorPageIDs) == 0 {
+		return make(map[string][]string)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_POSITIONS] fetching positions for %d contractors in parallel", len(contractorPageIDs)))
+
+	// Deduplicate contractor IDs
+	seen := make(map[string]bool)
+	var uniqueIDs []string
+	for _, id := range contractorPageIDs {
+		if id != "" && !seen[id] {
+			seen[id] = true
+			uniqueIDs = append(uniqueIDs, id)
+		}
+	}
+
+	results := make(map[string][]string)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	const maxConcurrent = 5
+	sem := make(chan struct{}, maxConcurrent)
+
+	for _, contractorID := range uniqueIDs {
+		wg.Add(1)
+		go func(cID string) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			positions, err := s.GetContractorPositions(ctx, cID)
+			mu.Lock()
+			if err != nil {
+				s.logger.Debug(fmt.Sprintf("[BATCH_POSITIONS] failed to fetch positions for contractor=%s: %v", cID, err))
+				results[cID] = nil
+			} else {
+				results[cID] = positions
+			}
+			mu.Unlock()
+		}(contractorID)
+	}
+
+	wg.Wait()
+	s.logger.Debug(fmt.Sprintf("[BATCH_POSITIONS] completed: fetched positions for %d contractors", len(results)))
+	return results
 }

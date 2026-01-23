@@ -218,6 +218,11 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 // contractorFilter: optional filter by contractor discord username or page ID
 // payDayFilter: optional filter by pay day (1-31), 0 means no filter
 // monthFilter: optional filter by month (YYYY-MM), empty means no filter
+//
+// OPTIMIZATION: Uses batch pre-loading to reduce Notion API calls from O(3N) to O(3):
+// - Pre-loads all contractor rates in one batch query
+// - Pre-loads all payout existence checks in one batch query
+// - Pre-loads all contractor positions in one batch query
 func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string, contractorFilter string, payDayFilter int, monthFilter string) {
 	ctx := c.Request.Context()
 
@@ -289,9 +294,91 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 		return
 	}
 
-	// Process orders concurrently with worker pool
-	const maxWorkers = 5 // Limit concurrent Notion API calls
-	l.Debug(fmt.Sprintf("processing %d orders with %d workers", len(approvedOrders), maxWorkers))
+	// ============================================================
+	// BATCH PRE-LOADING PHASE: Reduce O(3N) API calls to O(3)
+	// ============================================================
+	l.Debug(fmt.Sprintf("[PRELOAD] starting batch pre-loading for %d orders", len(approvedOrders)))
+	preloadStart := time.Now()
+
+	// Collect unique contractor IDs and task order IDs
+	contractorIDs := make([]string, 0, len(approvedOrders))
+	taskOrderIDs := make([]string, 0, len(approvedOrders))
+	contractorIDSet := make(map[string]bool)
+
+	// Use the first order's date as reference for rate lookup (typically all orders are for the same month)
+	var referenceDate time.Time
+	for _, order := range approvedOrders {
+		if order.ContractorPageID != "" && !contractorIDSet[order.ContractorPageID] {
+			contractorIDs = append(contractorIDs, order.ContractorPageID)
+			contractorIDSet[order.ContractorPageID] = true
+		}
+		taskOrderIDs = append(taskOrderIDs, order.PageID)
+		if referenceDate.IsZero() {
+			referenceDate = order.Date
+		}
+	}
+
+	l.Debug(fmt.Sprintf("[PRELOAD] unique contractors: %d, task orders: %d", len(contractorIDs), len(taskOrderIDs)))
+
+	// Pre-load data in parallel using goroutines
+	var (
+		preloadedRates     map[string]*notionsvc.ContractorRateData
+		preloadedPayouts   map[string]string // taskOrderID -> existing payout ID
+		preloadedPositions map[string][]string
+		ratesErr           error
+		payoutsErr         error
+	)
+
+	var preloadWg sync.WaitGroup
+	preloadWg.Add(3)
+
+	// 1. Batch fetch contractor rates
+	go func() {
+		defer preloadWg.Done()
+		l.Debug("[PRELOAD] fetching contractor rates batch...")
+		ratesStart := time.Now()
+		preloadedRates, ratesErr = contractorRatesService.FindActiveRatesByContractors(ctx, contractorIDs, referenceDate)
+		l.Debug(fmt.Sprintf("[PRELOAD] contractor rates fetch completed in %v, found %d rates", time.Since(ratesStart), len(preloadedRates)))
+	}()
+
+	// 2. Batch check existing payouts
+	go func() {
+		defer preloadWg.Done()
+		l.Debug("[PRELOAD] checking existing payouts batch...")
+		payoutsStart := time.Now()
+		preloadedPayouts, payoutsErr = contractorPayoutsService.CheckPayoutsExistByContractorFees(ctx, taskOrderIDs)
+		l.Debug(fmt.Sprintf("[PRELOAD] existing payouts check completed in %v, found %d existing", time.Since(payoutsStart), len(preloadedPayouts)))
+	}()
+
+	// 3. Batch fetch contractor positions
+	go func() {
+		defer preloadWg.Done()
+		l.Debug("[PRELOAD] fetching contractor positions batch...")
+		positionsStart := time.Now()
+		preloadedPositions = contractorPayoutsService.GetContractorPositionsBatch(ctx, contractorIDs)
+		l.Debug(fmt.Sprintf("[PRELOAD] contractor positions fetch completed in %v, fetched for %d contractors", time.Since(positionsStart), len(preloadedPositions)))
+	}()
+
+	preloadWg.Wait()
+	l.Debug(fmt.Sprintf("[PRELOAD] batch pre-loading completed in %v", time.Since(preloadStart)))
+
+	// Check for critical errors
+	if ratesErr != nil {
+		l.Error(ratesErr, "[PRELOAD] failed to batch fetch contractor rates")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, ratesErr, nil, ""))
+		return
+	}
+	if payoutsErr != nil {
+		l.Error(payoutsErr, "[PRELOAD] failed to batch check existing payouts")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, payoutsErr, nil, ""))
+		return
+	}
+
+	// ============================================================
+	// PROCESSING PHASE: Use pre-loaded data (no individual API calls)
+	// ============================================================
+	const maxWorkers = 5
+	l.Debug(fmt.Sprintf("[PROCESS] processing %d orders with %d workers (using pre-loaded data)", len(approvedOrders), maxWorkers))
 
 	type orderResult struct {
 		detail        map[string]any
@@ -336,13 +423,12 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 					continue
 				}
 
-				// Get contractor rate
-				l.Debug(fmt.Sprintf("[worker-%d] fetching contractor rate: contractor=%s date=%s", workerID, order.ContractorPageID, order.Date.Format("2006-01-02")))
-				rate, err := contractorRatesService.FindActiveRateByContractor(ctx, order.ContractorPageID, order.Date)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("[worker-%d] failed to get contractor rate for order %s", workerID, order.PageID))
+				// Get contractor rate from PRE-LOADED cache (no API call)
+				rate, rateExists := preloadedRates[order.ContractorPageID]
+				if !rateExists || rate == nil {
+					l.Warn(fmt.Sprintf("[worker-%d] no pre-loaded rate for contractor %s, order %s", workerID, order.ContractorPageID, order.PageID))
 					detail["status"] = "error"
-					detail["reason"] = fmt.Sprintf("failed to get contractor rate: %v", err)
+					detail["reason"] = "no active contractor rate found"
 					resultsChan <- orderResult{detail: detail, hasError: true}
 					continue
 				}
@@ -371,19 +457,9 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 				detail["currency"] = rate.Currency
 				detail["billing_type"] = rate.BillingType
 
-				// Check if payout exists (idempotency)
-				l.Debug(fmt.Sprintf("[worker-%d] checking if payout exists for order: %s", workerID, order.PageID))
-				exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByContractorFee(ctx, order.PageID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("[worker-%d] failed to check payout existence for order %s", workerID, order.PageID))
-					detail["status"] = "error"
-					detail["reason"] = "failed to check payout existence"
-					resultsChan <- orderResult{detail: detail, hasError: true}
-					continue
-				}
-
-				if exists {
-					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for order %s: %s", workerID, order.PageID, existingPayoutID))
+				// Check if payout exists from PRE-LOADED cache (no API call)
+				if existingPayoutID, exists := preloadedPayouts[order.PageID]; exists {
+					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for order %s: %s (from cache)", workerID, order.PageID, existingPayoutID))
 					detail["status"] = "skipped"
 					detail["reason"] = "payout already exists"
 					detail["payout_page_id"] = existingPayoutID
@@ -391,15 +467,12 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 					continue
 				}
 
-				// Generate description based on contractor positions
-				positions, posErr := contractorPayoutsService.GetContractorPositions(ctx, order.ContractorPageID)
-				if posErr != nil {
-					l.Debug(fmt.Sprintf("[worker-%d] failed to fetch contractor positions: %v", workerID, posErr))
-				}
+				// Get positions from PRE-LOADED cache (no API call)
+				positions := preloadedPositions[order.ContractorPageID]
 				description := generateServiceFeeDescription(month, positions)
 				l.Debug(fmt.Sprintf("[worker-%d] generated Service Fee description: %s", workerID, description))
 
-				// Create payout
+				// Create payout (this is the only API call per order that we can't avoid)
 				payoutName := fmt.Sprintf("Development work on %s", formatMonthYear(month))
 				l.Debug(fmt.Sprintf("[worker-%d] creating payout for order: %s name: %s amount: %.2f %s", workerID, order.PageID, payoutName, amount, rate.Currency))
 
@@ -489,6 +562,9 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 // processRefundPayouts processes approved refund requests
 // and creates payout entries of type "Refund"
 // idFilter: optional filter by RefundID (case-insensitive contains match)
+//
+// OPTIMIZATION: Uses batch pre-loading to reduce Notion API calls from O(N) to O(1):
+// - Pre-loads all payout existence checks in one batch query
 func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutType string, idFilter string) {
 	ctx := c.Request.Context()
 
@@ -550,12 +626,37 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 		return
 	}
 
-	// Process refunds concurrently with worker pool
+	// ============================================================
+	// BATCH PRE-LOADING PHASE: Reduce O(N) API calls to O(1)
+	// ============================================================
+	l.Debug(fmt.Sprintf("[PRELOAD] starting batch pre-loading for %d refunds", len(approvedRefunds)))
+	preloadStart := time.Now()
+
+	// Collect refund request IDs
+	refundRequestIDs := make([]string, 0, len(approvedRefunds))
+	for _, refund := range approvedRefunds {
+		refundRequestIDs = append(refundRequestIDs, refund.PageID)
+	}
+
+	// Batch check existing payouts
+	l.Debug("[PRELOAD] checking existing payouts batch...")
+	preloadedPayouts, err := contractorPayoutsService.CheckPayoutsExistByRefundRequests(ctx, refundRequestIDs)
+	if err != nil {
+		l.Error(err, "[PRELOAD] failed to batch check existing payouts")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("[PRELOAD] batch pre-loading completed in %v, found %d existing payouts", time.Since(preloadStart), len(preloadedPayouts)))
+
+	// ============================================================
+	// PROCESSING PHASE: Use pre-loaded data (no individual API calls)
+	// ============================================================
 	maxWorkers := h.config.RefundProcessingWorkers
 	if maxWorkers <= 0 {
 		maxWorkers = 5
 	}
-	l.Debug(fmt.Sprintf("processing %d refunds with %d workers", len(approvedRefunds), maxWorkers))
+	l.Debug(fmt.Sprintf("[PROCESS] processing %d refunds with %d workers (using pre-loaded data)", len(approvedRefunds), maxWorkers))
 
 	type refundResult struct {
 		detail        map[string]any
@@ -605,20 +706,9 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 					continue
 				}
 
-				// Check if payout exists (idempotency)
-				l.Debug(fmt.Sprintf("[worker-%d] checking if payout exists for refund: %s", workerID, refund.PageID))
-				exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByRefundRequest(ctx, refund.PageID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("[worker-%d] failed to check payout existence for refund %s", workerID, refund.PageID))
-					detail["status"] = "error"
-					detail["error_reason"] = "failed to check payout existence"
-					result.hasError = true
-					resultsChan <- result
-					continue
-				}
-
-				if exists {
-					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for refund %s: %s", workerID, refund.PageID, existingPayoutID))
+				// Check if payout exists from PRE-LOADED cache (no API call)
+				if existingPayoutID, exists := preloadedPayouts[refund.PageID]; exists {
+					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for refund %s: %s (from cache)", workerID, refund.PageID, existingPayoutID))
 					detail["status"] = "skipped"
 					detail["error_reason"] = "payout already exists"
 					detail["payout_page_id"] = existingPayoutID
@@ -627,7 +717,7 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 					continue
 				}
 
-				// Create payout
+				// Create payout (this is the only API call per refund that we can't avoid)
 				// Build payout name from reason
 				payoutName := refund.Reason
 				if payoutName == "" {
@@ -720,6 +810,9 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 // processInvoiceSplitPayouts processes pending invoice splits (Commission, Bonus, Fee)
 // and creates payout entries of type "Commission"
 // idFilter: optional filter by split Name (Auto Name formula, case-insensitive contains match)
+//
+// OPTIMIZATION: Uses batch pre-loading to reduce Notion API calls from O(N) to O(1):
+// - Pre-loads all payout existence checks in one batch query
 func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, idFilter string) {
 	ctx := c.Request.Context()
 
@@ -782,12 +875,37 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, id
 		return
 	}
 
-	// Process invoice splits concurrently with worker pool
+	// ============================================================
+	// BATCH PRE-LOADING PHASE: Reduce O(N) API calls to O(1)
+	// ============================================================
+	l.Debug(fmt.Sprintf("[PRELOAD] starting batch pre-loading for %d invoice splits", len(pendingSplits)))
+	preloadStart := time.Now()
+
+	// Collect invoice split IDs
+	invoiceSplitIDs := make([]string, 0, len(pendingSplits))
+	for _, split := range pendingSplits {
+		invoiceSplitIDs = append(invoiceSplitIDs, split.PageID)
+	}
+
+	// Batch check existing payouts
+	l.Debug("[PRELOAD] checking existing payouts batch...")
+	preloadedPayouts, err := contractorPayoutsService.CheckPayoutsExistByInvoiceSplits(ctx, invoiceSplitIDs)
+	if err != nil {
+		l.Error(err, "[PRELOAD] failed to batch check existing payouts")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("[PRELOAD] batch pre-loading completed in %v, found %d existing payouts", time.Since(preloadStart), len(preloadedPayouts)))
+
+	// ============================================================
+	// PROCESSING PHASE: Use pre-loaded data (no individual API calls)
+	// ============================================================
 	maxWorkers := h.config.InvoiceSplitProcessingWorkers
 	if maxWorkers <= 0 {
 		maxWorkers = 5
 	}
-	l.Debug(fmt.Sprintf("processing %d invoice splits with %d workers", len(pendingSplits), maxWorkers))
+	l.Debug(fmt.Sprintf("[PROCESS] processing %d invoice splits with %d workers (using pre-loaded data)", len(pendingSplits), maxWorkers))
 
 	type splitResult struct {
 		detail        map[string]any
@@ -837,20 +955,9 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, id
 					continue
 				}
 
-				// Check if payout exists (idempotency)
-				l.Debug(fmt.Sprintf("[worker-%d] checking if payout exists for invoice split: %s", workerID, split.PageID))
-				exists, existingPayoutID, err := contractorPayoutsService.CheckPayoutExistsByInvoiceSplit(ctx, split.PageID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("[worker-%d] failed to check payout existence for invoice split %s", workerID, split.PageID))
-					detail["status"] = "error"
-					detail["error_reason"] = "failed to check payout existence"
-					result.hasError = true
-					resultsChan <- result
-					continue
-				}
-
-				if exists {
-					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for invoice split %s: %s", workerID, split.PageID, existingPayoutID))
+				// Check if payout exists from PRE-LOADED cache (no API call)
+				if existingPayoutID, exists := preloadedPayouts[split.PageID]; exists {
+					l.Debug(fmt.Sprintf("[worker-%d] payout already exists for invoice split %s: %s (from cache)", workerID, split.PageID, existingPayoutID))
 					detail["status"] = "skipped"
 					detail["error_reason"] = "payout already exists"
 					detail["payout_page_id"] = existingPayoutID
@@ -859,7 +966,7 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, id
 					continue
 				}
 
-				// Create payout
+				// Create payout (this is the only API call per split that we can't avoid)
 				l.Debug(fmt.Sprintf("[worker-%d] creating payout for invoice split: %s name: %s notes: %s", workerID, split.PageID, split.Name, split.Description))
 
 				payoutInput := notionsvc.CreateCommissionPayoutInput{
