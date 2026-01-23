@@ -219,6 +219,76 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 	return payouts, nil
 }
 
+// GetFirstPayoutDateByDiscord returns the earliest payout Date for a contractor identified by Discord username.
+// It returns nil if no payout exists with a Date.
+func (s *ContractorPayoutsService) GetFirstPayoutDateByDiscord(ctx context.Context, discord string) (*time.Time, error) {
+	if discord == "" {
+		return nil, errors.New("discord username is required")
+	}
+
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying first payout date for discord=%s", discord))
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Discord",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Rollup: &nt.RollupDatabaseQueryFilter{
+							Any: &nt.DatabaseQueryPropertyFilter{
+								RichText: &nt.TextPropertyFilter{
+									Contains: discord,
+								},
+							},
+						},
+					},
+				},
+				{
+					Property: "Date",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Date: &nt.DatePropertyFilter{
+							IsNotEmpty: true,
+						},
+					},
+				},
+			},
+		},
+		Sorts: []nt.DatabaseQuerySort{
+			{
+				Property:  "Date",
+				Direction: nt.SortDirAsc,
+			},
+		},
+		PageSize: 5,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to query first payout date for discord=%s", discord))
+		return nil, fmt.Errorf("failed to query contractor payouts database: %w", err)
+	}
+
+	for _, page := range resp.Results {
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			continue
+		}
+
+		if date := s.extractDate(props, "Date"); date != nil {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: first payout date found discord=%s date=%s", discord, date.Format("2006-01-02")))
+			return date, nil
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout date found for discord=%s", discord))
+	return nil, nil
+}
+
 // QueryPendingRefundCommissionBeforeDate queries pending Refund/Commission/Other payouts for a contractor
 // where Date <= beforeDate. This is used to include older Refund/Commission/Other items in the current invoice.
 func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx context.Context, contractorPageID string, beforeDate string) ([]PayoutEntry, error) {
@@ -394,6 +464,14 @@ func (s *ContractorPayoutsService) determineSourceType(entry PayoutEntry) Payout
 	}
 	s.logger.Debug("[DEBUG] contractor_payouts: sourceType=Extra Payment (no relation set)")
 	return PayoutSourceTypeExtraPayment
+}
+
+func (s *ContractorPayoutsService) extractDate(props nt.DatabasePageProperties, propName string) *time.Time {
+	if prop, ok := props[propName]; ok && prop.Date != nil {
+		return &prop.Date.Start.Time
+	}
+
+	return nil
 }
 
 // Helper functions for extracting properties
