@@ -173,6 +173,9 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 	// Get optional contractor filter (discord username or page ID)
 	contractorFilter := c.Query("contractor")
 
+	// Get optional id filter (for invoice_split and refund types)
+	idFilter := c.Query("id")
+
 	// Get optional pay_day filter (1-31)
 	payDayFilter := 0
 	if payDayStr := c.Query("pay_day"); payDayStr != "" {
@@ -192,7 +195,7 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		}
 	}
 
-	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d, month: %s", payoutTypeKey, payoutType, contractorFilter, payDayFilter, monthFilter))
+	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d, month: %s, id: %s", payoutTypeKey, payoutType, contractorFilter, payDayFilter, monthFilter, idFilter))
 	l.Info("starting CreateContractorPayouts cronjob")
 
 	// Process based on payout type
@@ -200,9 +203,9 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 	case "contractor_payroll":
 		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter, monthFilter)
 	case "invoice_split":
-		h.processInvoiceSplitPayouts(c, l)
+		h.processInvoiceSplitPayouts(c, l, idFilter)
 	case "refund":
-		h.processRefundPayouts(c, l, payoutType)
+		h.processRefundPayouts(c, l, payoutType, idFilter)
 	default:
 		err := fmt.Errorf("unknown payout type: %s", payoutTypeKey)
 		l.Error(err, "unknown payout type")
@@ -485,8 +488,11 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 
 // processRefundPayouts processes approved refund requests
 // and creates payout entries of type "Refund"
-func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutType string) {
+// idFilter: optional filter by RefundID (case-insensitive contains match)
+func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutType string, idFilter string) {
 	ctx := c.Request.Context()
+
+	l.Debug(fmt.Sprintf("processRefundPayouts: idFilter=%s", idFilter))
 
 	// Get services
 	refundRequestsService := h.service.Notion.RefundRequests
@@ -515,6 +521,21 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 	}
 
 	l.Info(fmt.Sprintf("found %d refund requests with Status=Approved", len(approvedRefunds)))
+
+	// Filter by RefundID if specified (case-insensitive contains match)
+	if idFilter != "" {
+		l.Debug(fmt.Sprintf("filtering refunds by RefundID containing: %s", idFilter))
+		idFilterLower := strings.ToLower(idFilter)
+		var filteredRefunds []*notionsvc.ApprovedRefundData
+		for _, refund := range approvedRefunds {
+			if strings.Contains(strings.ToLower(refund.RefundID), idFilterLower) {
+				l.Debug(fmt.Sprintf("refund %s matches id filter (RefundID=%s)", refund.PageID, refund.RefundID))
+				filteredRefunds = append(filteredRefunds, refund)
+			}
+		}
+		l.Debug(fmt.Sprintf("filtered from %d to %d refunds", len(approvedRefunds), len(filteredRefunds)))
+		approvedRefunds = filteredRefunds
+	}
 
 	if len(approvedRefunds) == 0 {
 		l.Info("no approved refund requests found, returning success with zero counts")
@@ -697,8 +718,11 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 
 // processInvoiceSplitPayouts processes pending invoice splits (Commission, Bonus, Fee)
 // and creates payout entries of type "Commission"
-func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
+// idFilter: optional filter by split Name (Auto Name formula, case-insensitive contains match)
+func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, idFilter string) {
 	ctx := c.Request.Context()
+
+	l.Debug(fmt.Sprintf("processInvoiceSplitPayouts: idFilter=%s", idFilter))
 
 	// Get services
 	invoiceSplitService := h.service.Notion.InvoiceSplit
@@ -727,6 +751,21 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger) {
 	}
 
 	l.Info(fmt.Sprintf("found %d pending invoice splits", len(pendingSplits)))
+
+	// Filter by Name (Auto Name formula) if specified (case-insensitive contains match)
+	if idFilter != "" {
+		l.Debug(fmt.Sprintf("filtering splits by Name containing: %s", idFilter))
+		idFilterLower := strings.ToLower(idFilter)
+		var filteredSplits []notionsvc.PendingCommissionSplit
+		for _, split := range pendingSplits {
+			if strings.Contains(strings.ToLower(split.Name), idFilterLower) {
+				l.Debug(fmt.Sprintf("split %s matches id filter (Name=%s)", split.PageID, split.Name))
+				filteredSplits = append(filteredSplits, split)
+			}
+		}
+		l.Debug(fmt.Sprintf("filtered from %d to %d splits", len(pendingSplits), len(filteredSplits)))
+		pendingSplits = filteredSplits
+	}
 
 	if len(pendingSplits) == 0 {
 		l.Info("no pending invoice splits found, returning success with zero counts")
