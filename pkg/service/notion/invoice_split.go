@@ -248,21 +248,6 @@ func (s *InvoiceSplitService) extractTitle(props nt.DatabasePageProperties, prop
 	return result
 }
 
-// extractRichText extracts rich text property value
-func (s *InvoiceSplitService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.RichText) == 0 {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: rich_text property %s not found or empty", propName))
-		return ""
-	}
-	var result string
-	for _, rt := range prop.RichText {
-		result += rt.PlainText
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: rich_text %s value=%s", propName, result))
-	return result
-}
-
 // extractFirstRelationID extracts the first relation ID from a relation property
 func (s *InvoiceSplitService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
 	prop, ok := props[propName]
