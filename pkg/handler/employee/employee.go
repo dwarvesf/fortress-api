@@ -1195,8 +1195,21 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 	}
 
 	icyAmount := 2
+	now := time.Now()
 	// Get the current date without time
-	currentDate := time.Now().Truncate(24 * time.Hour)
+	currentDate := now.Truncate(24 * time.Hour)
+	eligibilityCutoff := now.AddDate(0, 0, -officeCheckInEligibilityWindowDays)
+	discordUsernameCache := map[string]string{}
+	firstPayoutDateCache := map[string]*time.Time{}
+
+	contractorPayoutsService := h.service.Notion.ContractorPayouts
+	if contractorPayoutsService == nil {
+		err := errors.New("contractor payouts service not configured")
+		l.Error(err, "contractor payouts service is nil")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
 	var resp []view.CheckInResponse
 	for _, v := range req.CheckIns {
 		// Truncate the givenTime to remove the time part
@@ -1212,6 +1225,46 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 
 		data := view.CheckInResponse{
 			DiscordID: v.DiscordID,
+		}
+
+		discordUsername, ok := discordUsernameCache[v.DiscordID]
+		if !ok {
+			account, err := h.store.DiscordAccount.OneByDiscordID(h.repo.DB(), v.DiscordID)
+			if err != nil {
+				l.Error(err, "failed to get discord account by discord id")
+				data.Err = "discord account not found"
+				resp = append(resp, data)
+				continue
+			}
+
+			discordUsername = account.DiscordUsername
+			if discordUsername == "" {
+				data.Err = "discord username not found"
+				resp = append(resp, data)
+				continue
+			}
+
+			discordUsernameCache[v.DiscordID] = discordUsername
+		}
+
+		firstPayoutDate, ok := firstPayoutDateCache[discordUsername]
+		if !ok {
+			var err error
+			firstPayoutDate, err = contractorPayoutsService.GetFirstPayoutDateByDiscord(c.Request.Context(), discordUsername)
+			if err != nil {
+				l.Error(err, "failed to get first payout date by discord")
+				data.Err = err.Error()
+				resp = append(resp, data)
+				continue
+			}
+
+			firstPayoutDateCache[discordUsername] = firstPayoutDate
+		}
+
+		if !isEligibleByFirstPayout(firstPayoutDate, eligibilityCutoff) {
+			data.Err = "not eligible for office check-in"
+			resp = append(resp, data)
+			continue
 		}
 
 		r, err := h.controller.Employee.CheckIn(v.DiscordID, v.Time, float64(icyAmount))
