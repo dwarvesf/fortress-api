@@ -149,6 +149,11 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 			l.Error(markErr, "failed to mark splits generated")
 			return markErr
 		}
+		// Also mark line items (even if empty, for consistency)
+		if markErr := w.service.Notion.MarkLineItemsSplitsGenerated(p.InvoicePageID); markErr != nil {
+			l.Error(markErr, "failed to mark line items splits generated")
+			// Don't return error - invoice is already marked
+		}
 		return nil
 	}
 
@@ -233,10 +238,16 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 
 	l.Infof("created %d commission splits", createdCount)
 
-	// Mark splits as generated
+	// Mark splits as generated on invoice
 	if err := w.service.Notion.MarkSplitsGenerated(p.InvoicePageID); err != nil {
 		l.Error(err, "failed to mark splits generated")
 		return err
+	}
+
+	// Mark splits as generated on line items
+	if err := w.service.Notion.MarkLineItemsSplitsGenerated(p.InvoicePageID); err != nil {
+		l.Error(err, "failed to mark line items splits generated")
+		// Don't return error - invoice is already marked, this is non-critical
 	}
 
 	l.Info("invoice splits generation completed successfully")

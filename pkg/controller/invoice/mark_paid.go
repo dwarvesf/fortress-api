@@ -161,6 +161,15 @@ func (c *controller) processNotionInvoicePaid(l logger.Logger, page *nt.Page, sk
 	}
 	l.Debug("Notion invoice status updated to Paid")
 
+	// 1a. Update Line Items status to "Paid"
+	l.Debug("updating Line Items status to Paid")
+	if err := c.service.Notion.UpdateLineItemsStatus(page.ID, "Paid"); err != nil {
+		l.Errorf(err, "failed to update Line Items status")
+		// Log error but don't fail the whole operation - invoice itself was already updated
+	} else {
+		l.Debug("Line Items status updated to Paid")
+	}
+
 	// 1b. Enqueue invoice splits generation job
 	l.Debug("enqueuing invoice splits generation job")
 	c.worker.Enqueue(worker.GenerateInvoiceSplitsMsg, worker.GenerateInvoiceSplitsPayload{

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	nt "github.com/dstotijn/go-notion"
@@ -17,6 +18,11 @@ import (
 
 // ClientInvoicesDBID is the Notion database ID for Client Invoices
 const ClientInvoicesDBID = "2bf64b29b84c80879a52ed2f9d493096"
+
+// notionAPIVersion is the Notion API version used for raw HTTP requests
+// Using 2022-06-28 for page updates as it's stable and widely compatible
+// Note: 2025-09-03 introduces breaking changes for database operations
+const notionAPIVersion = "2022-06-28"
 
 // QueryInvoices fetches invoices from Notion Client Invoices database with filters
 func (n *notionService) QueryInvoices(filter *InvoiceFilter, pagination model.Pagination) ([]nt.Page, int64, error) {
@@ -302,7 +308,7 @@ func (n *notionService) UpdateClientInvoiceStatus(pageID string, status string, 
 
 	req.Header.Set("Authorization", "Bearer "+n.secret)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Notion-Version", "2022-06-28")
+	req.Header.Set("Notion-Version", notionAPIVersion)
 
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
@@ -322,6 +328,136 @@ func (n *notionService) UpdateClientInvoiceStatus(pageID string, status string, 
 
 	l.Debug("invoice status updated successfully in Notion")
 
+	return nil
+}
+
+// UpdateLineItemsStatus updates the Status of all line items for a given invoice
+// Uses concurrent updates with semaphore to prevent API overload
+func (n *notionService) UpdateLineItemsStatus(invoicePageID string, status string) error {
+	l := n.l.Fields(logger.Fields{
+		"service":       "notion",
+		"method":        "UpdateLineItemsStatus",
+		"invoicePageID": invoicePageID,
+		"status":        status,
+	})
+
+	l.Debug("updating line items status in Notion")
+
+	if invoicePageID == "" {
+		l.Debug("empty invoice page ID provided")
+		return fmt.Errorf("invoice page ID is required")
+	}
+
+	// Fetch all line items for this invoice
+	lineItems, err := n.GetInvoiceLineItems(invoicePageID)
+	if err != nil {
+		l.Errorf(err, "failed to fetch line items for invoice")
+		return fmt.Errorf("failed to fetch line items: %w", err)
+	}
+
+	l.Debugf("found %d line items to update", len(lineItems))
+
+	if len(lineItems) == 0 {
+		l.Debug("no line items found for invoice")
+		return nil
+	}
+
+	// Concurrent updates with semaphore (like task order log pattern)
+	type updateResult struct {
+		pageID string
+		err    error
+	}
+
+	resultsChan := make(chan updateResult, len(lineItems))
+	var wg sync.WaitGroup
+
+	// Concurrency limit to prevent API overload
+	const maxConcurrent = 5
+	sem := make(chan struct{}, maxConcurrent)
+
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+
+	for _, lineItem := range lineItems {
+		wg.Add(1)
+		go func(pageID string) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			l.Debugf("updating line item %s status to %s", pageID, status)
+
+			// Build update payload - Line Items use Status type (same as Invoice)
+			updatePayload := map[string]any{
+				"properties": map[string]any{
+					"Status": map[string]any{
+						"status": map[string]string{
+							"name": status,
+						},
+					},
+				},
+			}
+
+			payloadBytes, err := json.Marshal(updatePayload)
+			if err != nil {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("marshal error: %w", err)}
+				return
+			}
+
+			// Create raw HTTP request to Notion API
+			// Note: Using raw HTTP because go-notion doesn't support status property type well
+			notionURL := fmt.Sprintf("https://api.notion.com/v1/pages/%s", pageID)
+			req, err := http.NewRequest("PATCH", notionURL, bytes.NewReader(payloadBytes))
+			if err != nil {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("request error: %w", err)}
+				return
+			}
+
+			req.Header.Set("Authorization", "Bearer "+n.secret)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Notion-Version", notionAPIVersion)
+
+			resp, err := httpClient.Do(req)
+			if err != nil {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("http error: %w", err)}
+				return
+			}
+
+			respBody, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("status %d: %s", resp.StatusCode, string(respBody))}
+				return
+			}
+
+			l.Debugf("line item %s status updated successfully", pageID)
+			resultsChan <- updateResult{pageID: pageID, err: nil}
+		}(lineItem.ID)
+	}
+
+	// Wait for all goroutines to complete
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
+	var updateErrors []string
+	for result := range resultsChan {
+		if result.err != nil {
+			l.Errorf(result.err, "failed to update line item %s", result.pageID)
+			updateErrors = append(updateErrors, fmt.Sprintf("%s: %v", result.pageID, result.err))
+		}
+	}
+
+	if len(updateErrors) > 0 {
+		l.Warnf("some line items failed to update: %v", updateErrors)
+		return fmt.Errorf("failed to update %d/%d line items", len(updateErrors), len(lineItems))
+	}
+
+	l.Infof("successfully updated %d line items status to %s", len(lineItems), status)
 	return nil
 }
 
@@ -884,6 +1020,132 @@ func (n *notionService) MarkSplitsGenerated(invoicePageID string) error {
 
 	l.Debug("splits generated flag updated successfully")
 
+	return nil
+}
+
+// MarkLineItemsSplitsGenerated updates the "Splits Generated" checkbox to true for all line items of an invoice
+// Uses concurrent updates with semaphore to prevent API overload
+func (n *notionService) MarkLineItemsSplitsGenerated(invoicePageID string) error {
+	l := n.l.Fields(logger.Fields{
+		"service":       "notion",
+		"method":        "MarkLineItemsSplitsGenerated",
+		"invoicePageID": invoicePageID,
+	})
+
+	l.Debug("marking line items splits as generated")
+
+	if invoicePageID == "" {
+		l.Debug("empty invoice page ID provided")
+		return fmt.Errorf("invoice page ID is required")
+	}
+
+	// Fetch all line items for this invoice
+	lineItems, err := n.GetInvoiceLineItems(invoicePageID)
+	if err != nil {
+		l.Errorf(err, "failed to fetch line items for invoice")
+		return fmt.Errorf("failed to fetch line items: %w", err)
+	}
+
+	l.Debugf("found %d line items to mark splits generated", len(lineItems))
+
+	if len(lineItems) == 0 {
+		l.Debug("no line items found for invoice")
+		return nil
+	}
+
+	// Concurrent updates with semaphore
+	type updateResult struct {
+		pageID string
+		err    error
+	}
+
+	resultsChan := make(chan updateResult, len(lineItems))
+	var wg sync.WaitGroup
+
+	// Concurrency limit to prevent API overload
+	const maxConcurrent = 5
+	sem := make(chan struct{}, maxConcurrent)
+
+	httpClient := &http.Client{Timeout: 30 * time.Second}
+
+	for _, lineItem := range lineItems {
+		wg.Add(1)
+		go func(pageID string) {
+			defer wg.Done()
+
+			// Acquire semaphore
+			sem <- struct{}{}
+			defer func() { <-sem }()
+
+			l.Debugf("marking line item %s splits generated", pageID)
+
+			// Build update payload for checkbox property
+			updatePayload := map[string]any{
+				"properties": map[string]any{
+					"Splits Generated": map[string]any{
+						"checkbox": true,
+					},
+				},
+			}
+
+			payloadBytes, err := json.Marshal(updatePayload)
+			if err != nil {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("marshal error: %w", err)}
+				return
+			}
+
+			// Create raw HTTP request to Notion API
+			notionURL := fmt.Sprintf("https://api.notion.com/v1/pages/%s", pageID)
+			req, err := http.NewRequest("PATCH", notionURL, bytes.NewReader(payloadBytes))
+			if err != nil {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("request error: %w", err)}
+				return
+			}
+
+			req.Header.Set("Authorization", "Bearer "+n.secret)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Notion-Version", notionAPIVersion)
+
+			resp, err := httpClient.Do(req)
+			if err != nil {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("http error: %w", err)}
+				return
+			}
+
+			respBody, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				resultsChan <- updateResult{pageID: pageID, err: fmt.Errorf("status %d: %s", resp.StatusCode, string(respBody))}
+				return
+			}
+
+			l.Debugf("line item %s splits generated marked successfully", pageID)
+			resultsChan <- updateResult{pageID: pageID, err: nil}
+		}(lineItem.ID)
+	}
+
+	// Wait for all goroutines to complete
+	go func() {
+		wg.Wait()
+		close(resultsChan)
+	}()
+
+	// Collect results
+	var updateErrors []string
+	for result := range resultsChan {
+		if result.err != nil {
+			l.Errorf(result.err, "failed to mark line item %s splits generated", result.pageID)
+			updateErrors = append(updateErrors, fmt.Sprintf("%s: %v", result.pageID, result.err))
+		}
+	}
+
+	if len(updateErrors) > 0 {
+		l.Warnf("some line items failed to mark splits generated: %v", updateErrors)
+		return fmt.Errorf("failed to mark %d/%d line items splits generated", len(updateErrors), len(lineItems))
+	}
+
+	l.Infof("successfully marked %d line items splits generated", len(lineItems))
 	return nil
 }
 

@@ -62,6 +62,7 @@ type IService interface {
 	// Client Invoice operations for Discord ?inv paid command
 	QueryClientInvoiceByNumber(invoiceNumber string) (*nt.Page, error)
 	UpdateClientInvoiceStatus(pageID string, status string, paidDate *time.Time) error
+	UpdateLineItemsStatus(invoicePageID string, status string) error
 	ExtractClientInvoiceData(page *nt.Page) (*model.Invoice, error)
 	GetNotionInvoiceStatus(page *nt.Page) (string, error)
 
@@ -69,6 +70,7 @@ type IService interface {
 	QueryLineItemsWithCommissions(invoicePageID string) ([]LineItemCommissionData, error)
 	IsSplitsGenerated(invoicePageID string) (bool, error)
 	MarkSplitsGenerated(invoicePageID string) error
+	MarkLineItemsSplitsGenerated(invoicePageID string) error
 
 	// Invoice Cloning
 	QueryInvoicesByMonth(year, month int, statuses []string, projectID string) ([]nt.Page, error)
