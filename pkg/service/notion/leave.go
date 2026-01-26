@@ -638,6 +638,51 @@ func (s *LeaveService) GetDiscordUsernameFromContractor(
 	return username, nil
 }
 
+// ContractorDetails holds contractor information from Notion
+type ContractorDetails struct {
+	PageID          string
+	FullName        string
+	DiscordUsername string
+	TeamEmail       string
+	Status          string
+}
+
+// GetContractorDetails fetches contractor details from Notion by page ID
+// Returns nil if contractor not found
+func (s *LeaveService) GetContractorDetails(ctx context.Context, contractorPageID string) (*ContractorDetails, error) {
+	if contractorPageID == "" {
+		s.logger.Debug("contractor page ID is empty")
+		return nil, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("fetching contractor details: page_id=%s", contractorPageID))
+
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to fetch contractor page: page_id=%s", contractorPageID))
+		return nil, err
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Error(errors.New("invalid properties type"), "failed to cast contractor properties")
+		return nil, errors.New("failed to cast contractor properties")
+	}
+
+	details := &ContractorDetails{
+		PageID:          contractorPageID,
+		FullName:        s.extractTitle(props, "Full Name"),
+		DiscordUsername: s.extractRichText(props, "Discord"),
+		TeamEmail:       s.extractEmail(props, "Team Email"),
+		Status:          s.extractSelect(props, "Status"),
+	}
+
+	s.logger.Debug(fmt.Sprintf("fetched contractor details: page_id=%s name=%s discord=%s status=%s",
+		contractorPageID, details.FullName, details.DiscordUsername, details.Status))
+
+	return details, nil
+}
+
 // LookupContractorByEmail finds contractor page ID by team email
 // Returns empty string if not found (graceful handling)
 // Returns error only on API failures

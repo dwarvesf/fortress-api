@@ -435,19 +435,23 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		} else if contractorPageID != "" {
 			l.Debug(fmt.Sprintf("found contractor page: user_id=%s page_id=%s", createdByUserID, contractorPageID))
 
+			// Update local leave object with contractor page ID (even if Notion update fails)
+			leave.EmployeeID = contractorPageID
+
+			// Fetch email from contractor page since Team Email rollup might be empty
+			email, err := h.getContractorEmail(ctx, l, contractorPageID)
+			if err != nil {
+				l.Error(err, fmt.Sprintf("failed to fetch contractor email: contractor_page_id=%s", contractorPageID))
+			} else if email != "" {
+				l.Debug(fmt.Sprintf("fetched contractor email: contractor_page_id=%s email=%s", contractorPageID, email))
+				leave.Email = email
+			}
+
+			// Try to update Notion page with contractor relation (best effort)
 			if err := h.updateOnLeaveContractor(ctx, l, pageID, contractorPageID); err != nil {
 				l.Error(err, fmt.Sprintf("failed to update contractor relation: page_id=%s", pageID))
 			} else {
 				l.Debug(fmt.Sprintf("successfully updated contractor relation: onleave_page=%s contractor_page=%s", pageID, contractorPageID))
-
-				// Fetch email from contractor page since Team Email rollup needs contractor relation
-				email, err := h.getContractorEmail(ctx, l, contractorPageID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to fetch contractor email: contractor_page_id=%s", contractorPageID))
-				} else if email != "" {
-					l.Debug(fmt.Sprintf("fetched contractor email: contractor_page_id=%s email=%s", contractorPageID, email))
-					leave.Email = email
-				}
 			}
 		}
 	} else {
@@ -467,40 +471,58 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		l.Debug(fmt.Sprintf("unavailability type already set: %s", leave.UnavailabilityType))
 	}
 
-	// Validate employee exists - use email from Team Email rollup
-	if leave.Email == "" {
-		l.Error(errors.New("missing employee email"), "Team Email is empty")
+	// Validate contractor exists in Notion - use Contractor relation
+	if leave.EmployeeID == "" {
+		l.Error(errors.New("missing contractor relation"), "Contractor relation is empty")
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"❌ Leave Request Validation Failed",
-			"Employee email not found",
+			"Contractor relation not set",
 			15158332, // Red color
 			[]model.DiscordMessageField{
-				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+				{Name: "Page ID", Value: pageID, Inline: nil},
 			},
 		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_email"))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_contractor"))
 		return
 	}
 
-	l.Debug(fmt.Sprintf("looking up employee by email: %s", leave.Email))
-	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
-	if err != nil || len(employees) == 0 {
-		l.Error(err, fmt.Sprintf("employee not found: email=%s notion_id=%s", leave.Email, leave.EmployeeID))
+	// Fetch contractor details from Notion
+	l.Debug(fmt.Sprintf("fetching contractor details from Notion: contractor_id=%s", leave.EmployeeID))
+	contractor, err := leaveService.GetContractorDetails(ctx, leave.EmployeeID)
+	if err != nil || contractor == nil {
+		l.Error(err, fmt.Sprintf("contractor not found in Notion: contractor_id=%s", leave.EmployeeID))
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"❌ Leave Request Validation Failed",
-			"Employee not found in database",
+			"Contractor not found in Notion",
 			15158332, // Red color
 			[]model.DiscordMessageField{
-				{Name: "Email", Value: leave.Email, Inline: nil},
-				{Name: "Notion ID", Value: leave.EmployeeID, Inline: nil},
+				{Name: "Contractor ID", Value: leave.EmployeeID, Inline: nil},
 			},
 		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:employee_not_found"))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:contractor_not_found"))
 		return
 	}
-	employee := employees[0]
 
-	l.Debug(fmt.Sprintf("found employee: id=%s full_name=%s team_email=%s", employee.ID, employee.FullName, employee.TeamEmail))
+	// Validate contractor is active
+	if contractor.Status != "Active" {
+		l.Debug(fmt.Sprintf("contractor is not active: contractor_id=%s status=%s", leave.EmployeeID, contractor.Status))
+		h.sendNotionLeaveDiscordNotification(ctx,
+			"❌ Leave Request Validation Failed",
+			fmt.Sprintf("Contractor is not active (status: %s)", contractor.Status),
+			15158332,
+			[]model.DiscordMessageField{
+				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
+			},
+		)
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:contractor_inactive"))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("found contractor: id=%s full_name=%s email=%s discord=%s",
+		leave.EmployeeID, contractor.FullName, contractor.TeamEmail, contractor.DiscordUsername))
+
+	// Get Discord mention from contractor's Discord username
+	contractorDiscordMention := h.getDiscordMentionFromUsername(l, contractor.DiscordUsername)
 
 	// Validate dates
 	if leave.StartDate == nil {
@@ -510,7 +532,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 			"Start date is required",
 			15158332,
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: employee.FullName, Inline: nil},
+				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_start_date"))
@@ -524,7 +546,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 			"End date is required",
 			15158332,
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: employee.FullName, Inline: nil},
+				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_end_date"))
@@ -538,7 +560,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 			"End date must be after start date",
 			15158332,
 			[]model.DiscordMessageField{
-				{Name: "Employee", Value: employee.FullName, Inline: nil},
+				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:invalid_date_range"))
@@ -550,10 +572,10 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	if channelID == "" {
 		l.Debug("onleave channel not configured, falling back to auditlog webhook")
 
-		// Use default Leave Type if empty
-		description := fmt.Sprintf("%s request time off", employee.FullName)
-		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
-			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		// Use Discord mention if available, otherwise use full name
+		description := fmt.Sprintf("%s request time off", contractor.FullName)
+		if contractorDiscordMention != "" {
+			description = fmt.Sprintf("%s request time off", contractorDiscordMention)
 		}
 		inlineTrue := true
 		h.sendNotionLeaveDiscordNotification(ctx,
@@ -582,9 +604,9 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	}
 
 	// Build embed description with Discord mention
-	description := fmt.Sprintf("%s request time off", employee.FullName)
-	if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
-		description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+	description := fmt.Sprintf("%s request time off", contractor.FullName)
+	if contractorDiscordMention != "" {
+		description = fmt.Sprintf("%s request time off", contractorDiscordMention)
 	}
 
 	embed := &discordgo.MessageEmbed{
@@ -629,14 +651,14 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	if err != nil {
 		l.Error(err, "failed to send leave request message to discord channel")
 		// Fallback to auditlog
-		description := fmt.Sprintf("%s request time off", employee.FullName)
-		if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordID != "" {
-			description = fmt.Sprintf("<@%s> request time off", employee.DiscordAccount.DiscordID)
+		fallbackDescription := fmt.Sprintf("%s request time off", contractor.FullName)
+		if contractorDiscordMention != "" {
+			fallbackDescription = fmt.Sprintf("%s request time off", contractorDiscordMention)
 		}
 		inlineTrue := true
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"📋 Leave Request",
-			description,
+			fallbackDescription,
 			3447003,
 			[]model.DiscordMessageField{
 				{Name: "Request", Value: leave.LeaveRequestTitle, Inline: &inlineTrue},
@@ -649,7 +671,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		l.Debug(fmt.Sprintf("sent leave request message to discord channel: message_id=%s", msg.ID))
 	}
 
-	l.Debug(fmt.Sprintf("leave request validated successfully: employee_id=%s page_id=%s", employee.ID, leave.PageID))
+	l.Debug(fmt.Sprintf("leave request validated successfully: contractor_id=%s page_id=%s", leave.EmployeeID, leave.PageID))
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
 }

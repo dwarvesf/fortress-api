@@ -31,7 +31,7 @@ fi
 
 # Run build to check for compilation errors
 echo "Running build..." >&2
-make build > .claude/validation-outputs/build-output.log 2>&1
+go build -o bin ./... > .claude/validation-outputs/build-output.log 2>&1
 if [ $? -ne 0 ]; then
 echo "❌ Build failed. Check .claude/validation-outputs/build-output.log for details." >&2
 echo "Failed build lines:" >&2
