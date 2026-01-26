@@ -88,7 +88,7 @@ func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*Ch
 	return response, done(nil)
 }
 
-// isEmployeeWhitelisted checks if an employee is whitelisted for check-in
+//nolint:unused // isEmployeeWhitelisted checks if an employee is whitelisted for check-in - reserved for future use
 func (r *controller) isEmployeeWhitelisted(employeeID model.UUID) bool {
 	for _, id := range r.config.CheckIn.WhitelistedEmployeeIDs {
 		if id == employeeID.String() {

@@ -30,6 +30,7 @@ type IHandler interface {
 	CreateContractorPayouts(c *gin.Context)
 	SendTaskOrderConfirmation(c *gin.Context)
 	SyncPayouts(c *gin.Context)
+	CloneMonthlyInvoices(c *gin.Context)
 }
 
 type handler struct {

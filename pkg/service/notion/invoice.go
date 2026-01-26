@@ -886,3 +886,557 @@ func (n *notionService) MarkSplitsGenerated(invoicePageID string) error {
 
 	return nil
 }
+
+// QueryInvoicesByMonth fetches invoices from Notion for a specific month with filters
+func (n *notionService) QueryInvoicesByMonth(year, month int, statuses []string, projectID string) ([]nt.Page, error) {
+	l := n.l.Fields(logger.Fields{
+		"service":   "notion",
+		"method":    "QueryInvoicesByMonth",
+		"year":      year,
+		"month":     month,
+		"statuses":  statuses,
+		"projectID": projectID,
+	})
+
+	l.Debug("querying invoices by month from Notion")
+
+	// Calculate first and last day of the month
+	firstDay := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	lastDay := firstDay.AddDate(0, 1, -1)
+
+	// Build base filters
+	filters := []nt.DatabaseQueryFilter{
+		// Type = Invoice (exclude Line Items)
+		{
+			Property: "Type",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Invoice",
+				},
+			},
+		},
+		// Issue Date >= first day of month
+		{
+			Property: "Issue Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					OnOrAfter: &firstDay,
+				},
+			},
+		},
+		// Issue Date <= last day of month
+		{
+			Property: "Issue Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					OnOrBefore: &lastDay,
+				},
+			},
+		},
+	}
+
+	// Add status filter if provided
+	if len(statuses) > 0 {
+		l.Debugf("adding status filter: %v", statuses)
+		statusFilters := []nt.DatabaseQueryFilter{}
+		for _, status := range statuses {
+			statusFilters = append(statusFilters, nt.DatabaseQueryFilter{
+				Property: "Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: status,
+					},
+				},
+			})
+		}
+		if len(statusFilters) > 1 {
+			filters = append(filters, nt.DatabaseQueryFilter{Or: statusFilters})
+		} else if len(statusFilters) == 1 {
+			filters = append(filters, statusFilters[0])
+		}
+	}
+
+	// Add project filter if provided
+	if projectID != "" {
+		l.Debugf("adding project filter: %s", projectID)
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Project",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: projectID,
+				},
+			},
+		})
+	}
+
+	// Combine all filters with AND
+	finalFilter := &nt.DatabaseQueryFilter{And: filters}
+
+	l.Debugf("querying Notion database with %d filter conditions", len(filters))
+
+	// Query database
+	response, err := n.GetDatabase(ClientInvoicesDBID, finalFilter, nil, 100)
+	if err != nil {
+		l.Error(err, "failed to query Notion database")
+		return nil, fmt.Errorf("failed to query invoices by month: %w", err)
+	}
+
+	l.Debugf("fetched %d invoices for %d-%02d", len(response.Results), year, month)
+
+	return response.Results, nil
+}
+
+// CloneInvoiceToNextMonth clones an invoice and its line items to a new month
+func (n *notionService) CloneInvoiceToNextMonth(sourceInvoicePageID string, targetIssueDate time.Time) (*ClonedInvoiceResult, error) {
+	l := n.l.Fields(logger.Fields{
+		"service":             "notion",
+		"method":              "CloneInvoiceToNextMonth",
+		"sourceInvoicePageID": sourceInvoicePageID,
+		"targetIssueDate":     targetIssueDate.Format("2006-01-02"),
+	})
+
+	l.Debug("cloning invoice to next month")
+
+	// Fetch source invoice page
+	ctx := context.Background()
+	sourcePage, err := n.notionClient.FindPageByID(ctx, sourceInvoicePageID)
+	if err != nil {
+		l.Error(err, "failed to fetch source invoice page")
+		return nil, fmt.Errorf("failed to fetch source invoice: %w", err)
+	}
+
+	sourceProps, ok := sourcePage.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		l.Error(fmt.Errorf("invalid properties"), "failed to cast source invoice properties")
+		return nil, fmt.Errorf("invalid source invoice properties")
+	}
+
+	// Extract source invoice data
+	var projectRelationID string
+	if projectProp, ok := sourceProps["Project"]; ok && projectProp.Relation != nil && len(projectProp.Relation) > 0 {
+		projectRelationID = projectProp.Relation[0].ID
+	}
+	if projectRelationID == "" {
+		return nil, fmt.Errorf("source invoice has no project relation")
+	}
+
+	// Extract other properties to clone
+	var currency, discountType string
+	var taxRate, discountValue float64
+	var bankAccountID string
+
+	if currencyProp, ok := sourceProps["Currency"]; ok && currencyProp.Select != nil {
+		currency = currencyProp.Select.Name
+	}
+	if taxRateProp, ok := sourceProps["Tax Rate"]; ok && taxRateProp.Number != nil {
+		taxRate = *taxRateProp.Number
+	}
+	if discountTypeProp, ok := sourceProps["Discount Type"]; ok && discountTypeProp.Select != nil {
+		discountType = discountTypeProp.Select.Name
+	}
+	if discountValueProp, ok := sourceProps["Discount Value"]; ok && discountValueProp.Number != nil {
+		discountValue = *discountValueProp.Number
+	}
+	if bankProp, ok := sourceProps["Bank Account"]; ok && bankProp.Relation != nil && len(bankProp.Relation) > 0 {
+		bankAccountID = bankProp.Relation[0].ID
+	}
+
+	// Extract description and notes
+	var description, notes string
+	if descProp, ok := sourceProps["Description"]; ok && len(descProp.RichText) > 0 {
+		for _, rt := range descProp.RichText {
+			description += rt.PlainText
+		}
+	}
+	if notesProp, ok := sourceProps["Notes"]; ok && len(notesProp.RichText) > 0 {
+		for _, rt := range notesProp.RichText {
+			notes += rt.PlainText
+		}
+	}
+
+	l.Debugf("source invoice data: project=%s, currency=%s, taxRate=%.2f, discountType=%s, discountValue=%.2f",
+		projectRelationID, currency, taxRate, discountType, discountValue)
+
+	// Build new invoice properties
+	newInvoiceProps := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"Type": map[string]interface{}{
+				"select": map[string]string{
+					"name": "Invoice",
+				},
+			},
+			"Status": map[string]interface{}{
+				"status": map[string]string{
+					"name": "Draft",
+				},
+			},
+			"Issue Date": map[string]interface{}{
+				"date": map[string]string{
+					"start": targetIssueDate.Format("2006-01-02"),
+				},
+			},
+			"Project": map[string]interface{}{
+				"relation": []map[string]string{
+					{"id": projectRelationID},
+				},
+			},
+			"Splits Generated": map[string]interface{}{
+				"checkbox": false,
+			},
+		},
+		"parent": map[string]interface{}{
+			"database_id": ClientInvoicesDBID,
+		},
+	}
+
+	propsMap := newInvoiceProps["properties"].(map[string]interface{})
+
+	// Add optional properties if they exist
+	if currency != "" {
+		propsMap["Currency"] = map[string]interface{}{
+			"select": map[string]string{
+				"name": currency,
+			},
+		}
+	}
+	if taxRate > 0 {
+		propsMap["Tax Rate"] = map[string]interface{}{
+			"number": taxRate,
+		}
+	}
+	if discountType != "" && discountType != "None" {
+		propsMap["Discount Type"] = map[string]interface{}{
+			"select": map[string]string{
+				"name": discountType,
+			},
+		}
+	}
+	if discountValue > 0 {
+		propsMap["Discount Value"] = map[string]interface{}{
+			"number": discountValue,
+		}
+	}
+	if bankAccountID != "" {
+		propsMap["Bank Account"] = map[string]interface{}{
+			"relation": []map[string]string{
+				{"id": bankAccountID},
+			},
+		}
+	}
+	if description != "" {
+		propsMap["Description"] = map[string]interface{}{
+			"rich_text": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": map[string]string{
+						"content": description,
+					},
+				},
+			},
+		}
+	}
+	if notes != "" {
+		propsMap["Notes"] = map[string]interface{}{
+			"rich_text": []map[string]interface{}{
+				{
+					"type": "text",
+					"text": map[string]string{
+						"content": notes,
+					},
+				},
+			},
+		}
+	}
+
+	// Create new invoice page via raw HTTP request
+	payloadBytes, err := json.Marshal(newInvoiceProps)
+	if err != nil {
+		l.Error(err, "failed to marshal new invoice payload")
+		return nil, fmt.Errorf("failed to marshal new invoice payload: %w", err)
+	}
+
+	l.Debugf("creating new invoice page with payload: %s", string(payloadBytes))
+
+	req, err := http.NewRequest("POST", "https://api.notion.com/v1/pages", bytes.NewReader(payloadBytes))
+	if err != nil {
+		l.Error(err, "failed to create HTTP request")
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+n.secret)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Notion-Version", "2022-06-28")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		l.Error(err, "failed to send HTTP request to Notion")
+		return nil, fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		l.Errorf(fmt.Errorf("notion create failed with status %d", resp.StatusCode),
+			fmt.Sprintf("response body: %s", string(respBody)))
+		return nil, fmt.Errorf("Notion create failed: status=%d body=%s", resp.StatusCode, string(respBody))
+	}
+
+	// Parse response to get new page ID
+	var createResp struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(respBody, &createResp); err != nil {
+		l.Error(err, "failed to parse create response")
+		return nil, fmt.Errorf("failed to parse create response: %w", err)
+	}
+
+	newInvoicePageID := createResp.ID
+	l.Debugf("created new invoice page: %s", newInvoicePageID)
+
+	// Fetch and clone line items
+	sourceLineItems, err := n.GetInvoiceLineItems(sourceInvoicePageID)
+	if err != nil {
+		l.Error(err, "failed to get source line items")
+		// Continue without line items - invoice is already created
+		return &ClonedInvoiceResult{
+			NewInvoicePageID: newInvoicePageID,
+			LineItemsCloned:  0,
+		}, nil
+	}
+
+	lineItemsCloned := 0
+	for _, sourceItem := range sourceLineItems {
+		itemProps, ok := sourceItem.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			l.Debugf("failed to cast line item properties: %s", sourceItem.ID)
+			continue
+		}
+
+		// Clone line item
+		err := n.cloneLineItem(itemProps, newInvoicePageID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to clone line item: %s", sourceItem.ID))
+			continue
+		}
+		lineItemsCloned++
+	}
+
+	l.Debugf("cloned %d line items", lineItemsCloned)
+
+	return &ClonedInvoiceResult{
+		NewInvoicePageID: newInvoicePageID,
+		LineItemsCloned:  lineItemsCloned,
+	}, nil
+}
+
+// cloneLineItem creates a new line item linked to a new invoice
+func (n *notionService) cloneLineItem(sourceProps nt.DatabasePageProperties, newInvoicePageID string) error {
+	l := n.l.Fields(logger.Fields{
+		"service":          "notion",
+		"method":           "cloneLineItem",
+		"newInvoicePageID": newInvoicePageID,
+	})
+
+	// Build new line item properties
+	newLineItemProps := map[string]interface{}{
+		"properties": map[string]interface{}{
+			"Type": map[string]interface{}{
+				"select": map[string]string{
+					"name": "Line Item",
+				},
+			},
+			"Parent item": map[string]interface{}{
+				"relation": []map[string]string{
+					{"id": newInvoicePageID},
+				},
+			},
+		},
+		"parent": map[string]interface{}{
+			"database_id": ClientInvoicesDBID,
+		},
+	}
+
+	propsMap := newLineItemProps["properties"].(map[string]interface{})
+
+	// Copy Quantity
+	if quantityProp, ok := sourceProps["Quantity"]; ok && quantityProp.Number != nil {
+		propsMap["Quantity"] = map[string]interface{}{
+			"number": *quantityProp.Number,
+		}
+	}
+
+	// Copy Unit Price
+	if unitPriceProp, ok := sourceProps["Unit Price"]; ok && unitPriceProp.Number != nil {
+		propsMap["Unit Price"] = map[string]interface{}{
+			"number": *unitPriceProp.Number,
+		}
+	}
+
+	// Copy Fixed Amount
+	if fixedAmountProp, ok := sourceProps["Fixed Amount"]; ok && fixedAmountProp.Number != nil {
+		propsMap["Fixed Amount"] = map[string]interface{}{
+			"number": *fixedAmountProp.Number,
+		}
+	}
+
+	// Copy Discount Type
+	if discountTypeProp, ok := sourceProps["Discount Type"]; ok && discountTypeProp.Select != nil {
+		propsMap["Discount Type"] = map[string]interface{}{
+			"select": map[string]string{
+				"name": discountTypeProp.Select.Name,
+			},
+		}
+	}
+
+	// Copy Discount Value
+	if discountValueProp, ok := sourceProps["Discount Value"]; ok && discountValueProp.Number != nil {
+		propsMap["Discount Value"] = map[string]interface{}{
+			"number": *discountValueProp.Number,
+		}
+	}
+
+	// Copy Description
+	if descProp, ok := sourceProps["Description"]; ok && len(descProp.RichText) > 0 {
+		var desc string
+		for _, rt := range descProp.RichText {
+			desc += rt.PlainText
+		}
+		if desc != "" {
+			propsMap["Description"] = map[string]interface{}{
+				"rich_text": []map[string]interface{}{
+					{
+						"type": "text",
+						"text": map[string]string{
+							"content": desc,
+						},
+					},
+				},
+			}
+		}
+	}
+
+	// Copy Deployment Tracker relation if exists
+	if deploymentProp, ok := sourceProps["Deployment Tracker"]; ok && deploymentProp.Relation != nil && len(deploymentProp.Relation) > 0 {
+		relations := []map[string]string{}
+		for _, rel := range deploymentProp.Relation {
+			relations = append(relations, map[string]string{"id": rel.ID})
+		}
+		propsMap["Deployment Tracker"] = map[string]interface{}{
+			"relation": relations,
+		}
+	}
+
+	// Copy commission percentages
+	commissionFields := []string{"% Sales", "% Account Mgr", "% Delivery Lead", "% Hiring Referral"}
+	for _, field := range commissionFields {
+		if prop, ok := sourceProps[field]; ok && prop.Number != nil {
+			propsMap[field] = map[string]interface{}{
+				"number": *prop.Number,
+			}
+		}
+	}
+
+	// Create line item via raw HTTP request
+	payloadBytes, err := json.Marshal(newLineItemProps)
+	if err != nil {
+		return fmt.Errorf("failed to marshal line item payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.notion.com/v1/pages", bytes.NewReader(payloadBytes))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+n.secret)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Notion-Version", "2022-06-28")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		l.Errorf(fmt.Errorf("notion create failed with status %d", resp.StatusCode),
+			fmt.Sprintf("response body: %s", string(respBody)))
+		return fmt.Errorf("Notion create failed: status=%d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// CheckInvoiceExistsForMonth checks if an invoice already exists for a project in a given month
+func (n *notionService) CheckInvoiceExistsForMonth(projectPageID string, year, month int) (bool, string, error) {
+	l := n.l.Fields(logger.Fields{
+		"service":       "notion",
+		"method":        "CheckInvoiceExistsForMonth",
+		"projectPageID": projectPageID,
+		"year":          year,
+		"month":         month,
+	})
+
+	l.Debug("checking if invoice exists for project in month")
+
+	// Calculate first and last day of the month
+	firstDay := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	lastDay := firstDay.AddDate(0, 1, -1)
+
+	// Build filter
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Type",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Select: &nt.SelectDatabaseQueryFilter{
+						Equals: "Invoice",
+					},
+				},
+			},
+			{
+				Property: "Project",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Relation: &nt.RelationDatabaseQueryFilter{
+						Contains: projectPageID,
+					},
+				},
+			},
+			{
+				Property: "Issue Date",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Date: &nt.DatePropertyFilter{
+						OnOrAfter: &firstDay,
+					},
+				},
+			},
+			{
+				Property: "Issue Date",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Date: &nt.DatePropertyFilter{
+						OnOrBefore: &lastDay,
+					},
+				},
+			},
+		},
+	}
+
+	// Query database
+	response, err := n.GetDatabase(ClientInvoicesDBID, filter, nil, 1)
+	if err != nil {
+		l.Error(err, "failed to query Notion database")
+		return false, "", fmt.Errorf("failed to check invoice existence: %w", err)
+	}
+
+	if len(response.Results) > 0 {
+		existingID := response.Results[0].ID
+		l.Debugf("found existing invoice: %s", existingID)
+		return true, existingID, nil
+	}
+
+	l.Debug("no existing invoice found")
+	return false, "", nil
+}

@@ -1279,6 +1279,12 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/invoiceemail.IHandler.ProcessInvoiceEmails-fm",
 			},
 		},
+		"/cronjobs/clone-monthly-invoices": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.CloneMonthlyInvoices-fm",
+			},
+		},
 		"/api/v1/contractor-payables/preview-commit": {
 			"GET": {
 				Method:  "GET",

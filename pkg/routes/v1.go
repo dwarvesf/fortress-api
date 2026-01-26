@@ -65,6 +65,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		cronjob.POST("/create-contractor-payouts", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.CreateContractorPayouts)
 		cronjob.POST("/send-task-order-confirmation", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.SendTaskOrderConfirmation)
 		cronjob.POST("/process-invoice-emails", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.InvoiceEmail.ProcessInvoiceEmails)
+		cronjob.POST("/clone-monthly-invoices", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notion.CloneMonthlyInvoices)
 	}
 
 	/////////////////

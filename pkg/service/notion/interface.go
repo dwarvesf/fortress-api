@@ -69,6 +69,11 @@ type IService interface {
 	QueryLineItemsWithCommissions(invoicePageID string) ([]LineItemCommissionData, error)
 	IsSplitsGenerated(invoicePageID string) (bool, error)
 	MarkSplitsGenerated(invoicePageID string) error
+
+	// Invoice Cloning
+	QueryInvoicesByMonth(year, month int, statuses []string, projectID string) ([]nt.Page, error)
+	CloneInvoiceToNextMonth(sourceInvoicePageID string, targetIssueDate time.Time) (*ClonedInvoiceResult, error)
+	CheckInvoiceExistsForMonth(projectPageID string, year, month int) (bool, string, error)
 }
 
 // InvoiceFilter defines filter criteria for querying invoices from Notion
@@ -76,4 +81,11 @@ type InvoiceFilter struct {
 	ProjectIDs    []string
 	Statuses      []string
 	InvoiceNumber string
+}
+
+// ClonedInvoiceResult contains the result of cloning an invoice
+type ClonedInvoiceResult struct {
+	NewInvoicePageID string
+	NewInvoiceNumber string
+	LineItemsCloned  int
 }
