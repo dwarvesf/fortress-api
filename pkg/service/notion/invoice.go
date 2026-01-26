@@ -1021,7 +1021,7 @@ func (n *notionService) CloneInvoiceToNextMonth(sourceInvoicePageID string, targ
 	}
 
 	// Extract other properties to clone
-	var currency, discountType string
+	var currency, discountType, billingType, paymentMethod string
 	var taxRate, discountValue float64
 	var bankAccountID string
 
@@ -1039,6 +1039,12 @@ func (n *notionService) CloneInvoiceToNextMonth(sourceInvoicePageID string, targ
 	}
 	if bankProp, ok := sourceProps["Bank Account"]; ok && bankProp.Relation != nil && len(bankProp.Relation) > 0 {
 		bankAccountID = bankProp.Relation[0].ID
+	}
+	if paymentMethodProp, ok := sourceProps["Payment Method"]; ok && paymentMethodProp.Select != nil {
+		paymentMethod = paymentMethodProp.Select.Name
+	}
+	if billingTypeProp, ok := sourceProps["Billing Type"]; ok && billingTypeProp.Select != nil {
+		billingType = billingTypeProp.Select.Name
 	}
 
 	// Extract description and notes
@@ -1120,6 +1126,20 @@ func (n *notionService) CloneInvoiceToNextMonth(sourceInvoicePageID string, targ
 		propsMap["Bank Account"] = map[string]interface{}{
 			"relation": []map[string]string{
 				{"id": bankAccountID},
+			},
+		}
+	}
+	if paymentMethod != "" {
+		propsMap["Payment Method"] = map[string]interface{}{
+			"select": map[string]string{
+				"name": paymentMethod,
+			},
+		}
+	}
+	if billingType != "" {
+		propsMap["Billing Type"] = map[string]interface{}{
+			"select": map[string]string{
+				"name": billingType,
 			},
 		}
 	}

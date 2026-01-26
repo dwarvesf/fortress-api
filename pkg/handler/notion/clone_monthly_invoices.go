@@ -15,11 +15,13 @@ import (
 
 // CloneMonthlyInvoicesRequest represents the query parameters for cloning invoices
 type CloneMonthlyInvoicesRequest struct {
-	Month     int      `form:"month"`
-	Year      int      `form:"year"`
-	ProjectID string   `form:"projectId"`
-	Status    []string `form:"status"`
-	DryRun    bool     `form:"dryRun"`
+	Month       int      `form:"month"`       // Source month (default: previous month)
+	Year        int      `form:"year"`        // Source year (default: current/previous year)
+	TargetMonth int      `form:"targetMonth"` // Target month (default: current month)
+	TargetYear  int      `form:"targetYear"`  // Target year (default: current year)
+	ProjectID   string   `form:"projectId"`
+	Status      []string `form:"status"`
+	DryRun      bool     `form:"dryRun"`
 }
 
 // CloneInvoiceDetail represents the result of cloning a single invoice
@@ -44,13 +46,15 @@ type CloneMonthlyInvoicesResponse struct {
 }
 
 // CloneMonthlyInvoices godoc
-// @Summary Clone client invoices from a source month to current month
-// @Description Clones client invoices from a previous month to generate new invoices for the current month
+// @Summary Clone client invoices from a source month to a target month
+// @Description Clones client invoices from a source month to generate new invoices for the target month
 // @Tags Cronjobs
 // @Accept json
 // @Produce json
-// @Param month query int false "Source month (1-12, default: previous month)"
-// @Param year query int false "Source year (default: current/previous year)"
+// @Param month query int false "Source month (1-12, default: month before target)"
+// @Param year query int false "Source year (default: year of month before target)"
+// @Param targetMonth query int false "Target month (1-12, default: current month)"
+// @Param targetYear query int false "Target year (default: current year)"
 // @Param projectId query string false "Optional Notion page ID to filter specific project"
 // @Param status query []string false "Statuses to clone (default: ['Paid'])"
 // @Param dryRun query bool false "If true, preview without creating (default: false)"
@@ -77,11 +81,20 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 
 	// Set defaults
 	now := time.Now()
+
+	// Default target is current month
 	targetYear := now.Year()
 	targetMonth := int(now.Month())
-	targetIssueDate := now
 
-	// Default source month is previous month
+	// Override target with provided values
+	if req.TargetYear > 0 {
+		targetYear = req.TargetYear
+	}
+	if req.TargetMonth > 0 {
+		targetMonth = req.TargetMonth
+	}
+
+	// Default source month is previous month relative to target
 	sourceYear := targetYear
 	sourceMonth := targetMonth - 1
 	if sourceMonth < 1 {
@@ -89,7 +102,7 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 		sourceYear--
 	}
 
-	// Override with provided values
+	// Override source with provided values
 	if req.Year > 0 {
 		sourceYear = req.Year
 	}
@@ -97,18 +110,37 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 		sourceMonth = req.Month
 	}
 
-	// Validate month
+	// Target issue date is the first day of target month
+	targetIssueDate := time.Date(targetYear, time.Month(targetMonth), 1, 0, 0, 0, 0, time.Local)
+
+	// Validate source month
 	if sourceMonth < 1 || sourceMonth > 12 {
-		err := fmt.Errorf("invalid month: %d (must be 1-12)", sourceMonth)
+		err := fmt.Errorf("invalid source month: %d (must be 1-12)", sourceMonth)
 		l.Error(err, "invalid month parameter")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	// Validate year
+	// Validate source year
 	if sourceYear < 2020 || sourceYear > 2100 {
-		err := fmt.Errorf("invalid year: %d (must be 2020-2100)", sourceYear)
+		err := fmt.Errorf("invalid source year: %d (must be 2020-2100)", sourceYear)
 		l.Error(err, "invalid year parameter")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Validate target month
+	if targetMonth < 1 || targetMonth > 12 {
+		err := fmt.Errorf("invalid target month: %d (must be 1-12)", targetMonth)
+		l.Error(err, "invalid targetMonth parameter")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Validate target year
+	if targetYear < 2020 || targetYear > 2100 {
+		err := fmt.Errorf("invalid target year: %d (must be 2020-2100)", targetYear)
+		l.Error(err, "invalid targetYear parameter")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
