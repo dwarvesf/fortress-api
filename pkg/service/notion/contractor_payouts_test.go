@@ -40,6 +40,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 	require.NoError(t, err)
 	olderDt, err := nt.ParseDateTime("2025-09-30")
 	require.NoError(t, err)
+	oldestDate := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
 
 	client := newNotionTestClient(t, func(r *http.Request) (*http.Response, error) {
 		require.Equal(t, http.MethodPost, r.Method)
@@ -68,7 +69,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 		require.Len(t, query.Sorts, 1)
 		require.Equal(t, "Date", query.Sorts[0].Property)
 		require.Equal(t, nt.SortDirDesc, query.Sorts[0].Direction)
-		require.Equal(t, 1, query.PageSize)
+		require.Equal(t, 5, query.PageSize)
 
 		resp := nt.DatabaseQueryResponse{
 			Results: []nt.Page{
@@ -80,7 +81,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 					},
 					Properties: nt.DatabasePageProperties{
 						"Date": nt.DatabasePageProperty{
-							Date: &nt.Date{Start: latestDt},
+							Date: &nt.Date{Start: olderDt},
 						},
 					},
 				},
@@ -92,7 +93,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 					},
 					Properties: nt.DatabasePageProperties{
 						"Date": nt.DatabasePageProperty{
-							Date: &nt.Date{Start: olderDt},
+							Date: &nt.Date{Start: latestDt},
 						},
 					},
 				},
@@ -125,6 +126,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	require.True(t, got.Equal(wantDate))
+	require.NotEqual(t, oldestDate, *got)
 }
 
 func TestGetLatestPayoutDateByDiscord_NoResults(t *testing.T) {

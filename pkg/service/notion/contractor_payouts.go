@@ -264,7 +264,7 @@ func (s *ContractorPayoutsService) GetLatestPayoutDateByDiscord(ctx context.Cont
 				Direction: nt.SortDirDesc,
 			},
 		},
-		PageSize: 1,
+		PageSize: 5,
 	}
 
 	resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
@@ -273,6 +273,7 @@ func (s *ContractorPayoutsService) GetLatestPayoutDateByDiscord(ctx context.Cont
 		return nil, fmt.Errorf("failed to query contractor payouts database: %w", err)
 	}
 
+	var latest *time.Time
 	for _, page := range resp.Results {
 		props, ok := page.Properties.(nt.DatabasePageProperties)
 		if !ok {
@@ -280,13 +281,19 @@ func (s *ContractorPayoutsService) GetLatestPayoutDateByDiscord(ctx context.Cont
 		}
 
 		if date := s.extractDate(props, "Date"); date != nil {
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: latest payout date found discord=%s date=%s", discord, date.Format("2006-01-02")))
-			return date, nil
+			if latest == nil || date.After(*latest) {
+				latest = date
+			}
 		}
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout date found for discord=%s", discord))
-	return nil, nil
+	if latest == nil {
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: no payout date found for discord=%s", discord))
+		return nil, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: latest payout date found discord=%s date=%s", discord, latest.Format("2006-01-02")))
+	return latest, nil
 }
 
 // QueryPendingRefundCommissionBeforeDate queries pending Refund/Commission/Other payouts for a contractor
