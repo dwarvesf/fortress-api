@@ -1200,7 +1200,7 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 	currentDate := now.Truncate(24 * time.Hour)
 	eligibilityCutoff := now.AddDate(0, 0, -officeCheckInEligibilityWindowDays)
 	discordUsernameCache := map[string]string{}
-	firstPayoutDateCache := map[string]*time.Time{}
+	latestPayoutDateCache := map[string]*time.Time{}
 
 	contractorPayoutsService := h.service.Notion.ContractorPayouts
 	if contractorPayoutsService == nil {
@@ -1247,21 +1247,21 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 			discordUsernameCache[v.DiscordID] = discordUsername
 		}
 
-		firstPayoutDate, ok := firstPayoutDateCache[discordUsername]
+		latestPayoutDate, ok := latestPayoutDateCache[discordUsername]
 		if !ok {
 			var err error
-			firstPayoutDate, err = contractorPayoutsService.GetFirstPayoutDateByDiscord(c.Request.Context(), discordUsername)
+			latestPayoutDate, err = contractorPayoutsService.GetLatestPayoutDateByDiscord(c.Request.Context(), discordUsername)
 			if err != nil {
-				l.Error(err, "failed to get first payout date by discord")
+				l.Error(err, "failed to get latest payout date by discord")
 				data.Err = err.Error()
 				resp = append(resp, data)
 				continue
 			}
 
-			firstPayoutDateCache[discordUsername] = firstPayoutDate
+			latestPayoutDateCache[discordUsername] = latestPayoutDate
 		}
 
-		if !isEligibleByFirstPayout(firstPayoutDate, eligibilityCutoff) {
+		if !isEligibleByLatestPayout(latestPayoutDate, eligibilityCutoff) {
 			data.Err = "not eligible for office check-in"
 			resp = append(resp, data)
 			continue
