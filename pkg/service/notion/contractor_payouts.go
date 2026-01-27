@@ -219,9 +219,9 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 	return payouts, nil
 }
 
-// GetFirstPayoutDateByDiscord returns the earliest payout Date for a contractor identified by Discord username.
+// GetLatestPayoutDateByDiscord returns the most recent payout Date for a contractor identified by Discord username.
 // It returns nil if no payout exists with a Date.
-func (s *ContractorPayoutsService) GetFirstPayoutDateByDiscord(ctx context.Context, discord string) (*time.Time, error) {
+func (s *ContractorPayoutsService) GetLatestPayoutDateByDiscord(ctx context.Context, discord string) (*time.Time, error) {
 	if discord == "" {
 		return nil, errors.New("discord username is required")
 	}
@@ -231,7 +231,7 @@ func (s *ContractorPayoutsService) GetFirstPayoutDateByDiscord(ctx context.Conte
 		return nil, errors.New("contractor payouts database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying first payout date for discord=%s", discord))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying latest payout date for discord=%s", discord))
 
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
@@ -261,15 +261,15 @@ func (s *ContractorPayoutsService) GetFirstPayoutDateByDiscord(ctx context.Conte
 		Sorts: []nt.DatabaseQuerySort{
 			{
 				Property:  "Date",
-				Direction: nt.SortDirAsc,
+				Direction: nt.SortDirDesc,
 			},
 		},
-		PageSize: 5,
+		PageSize: 1,
 	}
 
 	resp, err := s.client.QueryDatabase(ctx, payoutsDBID, query)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to query first payout date for discord=%s", discord))
+		s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to query latest payout date for discord=%s", discord))
 		return nil, fmt.Errorf("failed to query contractor payouts database: %w", err)
 	}
 
@@ -280,7 +280,7 @@ func (s *ContractorPayoutsService) GetFirstPayoutDateByDiscord(ctx context.Conte
 		}
 
 		if date := s.extractDate(props, "Date"); date != nil {
-			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: first payout date found discord=%s date=%s", discord, date.Format("2006-01-02")))
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: latest payout date found discord=%s date=%s", discord, date.Format("2006-01-02")))
 			return date, nil
 		}
 	}

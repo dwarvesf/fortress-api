@@ -4,10 +4,10 @@ import "time"
 
 const officeCheckInEligibilityWindowDays = 45
 
-func isEligibleByFirstPayout(firstPayoutDate *time.Time, cutoff time.Time) bool {
-	if firstPayoutDate == nil {
+func isEligibleByLatestPayout(latestPayoutDate *time.Time, cutoff time.Time) bool {
+	if latestPayoutDate == nil {
 		return false
 	}
 
-	return !firstPayoutDate.Before(cutoff)
+	return !latestPayoutDate.Before(cutoff)
 }
