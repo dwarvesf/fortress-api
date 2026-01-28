@@ -24,10 +24,11 @@ type InvoiceSplitService struct {
 
 // InvoiceSplitData represents invoice split data from Notion
 type InvoiceSplitData struct {
-	PageID   string
-	Amount   float64
-	Role     string // Sales, Account Manager, etc.
-	Currency string
+	PageID      string
+	Amount      float64
+	Role        string // Sales, Account Manager, etc.
+	Currency    string
+	Description string // From Description formula
 }
 
 // PendingCommissionSplit represents a pending commission split for payout processing
@@ -57,6 +58,7 @@ type CreateCommissionSplitInput struct {
 	DeploymentPageID  string
 	InvoiceItemPageID string
 	InvoicePageID     string
+	Description       string // Line item description/notes
 }
 
 // NewInvoiceSplitService creates a new Notion invoice split service
@@ -212,6 +214,19 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 		}
 	}
 
+	// Add description/notes if provided
+	if input.Description != "" {
+		props["Notes"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{
+					Type: nt.RichTextTypeText,
+					Text: &nt.Text{Content: input.Description},
+				},
+			},
+		}
+		l.Debug(fmt.Sprintf("setting Notes: %s", input.Description))
+	}
+
 	// Create the page
 	page, err := s.client.CreatePage(ctx, nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
@@ -225,11 +240,19 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 
 	l.Info("commission split created successfully")
 
+	// Fetch the created page to get the Description formula value
+	var description string
+	if props, ok := page.Properties.(nt.DatabasePageProperties); ok {
+		description = s.extractFormula(props, "Description")
+		l.Debug(fmt.Sprintf("extracted Description formula: %s", description))
+	}
+
 	return &InvoiceSplitData{
-		PageID:   page.ID,
-		Amount:   input.Amount,
-		Role:     input.Role,
-		Currency: input.Currency,
+		PageID:      page.ID,
+		Amount:      input.Amount,
+		Role:        input.Role,
+		Currency:    input.Currency,
+		Description: description,
 	}, nil
 }
 

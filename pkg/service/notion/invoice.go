@@ -19,6 +19,9 @@ import (
 // ClientInvoicesDBID is the Notion database ID for Client Invoices
 const ClientInvoicesDBID = "2bf64b29b84c80879a52ed2f9d493096"
 
+// ContractorsDBID is the Notion database ID for Contractors (used for name lookups)
+const ContractorsDBID = "9d468753ebb44977a8dc156428398a6b"
+
 // notionAPIVersion is the Notion API version used for raw HTTP requests
 // Using 2022-06-28 for page updates as it's stable and widely compatible
 // Note: 2025-09-03 introduces breaking changes for database operations
@@ -690,6 +693,7 @@ type LineItemCommissionData struct {
 	Currency    string
 	Month       time.Time
 	ProjectCode string
+	Description string // Line item description/notes
 }
 
 // QueryLineItemsWithCommissions fetches line items with commission data for a given invoice
@@ -776,21 +780,30 @@ func (n *notionService) QueryLineItemsWithCommissions(invoicePageID string) ([]L
 		l.Debugf("commission amounts: sales=%.2f, am=%.2f, dl=%.2f, hr=%.2f",
 			data.SalesAmount, data.AccountMgrAmount, data.DeliveryLeadAmount, data.HiringRefAmount)
 
-		// Fetch Deployment Tracker page to get contractor IDs
-		if data.DeploymentPageID != "" {
-			contractorIDs, err := n.getContractorIDsFromDeployment(data.DeploymentPageID)
-			if err != nil {
-				l.Debugf("failed to get contractor IDs from deployment: %v", err)
-			} else {
-				data.SalesPersonIDs = contractorIDs.SalesIDs
-				data.AccountMgrIDs = contractorIDs.AccountMgrIDs
-				data.DeliveryLeadIDs = contractorIDs.DeliveryLeadIDs
-				data.HiringRefIDs = contractorIDs.HiringRefIDs
-			}
+		// Resolve contractor IDs from Final formula columns
+		// This works for both Resource invoices (with Deployment Tracker) and Milestone invoices (without)
+		contractorIDs, err := n.resolveContractorIDsFromFinalFormulas(props)
+		if err != nil {
+			l.Debugf("failed to resolve contractor IDs from Final formulas: %v", err)
+		} else {
+			data.SalesPersonIDs = contractorIDs.SalesIDs
+			data.AccountMgrIDs = contractorIDs.AccountMgrIDs
+			data.DeliveryLeadIDs = contractorIDs.DeliveryLeadIDs
+			data.HiringRefIDs = contractorIDs.HiringRefIDs
 		}
 
 		l.Debugf("person IDs: sales=%v, am=%v, dl=%v, hr=%v",
 			data.SalesPersonIDs, data.AccountMgrIDs, data.DeliveryLeadIDs, data.HiringRefIDs)
+
+		// Warn if there are commission amounts but no persons assigned
+		hasCommissions := data.SalesAmount > 0 || data.AccountMgrAmount > 0 ||
+			data.DeliveryLeadAmount > 0 || data.HiringRefAmount > 0
+		hasPersons := len(data.SalesPersonIDs) > 0 || len(data.AccountMgrIDs) > 0 ||
+			len(data.DeliveryLeadIDs) > 0 || len(data.HiringRefIDs) > 0
+
+		if hasCommissions && !hasPersons {
+			l.Warnf("line item %s has commission amounts but no persons assigned", item.ID)
+		}
 
 		// Use Currency and Month from Invoice (already extracted above)
 		data.Currency = invoiceCurrency
@@ -805,6 +818,14 @@ func (n *notionService) QueryLineItemsWithCommissions(invoicePageID string) ([]L
 					data.ProjectCode = *item.Formula.String
 					l.Debugf("extracted project code: %s", data.ProjectCode)
 				}
+			}
+		}
+
+		// Extract Description from rich text
+		if descProp, ok := props["Description"]; ok && descProp.RichText != nil {
+			if len(descProp.RichText) > 0 {
+				data.Description = descProp.RichText[0].PlainText
+				l.Debugf("extracted description: %s", data.Description)
 			}
 		}
 
@@ -825,6 +846,8 @@ type DeploymentContractorIDs struct {
 }
 
 // getContractorIDsFromDeployment fetches the Deployment Tracker page and extracts contractor IDs
+// Deprecated: Use resolveContractorIDsFromFinalFormulas instead, which works for both Resource and Milestone invoices
+// This function is kept for rollback safety and may be removed in a future cleanup
 func (n *notionService) getContractorIDsFromDeployment(deploymentPageID string) (*DeploymentContractorIDs, error) {
 	l := n.l.Fields(logger.Fields{
 		"service":          "notion",
@@ -908,6 +931,138 @@ func (n *notionService) getContractorIDsFromDeployment(deploymentPageID string) 
 	return result, nil
 }
 
+// searchContractorByName searches the Contractors database by Full Name and returns the page ID
+func (n *notionService) searchContractorByName(name string) (string, error) {
+	l := n.l.Fields(logger.Fields{
+		"service": "notion",
+		"method":  "searchContractorByName",
+		"name":    name,
+	})
+
+	if name == "" {
+		l.Debug("empty name provided, skipping search")
+		return "", nil
+	}
+
+	l.Debugf("searching for contractor with name: %s", name)
+
+	ctx := context.Background()
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Full Name",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				RichText: &nt.TextPropertyFilter{
+					Equals: name,
+				},
+			},
+		},
+	}
+
+	resp, err := n.notionClient.QueryDatabase(ctx, ContractorsDBID, query)
+	if err != nil {
+		l.Debugf("failed to query contractors database: %v", err)
+		return "", fmt.Errorf("failed to query contractors: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		l.Debugf("no contractor found with name: %s", name)
+		return "", nil
+	}
+
+	contractorID := resp.Results[0].ID
+	l.Debugf("found contractor ID: %s for name: %s", contractorID, name)
+	return contractorID, nil
+}
+
+// resolveContractorIDsFromFinalFormulas extracts names from Final formula columns and looks up contractor IDs
+func (n *notionService) resolveContractorIDsFromFinalFormulas(props nt.DatabasePageProperties) (*DeploymentContractorIDs, error) {
+	l := n.l.Fields(logger.Fields{
+		"service": "notion",
+		"method":  "resolveContractorIDsFromFinalFormulas",
+	})
+
+	l.Debug("resolving contractor IDs from Final formula columns")
+
+	result := &DeploymentContractorIDs{}
+
+	// Extract names from Final formula columns
+	finalSales := n.extractFormulaString(props, "Final Sales")
+	finalAM := n.extractFormulaString(props, "Final AM")
+	finalDL := n.extractFormulaString(props, "Final DL")
+	hiringRef := n.extractFormulaString(props, "Hiring Referral")
+
+	l.Debugf("extracted names: sales=%s, am=%s, dl=%s, hr=%s", finalSales, finalAM, finalDL, hiringRef)
+
+	// Use name-to-ID cache to avoid duplicate lookups
+	nameCache := make(map[string]string)
+
+	// Helper to get contractor ID with caching
+	getContractorID := func(name string) (string, error) {
+		if name == "" {
+			return "", nil
+		}
+		if id, ok := nameCache[name]; ok {
+			l.Debugf("using cached ID for name: %s", name)
+			return id, nil
+		}
+		id, err := n.searchContractorByName(name)
+		if err != nil {
+			return "", err
+		}
+		nameCache[name] = id
+		return id, nil
+	}
+
+	// Resolve Sales Person IDs
+	if finalSales != "" {
+		salesID, err := getContractorID(finalSales)
+		if err != nil {
+			l.Debugf("failed to resolve sales person: %v", err)
+		} else if salesID != "" {
+			result.SalesIDs = []string{salesID}
+			l.Debugf("resolved sales person: %s -> %s", finalSales, salesID)
+		}
+	}
+
+	// Resolve Account Manager IDs
+	if finalAM != "" {
+		amID, err := getContractorID(finalAM)
+		if err != nil {
+			l.Debugf("failed to resolve account manager: %v", err)
+		} else if amID != "" {
+			result.AccountMgrIDs = []string{amID}
+			l.Debugf("resolved account manager: %s -> %s", finalAM, amID)
+		}
+	}
+
+	// Resolve Delivery Lead IDs
+	if finalDL != "" {
+		dlID, err := getContractorID(finalDL)
+		if err != nil {
+			l.Debugf("failed to resolve delivery lead: %v", err)
+		} else if dlID != "" {
+			result.DeliveryLeadIDs = []string{dlID}
+			l.Debugf("resolved delivery lead: %s -> %s", finalDL, dlID)
+		}
+	}
+
+	// Resolve Hiring Referral IDs
+	if hiringRef != "" {
+		hrID, err := getContractorID(hiringRef)
+		if err != nil {
+			l.Debugf("failed to resolve hiring referral: %v", err)
+		} else if hrID != "" {
+			result.HiringRefIDs = []string{hrID}
+			l.Debugf("resolved hiring referral: %s -> %s", hiringRef, hrID)
+		}
+	}
+
+	l.Debugf("resolved contractor IDs: sales=%v, am=%v, dl=%v, hr=%v",
+		result.SalesIDs, result.AccountMgrIDs, result.DeliveryLeadIDs, result.HiringRefIDs)
+
+	return result, nil
+}
+
 // extractNumberProp extracts a number property value
 func (n *notionService) extractNumberProp(props nt.DatabasePageProperties, propName string) float64 {
 	if prop, ok := props[propName]; ok && prop.Number != nil {
@@ -922,6 +1077,14 @@ func (n *notionService) extractFormulaProp(props nt.DatabasePageProperties, prop
 		return *prop.Formula.Number
 	}
 	return 0
+}
+
+// extractFormulaString extracts a string value from a formula property
+func (n *notionService) extractFormulaString(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && prop.Formula != nil && prop.Formula.String != nil {
+		return *prop.Formula.String
+	}
+	return ""
 }
 
 // IsSplitsGenerated checks if splits have already been generated for an invoice

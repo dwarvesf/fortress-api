@@ -202,6 +202,7 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 					DeploymentPageID:  item.DeploymentPageID,
 					InvoiceItemPageID: item.PageID,
 					InvoicePageID:     p.InvoicePageID,
+					Description:       item.Description,
 				}
 
 				split, err := w.service.Notion.InvoiceSplit.CreateCommissionSplit(w.ctx, input)
@@ -221,7 +222,7 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 						Amount:           split.Amount,
 						Currency:         split.Currency,
 						Date:             item.Month.Format("2006-01-02"),
-						Description:      "", // Empty for now, can be populated if needed
+						Description:      split.Description, // Use Description from split's formula
 					}
 
 					_, payoutErr := w.service.Notion.ContractorPayouts.CreateCommissionPayout(w.ctx, payoutInput)
