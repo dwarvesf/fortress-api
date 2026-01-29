@@ -162,6 +162,116 @@ func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, con
 	return nil, nil
 }
 
+// PayableInfo represents payable information for Discord lookup
+type PayableInfo struct {
+	PageID      string
+	Status      string     // "New", "Pending", "Paid"
+	Total       float64
+	Currency    string
+	InvoiceID   string
+	FileURL     string     // PDF file URL from Attachments field
+	PaymentDate *time.Time // Only for "Paid" status
+}
+
+// FindPayableByContractorAndPeriod finds all PENDING payables by contractor and period start date
+// Returns all pending payables (multiple invoices are supported)
+// Returns empty slice if no pending payables found
+func (s *ContractorPayablesService) FindPayableByContractorAndPeriod(ctx context.Context, contractorPageID, periodStart string) ([]*PayableInfo, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("looking up payable: contractor=%s periodStart=%s", contractorPageID, periodStart))
+
+	// Build filter: Contractor + Period start date + Status = "Pending"
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Contractor",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Relation: &nt.RelationDatabaseQueryFilter{
+						Contains: contractorPageID,
+					},
+				},
+			},
+			{
+				Property: "Period",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Date: &nt.DatePropertyFilter{
+						Equals: func() *time.Time {
+							t, _ := time.Parse("2006-01-02", periodStart)
+							return &t
+						}(),
+					},
+				},
+			},
+			{
+				Property: "Payment Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: "Pending",
+					},
+				},
+			},
+		},
+	}
+
+	// Query ALL pending payables for this contractor + period
+	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
+		Filter: filter,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query payables: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Debug("no pending payable found")
+		return []*PayableInfo{}, nil
+	}
+
+	// If multiple payables found, log info (this is expected - contractor can have multiple invoices)
+	s.logger.Debug(fmt.Sprintf("found %d pending payable(s) for contractor=%s period=%s", len(resp.Results), contractorPageID, periodStart))
+
+	// Extract all pending payables
+	var payables []*PayableInfo
+	for _, page := range resp.Results {
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			s.logger.Debug(fmt.Sprintf("failed to cast properties for pageID=%s", page.ID))
+			continue
+		}
+
+		payableInfo := &PayableInfo{
+			PageID:    page.ID,
+			Status:    s.extractSelect(props, "Payment Status"),
+			Total:     s.extractNumber(props, "Total"),
+			Currency:  s.extractSelect(props, "Currency"),
+			InvoiceID: s.extractRichText(props, "Invoice ID"),
+		}
+
+		// Extract payment date if paid
+		if dateProp, ok := props["Payment Date"]; ok && dateProp.Date != nil {
+			payableInfo.PaymentDate = &dateProp.Date.Start.Time
+		}
+
+		// Extract PDF file URL from Attachments field
+		if filesProp, ok := props["Attachments"]; ok && len(filesProp.Files) > 0 {
+			// Get the first file (should be the PDF)
+			if len(filesProp.Files[0].File.URL) > 0 {
+				payableInfo.FileURL = filesProp.Files[0].File.URL
+			} else if len(filesProp.Files[0].External.URL) > 0 {
+				payableInfo.FileURL = filesProp.Files[0].External.URL
+			}
+		}
+
+		payables = append(payables, payableInfo)
+	}
+
+	s.logger.Debug(fmt.Sprintf("returning %d pending payable(s)", len(payables)))
+	return payables, nil
+}
+
 // CreatePayable creates a new payable record or updates existing one in the Contractor Payables database
 // - If existing record with status "New" found: updates it
 // - If existing record with status "Pending" or other: skips (returns existing page ID)
@@ -869,6 +979,14 @@ func (s *ContractorPayablesService) extractSelect(props nt.DatabasePagePropertie
 		return ""
 	}
 	return prop.Select.Name
+}
+
+func (s *ContractorPayablesService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || len(prop.RichText) == 0 {
+		return ""
+	}
+	return prop.RichText[0].PlainText
 }
 
 func (s *ContractorPayablesService) extractRollupTitle(props nt.DatabasePageProperties, propName string) string {

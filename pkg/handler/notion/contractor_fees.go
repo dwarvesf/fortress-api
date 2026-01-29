@@ -62,9 +62,9 @@ func (h *handler) CreateContractorFees(c *gin.Context) {
 		return
 	}
 
-	// Step 2: Query approved orders (no month filter)
+	// Step 2: Query approved orders (no month filter, only approved status)
 	l.Debug("querying approved orders")
-	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx, "")
+	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx, "", false)
 	if err != nil {
 		l.Error(err, "failed to query approved orders")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))

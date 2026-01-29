@@ -44,8 +44,10 @@ func NewTaskOrderLogService(cfg *config.Config, logger logger.Logger) *TaskOrder
 	}
 }
 
-// QueryApprovedTimesheetsByMonth queries approved timesheets for a given month
-func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context, month string, contractorDiscord string, projectName string) ([]*TimesheetEntry, error) {
+// QueryApprovedTimesheetsByMonth queries timesheets for a given month
+// If skipStatusCheck is true, fetches all timesheets regardless of status
+// If skipStatusCheck is false, only fetches timesheets with Status="Reviewed"
+func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context, month string, contractorDiscord string, projectName string, skipStatusCheck bool) ([]*TimesheetEntry, error) {
 	timesheetDBID := s.cfg.Notion.Databases.Timesheet
 	if timesheetDBID == "" {
 		return nil, errors.New("timesheet database ID not configured")
@@ -66,15 +68,8 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 
 	s.logger.Debug(fmt.Sprintf("filtering timesheets by date range: on_or_after %s, on_or_before %s", startDate.Format("2006-01-02"), endDate.Format("2006-01-02")))
 
+	// Start with date filters
 	filters := []nt.DatabaseQueryFilter{
-		{
-			Property: "Status",
-			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-				Status: &nt.StatusDatabaseQueryFilter{
-					Equals: "Reviewed",
-				},
-			},
-		},
 		{
 			Property: "Date",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
@@ -91,6 +86,21 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 				},
 			},
 		},
+	}
+
+	// Only filter by status if skipStatusCheck is false
+	if !skipStatusCheck {
+		s.logger.Debug(fmt.Sprintf("filtering by status: Status=Reviewed"))
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "Reviewed",
+				},
+			},
+		})
+	} else {
+		s.logger.Debug(fmt.Sprintf("skipping status filter (force=true)"))
 	}
 
 	// Add contractor filter if specified
@@ -175,7 +185,11 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 		query.StartCursor = *resp.NextCursor
 	}
 
-	s.logger.Debug(fmt.Sprintf("found %d approved timesheets for month %s", len(timesheets), month))
+	if skipStatusCheck {
+		s.logger.Debug(fmt.Sprintf("found %d timesheets (all statuses) for month %s", len(timesheets), month))
+	} else {
+		s.logger.Debug(fmt.Sprintf("found %d approved timesheets for month %s", len(timesheets), month))
+	}
 	return timesheets, nil
 }
 
@@ -1118,16 +1132,21 @@ type ClientInfo struct {
 
 // QueryApprovedOrders queries all Task Order Log entries with Type=Order and Status=Approved
 // If month is provided (format: YYYY-MM), filters by that month
+// If skipStatusCheck is true, returns all orders regardless of status
 // Returns approved orders ready to be processed for contractor fee creation
-func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month string) ([]*ApprovedOrderData, error) {
+func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month string, skipStatusCheck bool) ([]*ApprovedOrderData, error) {
 	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
 	if taskOrderLogDBID == "" {
 		return nil, errors.New("task order log database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("querying approved orders: Type=Order, Status=Approved, month=%s", month))
+	if skipStatusCheck {
+		s.logger.Debug(fmt.Sprintf("querying orders: Type=Order (all statuses), month=%s, force=true", month))
+	} else {
+		s.logger.Debug(fmt.Sprintf("querying approved orders: Type=Order, Status=Approved, month=%s", month))
+	}
 
-	// Build filter: Type=Order AND Status=Approved
+	// Build filter: Type=Order (Status filter is conditional)
 	filters := []nt.DatabaseQueryFilter{
 		{
 			Property: "Type",
@@ -1137,14 +1156,21 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 				},
 			},
 		},
-		{
+	}
+
+	// Only filter by status if skipStatusCheck is false
+	if !skipStatusCheck {
+		s.logger.Debug("filtering by status: Status=Approved")
+		filters = append(filters, nt.DatabaseQueryFilter{
 			Property: "Status",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 				Select: &nt.SelectDatabaseQueryFilter{
 					Equals: "Approved",
 				},
 			},
-		},
+		})
+	} else {
+		s.logger.Debug("skipping status filter (force=true)")
 	}
 
 	// Add month filter if provided

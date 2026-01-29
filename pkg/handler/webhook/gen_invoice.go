@@ -107,49 +107,14 @@ func (h *handler) HandleGenInvoice(c *gin.Context) {
 	go h.processGenInvoice(l, req)
 }
 
-// processGenInvoice handles the async invoice generation process
+// processGenInvoice handles the async payable lookup process
 func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 	ctx := context.Background()
 
-	l.Debug(fmt.Sprintf("starting async invoice generation: discord_username=%s month=%s", req.DiscordUsername, req.Month))
+	l.Debug(fmt.Sprintf("starting payable lookup: discord_username=%s month=%s", req.DiscordUsername, req.Month))
 
-	// Step 1: Generate invoice data
-	l.Debug("step 1: generating invoice data")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month, nil)
-	if err != nil {
-		l.Errorf(err, "failed to generate contractor invoice data")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to generate invoice: %v", err))
-		return
-	}
-
-	l.Debug(fmt.Sprintf("invoice data generated: contractor=%s invoiceNumber=%s total=%.2f",
-		invoiceData.ContractorName, invoiceData.InvoiceNumber, invoiceData.TotalUSD))
-
-	// Step 2: Generate PDF
-	l.Debug("step 2: generating invoice PDF")
-	pdfBytes, err := h.controller.Invoice.GenerateContractorInvoicePDF(l, invoiceData)
-	if err != nil {
-		l.Errorf(err, "failed to generate contractor invoice PDF")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to generate PDF: %v", err))
-		return
-	}
-
-	l.Debug(fmt.Sprintf("PDF generated: size=%d bytes", len(pdfBytes)))
-
-	// Step 3: Upload PDF to Google Drive
-	l.Debug("step 3: uploading PDF to Google Drive")
-	fileName := fmt.Sprintf("%s.pdf", invoiceData.InvoiceNumber)
-	fileURL, err := h.service.GoogleDrive.UploadContractorInvoicePDF(invoiceData.ContractorName, fileName, pdfBytes)
-	if err != nil {
-		l.Errorf(err, "failed to upload PDF to Google Drive")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to upload PDF: %v", err))
-		return
-	}
-
-	l.Debug(fmt.Sprintf("PDF uploaded to Google Drive: url=%s", fileURL))
-
-	// Step 3.5a: Query contractor rate data (needed for payday and personal email)
-	l.Debug("step 3.5a: fetching contractor rate data")
+	// Step 1: Query contractor rates
+	l.Debug("step 1: fetching contractor rate data")
 	ratesService := notion.NewContractorRatesService(h.config, h.logger)
 	if ratesService == nil {
 		l.Error(nil, "failed to create contractor rates service")
@@ -160,65 +125,42 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 	rateData, err := ratesService.QueryRatesByDiscordAndMonth(ctx, req.DiscordUsername, req.Month)
 	if err != nil {
 		l.Errorf(err, "failed to query contractor rates")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("Failed to find contractor: %v", err))
+		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "No active contractor rate found. Please contact HR.")
 		return
 	}
 
-	// Step 3.5b: Create Contractor Payables record in Notion
-	l.Debug("step 3.5b: creating contractor payables record in Notion")
+	l.Debug(fmt.Sprintf("found contractor: pageID=%s payDay=%d", rateData.ContractorPageID, rateData.PayDay))
 
-	// Calculate period dates based on payday from contractor rate
-	// PeriodStart: payday of invoice month
-	// PeriodEnd: payday of next month
-	monthTime, _ := time.Parse("2006-01", invoiceData.Month)
-	payday := rateData.PayDay
-	if payday == 0 {
-		payday = 15 // Default to 15 if not set
+	// Step 2: Calculate period dates
+	monthTime, _ := time.Parse("2006-01", req.Month)
+	payDay := rateData.PayDay
+	if payDay == 0 {
+		payDay = 15 // Default to 15
 	}
-	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payday, 0, 0, 0, 0, time.UTC)
-	nextMonth := monthTime.AddDate(0, 1, 0)
-	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
+	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payDay, 0, 0, 0, 0, time.UTC)
 
-	l.Debug(fmt.Sprintf("[DEBUG] calculated period: payday=%d start=%s end=%s",
-		payday, periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
+	l.Debug(fmt.Sprintf("calculated period start: %s", periodStart.Format("2006-01-02")))
 
-	payableInput := notion.CreatePayableInput{
-		ContractorPageID: invoiceData.ContractorPageID,
-		Total:            invoiceData.TotalUSD,
-		Currency:         "USD",
-		PeriodStart:      periodStart.Format("2006-01-02"),
-		PeriodEnd:        periodEnd.Format("2006-01-02"),
-		InvoiceDate:      time.Now().Format("2006-01-02"),
-		InvoiceID:        invoiceData.InvoiceNumber,
-		PayoutItemIDs:    invoiceData.PayoutPageIDs,
-		ContractorType:   "Individual",           // Default to Individual
-		ExchangeRate:     invoiceData.ExchangeRate,
-		PDFBytes:         pdfBytes,               // Upload PDF to Notion
-	}
-
-	l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
-		payableInput.ContractorPageID, payableInput.Total, len(payableInput.PayoutItemIDs), payableInput.PeriodStart, payableInput.PeriodEnd))
-
-	payablePageID, payableErr := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)
-	if payableErr != nil {
-		l.Errorf(payableErr, "[DEBUG] failed to create contractor payables record - continuing with response")
-		// Non-fatal: continue with response
-	} else {
-		l.Debug(fmt.Sprintf("[DEBUG] contractor payables record created: pageID=%s", payablePageID))
-	}
-
-	// Extract file ID from URL for sharing
-	fileID := extractFileIDFromURL(fileURL)
-	if fileID == "" {
-		l.Error(nil, "failed to extract file ID from URL")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to process uploaded file")
+	// Step 3: Lookup existing pending payables
+	l.Debug("step 3: looking up pending payables")
+	payables, err := h.service.Notion.ContractorPayables.FindPayableByContractorAndPeriod(ctx, rateData.ContractorPageID, periodStart.Format("2006-01-02"))
+	if err != nil {
+		l.Errorf(err, "failed to lookup payables")
+		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to lookup invoice. Please try again later.")
 		return
 	}
 
-	l.Debug(fmt.Sprintf("extracted file ID: %s", fileID))
+	// Step 4: Check if any pending payables found
+	if len(payables) == 0 {
+		l.Debug("no pending payables found - invoice being processed")
+		h.updateDMWithNotReady(l, req.DMChannelID, req.DMMessageID, req.Month)
+		return
+	}
 
-	// Step 4: Get contractor's personal email from Notion
-	l.Debug("step 4: fetching contractor personal email")
+	l.Debug(fmt.Sprintf("found %d pending payable(s)", len(payables)))
+
+	// Step 5: Get contractor personal email (once for all payables)
+	l.Debug("step 5: fetching contractor personal email")
 	taskOrderLogService := h.service.Notion.TaskOrderLog
 	personalEmail := taskOrderLogService.GetContractorPersonalEmail(ctx, rateData.ContractorPageID)
 	if personalEmail == "" {
@@ -229,27 +171,57 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 
 	l.Debug(fmt.Sprintf("found personal email: %s", personalEmail))
 
-	// Step 5: Share file with contractor's personal email
-	l.Debug("step 5: sharing file with contractor email")
-	if err := h.service.GoogleDrive.ShareFileWithEmail(fileID, personalEmail); err != nil {
-		l.Errorf(err, "failed to share file with email")
-		// Non-fatal: file is uploaded, just couldn't share. Update with partial success
-		h.updateDMWithPartialSuccess(l, req.DMChannelID, req.DMMessageID, invoiceData, fileURL, personalEmail, err)
+	// Step 6: Process each pending payable separately
+	l.Debug(fmt.Sprintf("step 6: processing %d payable(s)", len(payables)))
+	successCount := 0
+	for i, payable := range payables {
+		l.Debug(fmt.Sprintf("processing payable %d/%d: pageID=%s invoiceID=%s hasFileURL=%v",
+			i+1, len(payables), payable.PageID, payable.InvoiceID, payable.FileURL != ""))
+
+		// Check if PDF is available
+		if payable.FileURL == "" {
+			l.Debug(fmt.Sprintf("payable %s has no PDF attached yet - skipping", payable.PageID))
+			continue
+		}
+
+		// Extract file ID from URL for sharing
+		fileID := extractFileIDFromURL(payable.FileURL)
+		if fileID == "" {
+			l.Error(nil, fmt.Sprintf("failed to extract file ID from URL for payable %s", payable.PageID))
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("extracted file ID: %s", fileID))
+
+		// Share file with contractor email
+		if err := h.service.GoogleDrive.ShareFileWithEmail(fileID, personalEmail); err != nil {
+			l.Errorf(err, fmt.Sprintf("failed to share file for payable %s", payable.PageID))
+			// Non-fatal: file exists, just couldn't share. Update with partial success
+			h.updateDMWithPartialSuccess(l, req.DMChannelID, req.DMMessageID, payable, personalEmail, err)
+			successCount++
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("file shared with email: %s", personalEmail))
+
+		// Update DM with success for this payable
+		h.updateDMWithSuccess(l, req.DMChannelID, req.DMMessageID, req.Month, payable, personalEmail)
+		successCount++
+	}
+
+	// Step 7: Check if any payables were processed
+	if successCount == 0 {
+		l.Debug("no payables with PDF found")
+		h.updateDMWithNotReady(l, req.DMChannelID, req.DMMessageID, req.Month)
 		return
 	}
 
-	l.Debug(fmt.Sprintf("file shared with email: %s", personalEmail))
-
-	// Step 6: Update DM with success
-	l.Debug("step 6: updating Discord DM with success")
-	h.updateDMWithSuccess(l, req.DMChannelID, req.DMMessageID, invoiceData, fileURL, personalEmail)
-
-	l.Info(fmt.Sprintf("invoice generation completed successfully: discord_username=%s month=%s invoice=%s",
-		req.DiscordUsername, req.Month, invoiceData.InvoiceNumber))
+	l.Info(fmt.Sprintf("payable lookup completed: discord_username=%s month=%s processed=%d/%d",
+		req.DiscordUsername, req.Month, successCount, len(payables)))
 }
 
 // updateDMWithSuccess updates the Discord DM with success status
-func (h *handler) updateDMWithSuccess(l logger.Logger, channelID, messageID string, invoiceData interface{}, fileURL, email string) {
+func (h *handler) updateDMWithSuccess(l logger.Logger, channelID, messageID, month string, payable *notion.PayableInfo, email string) {
 	l.Debug(fmt.Sprintf("updating DM with success: channelID=%s messageID=%s", channelID, messageID))
 
 	// Check if Discord service is available
@@ -260,19 +232,29 @@ func (h *handler) updateDMWithSuccess(l logger.Logger, channelID, messageID stri
 
 	// Build success embed
 	successEmbed := &discordgo.MessageEmbed{
-		Title:       "✅ Invoice Generated Successfully",
-		Description: "Your invoice has been generated and shared with your personal email.",
+		Title:       "✅ Invoice Ready",
+		Description: "Your invoice has been found and shared with your personal email.",
 		Color:       3066993, // Green
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "File",
-				Value:  fmt.Sprintf("[View Invoice](%s)", fileURL),
+				Value:  fmt.Sprintf("[View Invoice](%s)", payable.FileURL),
 				Inline: false,
 			},
 			{
 				Name:   "Email Notification",
 				Value:  fmt.Sprintf("A notification has been sent to %s", email),
 				Inline: false,
+			},
+			{
+				Name:   "Status",
+				Value:  payable.Status,
+				Inline: true,
+			},
+			{
+				Name:   "Amount",
+				Value:  fmt.Sprintf("%.2f %s", payable.Total, payable.Currency),
+				Inline: true,
 			},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
@@ -360,8 +342,8 @@ func (h *handler) updateDMWithRateLimitError(l logger.Logger, channelID, message
 	}
 }
 
-// updateDMWithPartialSuccess updates the Discord DM with partial success (file uploaded but not shared)
-func (h *handler) updateDMWithPartialSuccess(l logger.Logger, channelID, messageID string, invoiceData interface{}, fileURL, email string, shareErr error) {
+// updateDMWithPartialSuccess updates the Discord DM with partial success (file found but not shared)
+func (h *handler) updateDMWithPartialSuccess(l logger.Logger, channelID, messageID string, payable *notion.PayableInfo, email string, shareErr error) {
 	l.Debug(fmt.Sprintf("updating DM with partial success: channelID=%s messageID=%s", channelID, messageID))
 
 	// Check if Discord service is available
@@ -371,13 +353,13 @@ func (h *handler) updateDMWithPartialSuccess(l logger.Logger, channelID, message
 	}
 
 	warningEmbed := &discordgo.MessageEmbed{
-		Title:       "⚠️ Invoice Generated (Partial Success)",
-		Description: "Your invoice has been generated but we couldn't send the email notification.",
+		Title:       "⚠️ Invoice Found (Partial Success)",
+		Description: "Your invoice has been found but we couldn't send the email notification.",
 		Color:       16776960, // Yellow
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "File",
-				Value:  fmt.Sprintf("[View Invoice](%s)", fileURL),
+				Value:  fmt.Sprintf("[View Invoice](%s)", payable.FileURL),
 				Inline: false,
 			},
 			{
@@ -399,6 +381,35 @@ func (h *handler) updateDMWithPartialSuccess(l logger.Logger, channelID, message
 		l.Errorf(err, "failed to update discord DM with partial success")
 	} else {
 		l.Debug("successfully updated discord DM with partial success status")
+	}
+}
+
+// updateDMWithNotReady updates the Discord DM with "not ready" message
+func (h *handler) updateDMWithNotReady(l logger.Logger, channelID, messageID, month string) {
+	l.Debug(fmt.Sprintf("updating DM with not ready: channelID=%s messageID=%s", channelID, messageID))
+
+	// Check if Discord service is available
+	if h.service == nil || h.service.Discord == nil {
+		l.Error(nil, "Discord service not available, cannot update DM")
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "⏳ Invoice Being Processed",
+		Description: "Your invoice is currently being processed and is not yet ready for payout; we will notify you immediately once it is cleared.",
+		Color:       16776960, // Yellow
+		Fields: []*discordgo.MessageEmbedField{
+			{Name: "Month", Value: month, Inline: true},
+			{Name: "Note", Value: "This process typically takes 1-2 business days", Inline: false},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Errorf(err, "failed to update Discord DM with not ready")
+	} else {
+		l.Debug("successfully updated Discord DM with not ready status")
 	}
 }
 

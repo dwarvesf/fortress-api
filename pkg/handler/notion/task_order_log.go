@@ -27,6 +27,7 @@ import (
 // @Param month query string true "Target month in YYYY-MM format (e.g., 2025-12)"
 // @Param contractor query string false "Discord username to filter by specific contractor (e.g., chinhld)"
 // @Param project query string false "Project code/name to filter by specific project (e.g., kafi, nghenhan)"
+// @Param force query bool false "Fetch all timesheets regardless of approval status (default: false)"
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -59,7 +60,11 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	// Parse project parameter (optional)
 	projectID := strings.TrimSpace(c.Query("project"))
 
-	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s", month, contractorDiscord, projectID))
+	// Parse force parameter (optional, defaults to false)
+	forceParam := strings.TrimSpace(c.Query("force"))
+	skipStatusCheck := forceParam == "true"
+
+	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v", month, contractorDiscord, projectID, skipStatusCheck))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -78,19 +83,31 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		return
 	}
 
-	// Step 1: Query approved timesheets for the month
-	l.Debug(fmt.Sprintf("querying approved timesheets for month: %s", month))
-	timesheets, err := taskOrderLogService.QueryApprovedTimesheetsByMonth(ctx, month, contractorDiscord, projectID)
+	// Step 1: Query timesheets for the month (approved or all based on force parameter)
+	if skipStatusCheck {
+		l.Debug(fmt.Sprintf("querying all timesheets for month: %s (force=true)", month))
+	} else {
+		l.Debug(fmt.Sprintf("querying approved timesheets for month: %s", month))
+	}
+	timesheets, err := taskOrderLogService.QueryApprovedTimesheetsByMonth(ctx, month, contractorDiscord, projectID, skipStatusCheck)
 	if err != nil {
 		l.Error(err, fmt.Sprintf("failed to query timesheets: month=%s", month))
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	l.Debug(fmt.Sprintf("found %d approved timesheets", len(timesheets)))
+	if skipStatusCheck {
+		l.Debug(fmt.Sprintf("found %d timesheets (all statuses)", len(timesheets)))
+	} else {
+		l.Debug(fmt.Sprintf("found %d approved timesheets", len(timesheets)))
+	}
 
 	if len(timesheets) == 0 {
-		l.Info("no approved timesheets found, returning success with zero counts")
+		if skipStatusCheck {
+			l.Info("no timesheets found (all statuses checked), returning success with zero counts")
+		} else {
+			l.Info("no approved timesheets found, returning success with zero counts")
+		}
 		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
 			"month":                 month,
 			"orders_created":        0,

@@ -146,6 +146,7 @@ var (
 // @Produce json
 // @Param type query string false "Payout type (default: contractor_payroll)"
 // @Param contractor query string false "Filter by contractor (discord username, name, or page ID)"
+// @Param force query string false "Skip status check and process all orders regardless of status (default: false)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -173,6 +174,10 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 	// Get optional contractor filter (discord username or page ID)
 	contractorFilter := c.Query("contractor")
 
+	// Parse force parameter (optional, defaults to false)
+	forceParam := strings.TrimSpace(c.Query("force"))
+	skipStatusCheck := forceParam == "true"
+
 	// Get optional id filter (for invoice_split and refund types)
 	idFilter := c.Query("id")
 
@@ -195,13 +200,13 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 		}
 	}
 
-	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d, month: %s, id: %s", payoutTypeKey, payoutType, contractorFilter, payDayFilter, monthFilter, idFilter))
-	l.Info("starting CreateContractorPayouts cronjob")
+	l.Debug(fmt.Sprintf("payout type key: %s, value: %s, contractor: %s, pay_day: %d, month: %s, id: %s, force: %v", payoutTypeKey, payoutType, contractorFilter, payDayFilter, monthFilter, idFilter, skipStatusCheck))
+	l.Info(fmt.Sprintf("starting CreateContractorPayouts cronjob: type=%s force=%v", payoutTypeKey, skipStatusCheck))
 
 	// Process based on payout type
 	switch payoutTypeKey {
 	case "contractor_payroll":
-		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter, monthFilter)
+		h.processContractorPayrollPayouts(c, l, payoutType, contractorFilter, payDayFilter, monthFilter, skipStatusCheck)
 	case "invoice_split":
 		h.processInvoiceSplitPayouts(c, l, idFilter)
 	case "refund":
@@ -218,15 +223,16 @@ func (h *handler) CreateContractorPayouts(c *gin.Context) {
 // contractorFilter: optional filter by contractor discord username or page ID
 // payDayFilter: optional filter by pay day (1-31), 0 means no filter
 // monthFilter: optional filter by month (YYYY-MM), empty means no filter
+// skipStatusCheck: if true, processes all orders regardless of status
 //
 // OPTIMIZATION: Uses batch pre-loading to reduce Notion API calls from O(3N) to O(3):
 // - Pre-loads all contractor rates in one batch query
 // - Pre-loads all payout existence checks in one batch query
 // - Pre-loads all contractor positions in one batch query
-func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string, contractorFilter string, payDayFilter int, monthFilter string) {
+func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logger, payoutType string, contractorFilter string, payDayFilter int, monthFilter string, skipStatusCheck bool) {
 	ctx := c.Request.Context()
 
-	l.Debug(fmt.Sprintf("processContractorPayrollPayouts: contractorFilter=%s payDayFilter=%d monthFilter=%s", contractorFilter, payDayFilter, monthFilter))
+	l.Debug(fmt.Sprintf("processContractorPayrollPayouts: contractorFilter=%s payDayFilter=%d monthFilter=%s force=%v", contractorFilter, payDayFilter, monthFilter, skipStatusCheck))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -253,16 +259,24 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 		return
 	}
 
-	// Query approved orders (Type=Order, Status=Approved, optional month filter)
-	l.Debug(fmt.Sprintf("querying Task Order Log with Type=Order, Status=Approved, month=%s", monthFilter))
-	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx, monthFilter)
+	// Query approved orders (Type=Order, Status=Approved unless force=true, optional month filter)
+	if skipStatusCheck {
+		l.Debug(fmt.Sprintf("querying Task Order Log with Type=Order (all statuses), month=%s, force=true", monthFilter))
+	} else {
+		l.Debug(fmt.Sprintf("querying Task Order Log with Type=Order, Status=Approved, month=%s", monthFilter))
+	}
+	approvedOrders, err := taskOrderLogService.QueryApprovedOrders(ctx, monthFilter, skipStatusCheck)
 	if err != nil {
 		l.Error(err, "failed to query approved orders")
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return
 	}
 
-	l.Info(fmt.Sprintf("found %d approved orders", len(approvedOrders)))
+	if skipStatusCheck {
+		l.Info(fmt.Sprintf("found %d orders (all statuses)", len(approvedOrders)))
+	} else {
+		l.Info(fmt.Sprintf("found %d approved orders", len(approvedOrders)))
+	}
 
 	// Filter by contractor if specified
 	if contractorFilter != "" {
