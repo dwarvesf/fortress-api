@@ -1155,7 +1155,7 @@ type CreateCommissionPayoutInput struct {
 	Amount           float64 // Payment amount
 	Currency         string  // Currency (e.g., "VND", "USD")
 	Date             string  // Date in YYYY-MM-DD format
-	Description      string  // Description/Notes (from Invoice Split Notes)
+	Description      string  // Description (from Invoice Split Description formula field)
 }
 
 // CreateCommissionPayout creates a new commission payout entry in the Contractor Payouts database
@@ -1227,7 +1227,7 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 		}
 	}
 
-	// Add Description if provided (from Invoice Split Notes)
+	// Add Description if provided (from Invoice Split Description formula field)
 	if input.Description != "" {
 		props["Description"] = nt.DatabasePageProperty{
 			RichText: []nt.RichText{

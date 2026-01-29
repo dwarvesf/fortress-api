@@ -42,7 +42,7 @@ type PendingCommissionSplit struct {
 	Type         string // Commission, Bonus, Fee
 	PersonPageID string // From Person relation
 	Month        string // Date in YYYY-MM-DD format from Month property
-	Description  string // Notes field for additional context (used as Description in payout)
+	Description  string // Formula field in Notion (read-only, automatically calculated)
 }
 
 // CreateCommissionSplitInput contains the data needed to create a commission split
@@ -58,7 +58,7 @@ type CreateCommissionSplitInput struct {
 	DeploymentPageID  string
 	InvoiceItemPageID string
 	InvoicePageID     string
-	Description       string // Line item description/notes
+	Description       string // Not used (Description is a formula field in Notion)
 }
 
 // NewInvoiceSplitService creates a new Notion invoice split service
@@ -214,18 +214,8 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 		}
 	}
 
-	// Add description/notes if provided
-	if input.Description != "" {
-		props["Notes"] = nt.DatabasePageProperty{
-			RichText: []nt.RichText{
-				{
-					Type: nt.RichTextTypeText,
-					Text: &nt.Text{Content: input.Description},
-				},
-			},
-		}
-		l.Debug(fmt.Sprintf("setting Notes: %s", input.Description))
-	}
+	// Note: Description column is a formula field in Notion and cannot be set manually
+	// It will be automatically calculated based on other properties
 
 	// Create the page
 	page, err := s.client.CreatePage(ctx, nt.CreatePageParams{

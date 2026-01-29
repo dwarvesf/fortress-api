@@ -17,6 +17,7 @@ const (
 	InvoiceStatusError         InvoiceStatus = "error"
 	InvoiceStatusScheduled     InvoiceStatus = "scheduled"
 	InvoiceStatusUncollectible InvoiceStatus = "uncollectible"
+	InvoiceStatusCredited      InvoiceStatus = "credited"
 )
 
 func (i InvoiceStatus) IsValid() bool {
@@ -27,7 +28,8 @@ func (i InvoiceStatus) IsValid() bool {
 		InvoiceStatusPaid,
 		InvoiceStatusError,
 		InvoiceStatusScheduled,
-		InvoiceStatusUncollectible:
+		InvoiceStatusUncollectible,
+		InvoiceStatusCredited:
 		return true
 	}
 	return false

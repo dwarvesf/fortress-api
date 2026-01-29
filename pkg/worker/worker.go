@@ -215,6 +215,17 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 
 				// Create corresponding payout for this split
 				if w.service.Notion.ContractorPayouts != nil && split != nil {
+					// Check if payout already exists for this split to prevent duplicates
+					exists, existingPayoutID, checkErr := w.service.Notion.ContractorPayouts.CheckPayoutExistsByInvoiceSplit(w.ctx, split.PageID)
+					if checkErr != nil {
+						l.Debugf("failed to check payout existence for split=%s: %v", split.PageID, checkErr)
+						// Continue anyway - better to risk duplicate than skip creating payout
+					} else if exists {
+						l.Infof("payout already exists for split=%s: %s, skipping creation", split.PageID, existingPayoutID)
+						continue
+					}
+
+					// Payout doesn't exist, create it
 					payoutInput := notion.CreateCommissionPayoutInput{
 						Name:             splitName,
 						ContractorPageID: personID,
@@ -230,7 +241,7 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 						l.Errorf(payoutErr, "failed to create payout for split=%s role=%s person=%s", split.PageID, role.name, personID)
 						// Continue even if payout creation fails
 					} else {
-						l.Debugf("created payout for split=%s", split.PageID)
+						l.Infof("created payout for split=%s", split.PageID)
 					}
 				}
 			}
