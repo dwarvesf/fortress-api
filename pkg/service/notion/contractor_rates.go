@@ -809,3 +809,131 @@ done:
 
 	return results, nil
 }
+
+// ContractorInfo holds basic contractor information for batch processing
+type ContractorInfo struct {
+	PageID  string
+	Discord string
+	PayDay  int
+}
+
+// QueryAllContractorsByMonthAndBatch queries all contractors for a given month and batch
+// Returns list of contractors with their page IDs for batch processing
+// batch: pay day filter (1 or 15), 0 means all contractors
+func (s *ContractorRatesService) QueryAllContractorsByMonthAndBatch(
+	ctx context.Context,
+	month string,
+	batch int,
+) ([]ContractorInfo, error) {
+	contractorRatesDBID := s.cfg.Notion.Databases.ContractorRates
+	if contractorRatesDBID == "" {
+		return nil, errors.New("contractor rates database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_QUERY] querying all contractors for month=%s batch=%d", month, batch))
+
+	// Parse month to get date range
+	monthTime, err := time.Parse("2006-01", month)
+	if err != nil {
+		return nil, fmt.Errorf("invalid month format: %w", err)
+	}
+
+	startOfMonth := time.Date(monthTime.Year(), monthTime.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endOfMonth := startOfMonth.AddDate(0, 1, -1)
+
+	// Build filter for active rates in the given month
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							Equals: "Active",
+						},
+					},
+				},
+				{
+					Property: "Start Date",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Date: &nt.DatePropertyFilter{
+							OnOrBefore: &endOfMonth,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// Query all matching rates (we'll filter by PayDay in-memory)
+	var allResults []nt.Page
+
+	for {
+		resp, err := s.client.QueryDatabase(ctx, contractorRatesDBID, query)
+		if err != nil {
+			s.logger.Error(err, "[BATCH_QUERY] failed to query contractor rates")
+			return nil, fmt.Errorf("failed to query contractor rates: %w", err)
+		}
+
+		allResults = append(allResults, resp.Results...)
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_QUERY] found %d contractor rates", len(allResults)))
+
+	// Extract contractor info
+	var contractors []ContractorInfo
+	contractorSet := make(map[string]bool) // Deduplicate by contractor page ID
+
+	for _, page := range allResults {
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			continue
+		}
+
+		// Get Contractor relation
+		var contractorPageID string
+		if prop, ok := props["Contractor"]; ok && prop.Relation != nil && len(prop.Relation) > 0 {
+			contractorPageID = prop.Relation[0].ID
+		}
+
+		if contractorPageID == "" || contractorSet[contractorPageID] {
+			continue
+		}
+
+		// Get PayDay number
+		var payDay int
+		if prop, ok := props["Pay Day"]; ok && prop.Number != nil {
+			payDay = int(*prop.Number)
+		}
+
+		// Filter by batch (PayDay) if specified
+		if batch > 0 && batch != payDay {
+			continue
+		}
+
+		// Get Discord from rollup (best effort - try to extract plain text)
+		var discord string
+		if prop, ok := props["Discord"]; ok && prop.Rollup != nil {
+			// Discord is a rollup field, value is in the Array
+			// The Array contains DatabasePageProperty structures
+			// For now, we'll skip Discord extraction as it's complex
+			// The contractor will be identified by PageID
+			discord = "" // TODO: Extract Discord from rollup if needed
+		}
+
+		contractors = append(contractors, ContractorInfo{
+			PageID:  contractorPageID,
+			Discord: discord,
+			PayDay:  payDay,
+		})
+		contractorSet[contractorPageID] = true
+	}
+
+	s.logger.Debug(fmt.Sprintf("[BATCH_QUERY] extracted %d unique contractors (filtered by batch=%d)", len(contractors), batch))
+	return contractors, nil
+}

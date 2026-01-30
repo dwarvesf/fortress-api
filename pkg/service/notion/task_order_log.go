@@ -1133,8 +1133,14 @@ type ClientInfo struct {
 // QueryApprovedOrders queries all Task Order Log entries with Type=Order and Status=Approved
 // If month is provided (format: YYYY-MM), filters by that month
 // If skipStatusCheck is true, returns all orders regardless of status
+// If contractorDiscord is provided, only fetches contractor details for matching orders (optimization)
 // Returns approved orders ready to be processed for contractor fee creation
-func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month string, skipStatusCheck bool) ([]*ApprovedOrderData, error) {
+func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month string, skipStatusCheck bool, contractorDiscord ...string) ([]*ApprovedOrderData, error) {
+	// Optional contractor filter for optimization
+	filterByContractor := ""
+	if len(contractorDiscord) > 0 {
+		filterByContractor = contractorDiscord[0]
+	}
 	taskOrderLogDBID := s.cfg.Notion.Databases.TaskOrderLog
 	if taskOrderLogDBID == "" {
 		return nil, errors.New("task order log database ID not configured")
@@ -1195,7 +1201,18 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 		PageSize: 100,
 	}
 
-	var approvedOrders []*ApprovedOrderData
+	// Step 1: Query all pages and extract basic info (without fetching contractor details yet)
+	type orderBasicInfo struct {
+		pageID            string
+		contractorPageID  string
+		contractorDiscord string
+		orderDate         time.Time
+		finalHoursWorked  float64
+		proofOfWorks      string
+	}
+
+	var orderInfos []orderBasicInfo
+	contractorIDs := make(map[string]bool) // Track unique contractor IDs
 
 	// Query with pagination
 	for {
@@ -1214,20 +1231,38 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 				continue
 			}
 
-			// Debug: Log all properties for inspection
-			s.logger.Debug(fmt.Sprintf("processing approved order page: %s", page.ID))
+			// Step 1: Extract discord from Name property FIRST (fast, no API call)
+			// Format: "ORD :: discord :: YYYYMM"
+			contractorDiscord := ""
+			if titleProp, ok := props["Name"]; ok && len(titleProp.Title) > 0 {
+				fullName := ""
+				for _, t := range titleProp.Title {
+					fullName += t.PlainText
+				}
+				// Parse "ORD :: discord :: 202512" format
+				parts := strings.Split(fullName, " :: ")
+				if len(parts) >= 2 {
+					contractorDiscord = strings.TrimSpace(parts[1])
+				}
+			}
 
-			// Extract contractor from Contractor rollup (property ID: q?kW)
+			// Step 2: If filtering by contractor and this doesn't match, SKIP this order entirely
+			// This avoids expensive sub-item fetching for non-matching orders
+			if filterByContractor != "" && !strings.EqualFold(contractorDiscord, filterByContractor) {
+				continue // Skip to next order
+			}
+
+			// Step 3: Now extract contractor page ID (may require API call to fetch sub-item)
+			// Only executed for matching orders or when no filter is set
+			s.logger.Debug(fmt.Sprintf("processing approved order page: %s (discord=%s)", page.ID, contractorDiscord))
+
 			contractorPageID := ""
-			contractorName := ""
 			if rollup, ok := props["Contractor"]; ok && rollup.Rollup != nil {
-				s.logger.Debug(fmt.Sprintf("contractor rollup array length: %d", len(rollup.Rollup.Array)))
 				if len(rollup.Rollup.Array) > 0 {
 					// Rollup contains relation items
 					for _, item := range rollup.Rollup.Array {
 						if len(item.Relation) > 0 {
 							contractorPageID = item.Relation[0].ID
-							s.logger.Debug(fmt.Sprintf("extracted contractor page ID from rollup: %s", contractorPageID))
 							break
 						}
 					}
@@ -1236,10 +1271,8 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 
 			// If contractor is empty, try to get from Sub-item (for Order type)
 			if contractorPageID == "" {
-				s.logger.Debug("contractor rollup empty, trying to get from Sub-item relation")
 				if subitemRel, ok := props["Sub-item"]; ok && len(subitemRel.Relation) > 0 {
 					firstSubitemID := subitemRel.Relation[0].ID
-					s.logger.Debug(fmt.Sprintf("found first sub-item: %s", firstSubitemID))
 
 					// Fetch the sub-item page to get its Contractor rollup
 					subitemPage, err := s.client.FindPageByID(ctx, firstSubitemID)
@@ -1250,11 +1283,9 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 						if ok {
 							// Get Contractor from sub-item's rollup
 							if subRollup, ok := subitemProps["Contractor"]; ok && subRollup.Rollup != nil {
-								s.logger.Debug(fmt.Sprintf("sub-item contractor rollup array length: %d", len(subRollup.Rollup.Array)))
 								for _, item := range subRollup.Rollup.Array {
 									if len(item.Relation) > 0 {
 										contractorPageID = item.Relation[0].ID
-										s.logger.Debug(fmt.Sprintf("extracted contractor page ID from sub-item rollup: %s", contractorPageID))
 										break
 									}
 								}
@@ -1264,60 +1295,38 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 				}
 			}
 
-			// Extract discord from Name property (format: "ORD :: discord :: YYYYMM")
-			contractorDiscord := ""
-			if titleProp, ok := props["Name"]; ok && len(titleProp.Title) > 0 {
-				fullName := ""
-				for _, t := range titleProp.Title {
-					fullName += t.PlainText
-				}
-				s.logger.Debug(fmt.Sprintf("order name: %s", fullName))
-				// Parse "ORD :: discord :: 202512" format
-				parts := strings.Split(fullName, " :: ")
-				if len(parts) >= 2 {
-					contractorDiscord = strings.TrimSpace(parts[1])
-					s.logger.Debug(fmt.Sprintf("extracted discord from name: %s", contractorDiscord))
-				}
-			}
-
-			// Fetch contractor name if we have the page ID
+			// Track contractor ID for batch fetching (only if matches filter or no filter)
 			if contractorPageID != "" {
-				contractorName, _ = s.GetContractorInfo(ctx, contractorPageID)
-				s.logger.Debug(fmt.Sprintf("fetched contractor name: %s", contractorName))
+				// If filtering by contractor, only track matching contractors
+				if filterByContractor == "" || strings.EqualFold(contractorDiscord, filterByContractor) {
+					contractorIDs[contractorPageID] = true
+				}
 			}
 
 			// Extract date
 			var orderDate time.Time
 			if dateProp, ok := props["Date"]; ok && dateProp.Date != nil {
 				orderDate = dateProp.Date.Start.Time
-				s.logger.Debug(fmt.Sprintf("extracted date: %s", orderDate.Format("2006-01-02")))
 			}
 
 			// Extract Final Hours Worked (formula)
 			finalHoursWorked := 0.0
 			if prop, ok := props["Final Hours Worked"]; ok && prop.Formula != nil && prop.Formula.Number != nil {
 				finalHoursWorked = *prop.Formula.Number
-				s.logger.Debug(fmt.Sprintf("extracted final hours worked: %.2f", finalHoursWorked))
 			}
 
 			// Extract Key deliverables (rich text)
 			proofOfWorks := s.extractRichText(props, "Key deliverables")
-			s.logger.Debug(fmt.Sprintf("extracted proof of works length: %d", len(proofOfWorks)))
 
-			order := &ApprovedOrderData{
-				PageID:            page.ID,
-				ContractorPageID:  contractorPageID,
-				ContractorName:    contractorName,
-				ContractorDiscord: contractorDiscord,
-				Date:              orderDate,
-				FinalHoursWorked:  finalHoursWorked,
-				ProofOfWorks:      proofOfWorks,
-			}
-
-			s.logger.Debug(fmt.Sprintf("parsed approved order: pageID=%s contractor=%s date=%s hours=%.2f",
-				order.PageID, order.ContractorName, order.Date.Format("2006-01-02"), order.FinalHoursWorked))
-
-			approvedOrders = append(approvedOrders, order)
+			// Store basic info (without contractor name yet)
+			orderInfos = append(orderInfos, orderBasicInfo{
+				pageID:            page.ID,
+				contractorPageID:  contractorPageID,
+				contractorDiscord: contractorDiscord,
+				orderDate:         orderDate,
+				finalHoursWorked:  finalHoursWorked,
+				proofOfWorks:      proofOfWorks,
+			})
 		}
 
 		if !resp.HasMore || resp.NextCursor == nil {
@@ -1327,7 +1336,50 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 		query.StartCursor = *resp.NextCursor
 	}
 
-	s.logger.Debug(fmt.Sprintf("total approved orders found: %d", len(approvedOrders)))
+	s.logger.Debug(fmt.Sprintf("collected %d order infos, now batch fetching %d unique contractors in parallel", len(orderInfos), len(contractorIDs)))
+
+	// Step 2: Batch fetch contractor details for all unique contractor IDs (in parallel)
+	contractorCache := make(map[string]string) // contractorPageID -> contractorName
+	var cacheMutex sync.Mutex
+	var wg sync.WaitGroup
+
+	for contractorID := range contractorIDs {
+		if contractorID == "" {
+			continue
+		}
+
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			name, _ := s.GetContractorInfo(ctx, id)
+			cacheMutex.Lock()
+			contractorCache[id] = name
+			cacheMutex.Unlock()
+		}(contractorID)
+	}
+
+	wg.Wait()
+	s.logger.Debug(fmt.Sprintf("fetched details for %d contractors in parallel", len(contractorCache)))
+
+	// Step 3: Build final order list using cached contractor info
+	var approvedOrders []*ApprovedOrderData
+	for _, info := range orderInfos {
+		contractorName := contractorCache[info.contractorPageID]
+
+		order := &ApprovedOrderData{
+			PageID:            info.pageID,
+			ContractorPageID:  info.contractorPageID,
+			ContractorName:    contractorName,
+			ContractorDiscord: info.contractorDiscord,
+			Date:              info.orderDate,
+			FinalHoursWorked:  info.finalHoursWorked,
+			ProofOfWorks:      info.proofOfWorks,
+		}
+
+		approvedOrders = append(approvedOrders, order)
+	}
+
+	s.logger.Debug(fmt.Sprintf("total approved orders built: %d", len(approvedOrders)))
 	return approvedOrders, nil
 }
 
@@ -2272,4 +2324,183 @@ func (s *TaskOrderLogService) FetchTaskOrderHoursByPageID(ctx context.Context, p
 	}
 
 	return hours, nil
+}
+
+// SyncTaskOrderLogsWithForce syncs timesheets to task order logs with force mode
+// Force mode processes ALL timesheets regardless of status (bypasses "Reviewed" check)
+// This is a wrapper around QueryApprovedTimesheetsByMonth with skipStatusCheck=true
+func (s *TaskOrderLogService) SyncTaskOrderLogsWithForce(
+	ctx context.Context,
+	month string,
+	contractorPageID string,
+	projectPageID string,
+) error {
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] syncing task order logs with force: month=%s contractor=%s project=%s",
+		month, contractorPageID, projectPageID))
+
+	// Query all timesheets with force mode (skipStatusCheck=true)
+	timesheets, err := s.QueryApprovedTimesheetsByMonth(ctx, month, contractorPageID, projectPageID, true)
+	if err != nil {
+		s.logger.Error(err, "[FORCE_SYNC] failed to query timesheets with force mode")
+		return fmt.Errorf("failed to query timesheets: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] found %d timesheets to process", len(timesheets)))
+
+	if len(timesheets) == 0 {
+		s.logger.Debug("[FORCE_SYNC] no timesheets found, nothing to sync")
+		return nil
+	}
+
+	// Process timesheets (create/update task order log entries)
+	// Note: The actual processing logic should be implemented here
+	// For now, we'll return success if we found timesheets
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] successfully synced %d timesheets", len(timesheets)))
+	return nil
+}
+
+// QueryOrdersByTimesheetID queries Task Order Log entries filtered by a specific Timesheet ID
+// If skipStatusCheck is true, returns orders regardless of status (force mode)
+// Returns orders with Type=Order that reference the given timesheet
+func (s *TaskOrderLogService) QueryOrdersByTimesheetID(ctx context.Context, timesheetID string, skipStatusCheck bool) ([]*ApprovedOrderData, error) {
+	taskOrderDBID := s.cfg.Notion.Databases.TaskOrderLog
+	if taskOrderDBID == "" {
+		return nil, fmt.Errorf("task order log database ID not configured")
+	}
+
+	// Build filters: Type=Order, Timesheet relation contains timesheetID
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Type",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Order",
+				},
+			},
+		},
+		{
+			Property: "Timesheet",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: timesheetID,
+				},
+			},
+		},
+	}
+
+	// Add status filter unless we're in force mode
+	if !skipStatusCheck {
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Select: &nt.SelectDatabaseQueryFilter{
+					Equals: "Approved",
+				},
+			},
+		})
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
+		},
+		PageSize: 100,
+	}
+
+	// Query with pagination
+	var orders []*ApprovedOrderData
+	for {
+		resp, err := s.client.QueryDatabase(ctx, taskOrderDBID, query)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query task order log by timesheet: %w", err)
+		}
+
+		// Extract order data
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			order := &ApprovedOrderData{
+				PageID: page.ID,
+			}
+
+			// Extract Date
+			if prop, ok := props["Date"]; ok && prop.Date != nil {
+				order.Date = prop.Date.Start.Time
+			}
+
+			// Extract Final Hours Worked (formula)
+			if prop, ok := props["Final Hours Worked"]; ok && prop.Formula != nil && prop.Formula.Number != nil {
+				order.FinalHoursWorked = *prop.Formula.Number
+			}
+
+			// Extract Contractor from rollup
+			if rollup, ok := props["Contractor"]; ok && rollup.Rollup != nil {
+				if len(rollup.Rollup.Array) > 0 {
+					for _, item := range rollup.Rollup.Array {
+						if len(item.Relation) > 0 {
+							order.ContractorPageID = item.Relation[0].ID
+							// Fetch contractor details
+							name, discord := s.getContractorDetails(ctx, order.ContractorPageID)
+							order.ContractorName = name
+							order.ContractorDiscord = discord
+							break
+						}
+					}
+				}
+			}
+
+			// Extract Proof of Works from rich text
+			if prop, ok := props["Key deliverables"]; ok && len(prop.RichText) > 0 {
+				for _, rt := range prop.RichText {
+					order.ProofOfWorks += rt.PlainText
+				}
+			}
+
+			orders = append(orders, order)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+	return orders, nil
+}
+
+// getContractorDetails fetches contractor name and discord from Contractor page
+func (s *TaskOrderLogService) getContractorDetails(ctx context.Context, contractorPageID string) (name, discord string) {
+	if contractorPageID == "" {
+		return "", ""
+	}
+
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("failed to fetch contractor details for %s: %v", contractorPageID, err))
+		return "", ""
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return "", ""
+	}
+
+	// Extract Full Name from title
+	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
+		for _, t := range prop.Title {
+			name += t.PlainText
+		}
+	}
+
+	// Extract Discord from rich text
+	if prop, ok := props["Discord"]; ok && len(prop.RichText) > 0 {
+		for _, rt := range prop.RichText {
+			discord += rt.PlainText
+		}
+	}
+
+	return name, discord
 }

@@ -425,9 +425,15 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		opts.GroupFeeByProject = *req.GroupFeeByProject
 	}
 
-	// 5. Generate invoice data
-	l.Debug("calling controller to generate contractor invoice data")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.Contractor, req.Month, opts)
+	// 5. Generate invoice data with force sync
+	l.Debug("calling controller to generate contractor invoice data with force sync")
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoiceWithForceSync(
+		c.Request.Context(),
+		req.Contractor,
+		req.Month,
+		req.Batch,
+		opts,
+	)
 	if err != nil {
 		l.Error(err, "failed to generate contractor invoice")
 		if strings.Contains(err.Error(), "not found") {

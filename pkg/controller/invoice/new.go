@@ -59,4 +59,5 @@ type IController interface {
 	// Contractor invoice generation
 	GenerateContractorInvoice(ctx context.Context, discord, month string, opts *ContractorInvoiceOptions) (*ContractorInvoiceData, error)
 	GenerateContractorInvoicePDF(l logger.Logger, data *ContractorInvoiceData) ([]byte, error)
+	GenerateContractorInvoiceWithForceSync(ctx context.Context, discord string, month string, batch int, invoiceType *ContractorInvoiceOptions) (*ContractorInvoiceData, error)
 }

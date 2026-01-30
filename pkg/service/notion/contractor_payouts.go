@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -1623,4 +1624,340 @@ func (s *ContractorPayoutsService) GetContractorPositionsBatch(ctx context.Conte
 	wg.Wait()
 	s.logger.Debug(fmt.Sprintf("[BATCH_POSITIONS] completed: fetched positions for %d contractors", len(results)))
 	return results
+}
+
+// ProcessContractorPayrollPayoutsWithForce creates payouts from Task Order Log with force mode
+// Force mode processes ALL orders regardless of status (bypasses "Approved" check)
+// This replicates the logic from /cronjobs/create-contractor-payouts endpoint
+//
+// The logic is:
+// 1. Query Timesheet entries for the contractor and month (efficient filtering)
+// 2. Query Task Order Log entries filtered by those Timesheet IDs (Type=Order, no status filter)
+// 3. For each order, fetch contractor rate
+// 4. Calculate amount: HourlyRate * FinalHoursWorked OR MonthlyFixed (prorated)
+// 5. Create payout with calculated amount
+func (s *ContractorPayoutsService) ProcessContractorPayrollPayoutsWithForce(
+	ctx context.Context,
+	contractorPageID string,
+	discord string,
+	month string,
+) error {
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] processing contractor payouts with force: contractor=%s discord=%s month=%s",
+		contractorPageID, discord, month))
+
+	// Query Task Order Log with Type=Order for the month (all statuses - force mode)
+	// Then filter by Discord in memory
+	taskOrderLogService := NewTaskOrderLogService(s.cfg, s.logger)
+
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] querying Task Order Log with Type=Order, month=%s (all statuses), contractor filter=%s", month, discord))
+
+	allOrders, err := taskOrderLogService.QueryApprovedOrders(ctx, month, true, discord) // true = skipStatusCheck (force mode), discord = contractor filter
+	if err != nil {
+		s.logger.Error(err, "[FORCE_SYNC] failed to query task orders")
+		return fmt.Errorf("failed to query task orders: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] found %d orders total, filtering by contractor discord=%s", len(allOrders), discord))
+
+	// Filter orders by contractor Discord username
+	var contractorOrders []*ApprovedOrderData
+	for _, order := range allOrders {
+		if strings.EqualFold(order.ContractorDiscord, discord) {
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] order %s: MATCHED discord %s", order.PageID, discord))
+			contractorOrders = append(contractorOrders, order)
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] found %d orders for contractor %s", len(contractorOrders), discord))
+
+	if len(contractorOrders) == 0 {
+		s.logger.Debug("[FORCE_SYNC] no orders found for contractor, nothing to create")
+		return nil
+	}
+
+	// Batch check for existing payouts
+	orderIDs := make([]string, len(contractorOrders))
+	for i, order := range contractorOrders {
+		orderIDs[i] = order.PageID
+	}
+
+	existingPayouts, err := s.CheckPayoutsExistByContractorFees(ctx, orderIDs)
+	if err != nil {
+		s.logger.Error(err, "[FORCE_SYNC] failed to check existing payouts")
+		// Continue anyway - we'll handle duplicates on create
+		existingPayouts = make(map[string]string)
+	}
+
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] found %d existing payouts, checking status", len(existingPayouts)))
+
+	// For existing payouts, check their status and delete if status == "New"
+	// This allows force mode to overwrite payouts that haven't been processed yet
+	deletedCount := 0
+	for orderID, payoutID := range existingPayouts {
+		status, err := s.GetPayoutStatus(ctx, payoutID)
+		if err != nil {
+			s.logger.Warn(fmt.Sprintf("[FORCE_SYNC] failed to get status for payout %s: %v", payoutID, err))
+			continue
+		}
+
+		if status == "New" {
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] deleting existing payout with status=New: %s for order %s", payoutID, orderID))
+			err = s.DeletePayout(ctx, payoutID)
+			if err != nil {
+				s.logger.Error(err, fmt.Sprintf("[FORCE_SYNC] failed to delete payout %s", payoutID))
+				continue
+			}
+			// Remove from existingPayouts map so it gets recreated
+			delete(existingPayouts, orderID)
+			deletedCount++
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] deleted payout %s, will recreate", payoutID))
+		} else {
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] keeping existing payout with status=%s: %s", status, payoutID))
+		}
+	}
+
+	s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] deleted %d payouts with status=New, keeping %d with other statuses", deletedCount, len(existingPayouts)))
+
+	// Get contractor rates service
+	contractorRatesService := NewContractorRatesService(s.cfg, s.logger)
+
+	// Create payouts from orders
+	createdCount := 0
+	skippedCount := 0
+	errorCount := 0
+
+	for _, order := range contractorOrders {
+		// Skip if payout already exists (and was not deleted above)
+		if existingPayoutID, exists := existingPayouts[order.PageID]; exists {
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] payout already exists for order %s: %s (status != New)", order.PageID, existingPayoutID))
+			skippedCount++
+			continue
+		}
+
+		// Validate contractor
+		if order.ContractorPageID == "" {
+			s.logger.Warn(fmt.Sprintf("[FORCE_SYNC] skipping order %s: no contractor found", order.PageID))
+			skippedCount++
+			continue
+		}
+
+		// Get contractor rate (active rate for the order date)
+		rate, err := contractorRatesService.FindActiveRateByContractor(ctx, order.ContractorPageID, order.Date)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[FORCE_SYNC] failed to get rate for contractor %s, order %s", order.ContractorPageID, order.PageID))
+			errorCount++
+			continue
+		}
+
+		// Calculate amount based on billing type
+		var amount float64
+		if rate.BillingType == "Monthly Fixed" {
+			// Prorate monthly fixed based on actual working days from Start Date
+			amount = calculateMonthlyFixedAmount(rate.StartDate, order.Date, rate.MonthlyFixed, s.logger)
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] order %s: using monthly fixed rate: %.2f (prorated from %.2f)", order.PageID, amount, rate.MonthlyFixed))
+		} else {
+			amount = rate.HourlyRate * order.FinalHoursWorked
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] order %s: using hourly rate: %.2f * %.2f = %.2f", order.PageID, rate.HourlyRate, order.FinalHoursWorked, amount))
+		}
+
+		// Get positions for description
+		positions, err := s.GetContractorPositions(ctx, order.ContractorPageID)
+		if err != nil {
+			s.logger.Warn(fmt.Sprintf("[FORCE_SYNC] failed to get positions for contractor %s: %v, using empty positions", order.ContractorPageID, err))
+			positions = []string{}
+		}
+		orderMonth := order.Date.Format("2006-01")
+		description := generateServiceFeeDescription(orderMonth, positions)
+
+		// Create payout
+		payoutName := fmt.Sprintf("Development work on %s", formatMonthYear(orderMonth))
+		s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] creating payout for order: %s name: %s amount: %.2f %s", order.PageID, payoutName, amount, rate.Currency))
+
+		input := CreatePayoutInput{
+			Name:             payoutName,
+			ContractorPageID: order.ContractorPageID,
+			TaskOrderID:      order.PageID,
+			ServiceRateID:    rate.PageID,
+			Amount:           amount,
+			Currency:         rate.Currency,
+			Date:             order.Date.Format("2006-01-02"),
+			Description:      description,
+		}
+
+		payoutID, err := s.CreatePayout(ctx, input)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[FORCE_SYNC] failed to create payout for order %s", order.PageID))
+			errorCount++
+			continue
+		}
+
+		s.logger.Info(fmt.Sprintf("[FORCE_SYNC] created payout %s for order %s (%.2f %s)", payoutID, order.PageID, amount, rate.Currency))
+		createdCount++
+
+		// Update Task Order Log status to "Completed"
+		s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] updating order %s status to Completed", order.PageID))
+		err = taskOrderLogService.UpdateOrderAndSubitemsStatus(ctx, order.PageID, "Completed")
+		if err != nil {
+			// Log error but don't fail - payout is already created
+			s.logger.Error(err, fmt.Sprintf("[FORCE_SYNC] failed to update order status: %s (payout created: %s)", order.PageID, payoutID))
+		}
+	}
+
+	s.logger.Info(fmt.Sprintf("[FORCE_SYNC] completed: created=%d skipped=%d errors=%d", createdCount, skippedCount, errorCount))
+
+	return nil
+}
+
+// Helper functions for payout processing
+
+// formatMonthYear formats a month string (YYYY-MM) to "Month, Year"
+func formatMonthYear(month string) string {
+	if month == "" {
+		return ""
+	}
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return month // Return as-is if parsing fails
+	}
+	return t.Format("January, 2006")
+}
+
+// generateServiceFeeDescription generates service fee description based on contractor positions.
+// Priority: design > operation executive > default (software development)
+func generateServiceFeeDescription(month string, positions []string) string {
+	t, err := time.Parse("2006-01", month)
+	if err != nil {
+		return "Software Development Services Rendered"
+	}
+
+	startDate := time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, -1)
+	dateRange := fmt.Sprintf("(%s %d-%d, %d)",
+		startDate.Format("January"), startDate.Day(), endDate.Day(), startDate.Year())
+
+	hasDesign := false
+	hasOperationExecutive := false
+
+	for _, pos := range positions {
+		posLower := strings.ToLower(pos)
+		if strings.Contains(posLower, "design") {
+			hasDesign = true
+		}
+		if strings.Contains(posLower, "operation executive") {
+			hasOperationExecutive = true
+		}
+	}
+
+	if hasDesign {
+		return "Design Consulting Services Rendered " + dateRange
+	}
+	if hasOperationExecutive {
+		return "Operational Consulting Services Rendered " + dateRange
+	}
+
+	return "Software Development Services Rendered " + dateRange
+}
+
+// countWorkingDays counts working days (Mon-Fri) between two dates inclusive
+func countWorkingDays(start, end time.Time) int {
+	if start.After(end) {
+		return 0
+	}
+
+	count := 0
+	current := start
+	for !current.After(end) {
+		weekday := current.Weekday()
+		if weekday != time.Saturday && weekday != time.Sunday {
+			count++
+		}
+		current = current.AddDate(0, 0, 1)
+	}
+	return count
+}
+
+// calculateMonthlyFixedAmount calculates the prorated monthly fixed amount based on working days
+func calculateMonthlyFixedAmount(startDate *time.Time, orderDate time.Time, monthlyFixed float64, l logger.Logger) float64 {
+	// Get first and last day of the order month
+	firstOfMonth := time.Date(orderDate.Year(), orderDate.Month(), 1, 0, 0, 0, 0, orderDate.Location())
+	lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+
+	// Calculate total working days in the month
+	totalWorkingDays := countWorkingDays(firstOfMonth, lastOfMonth)
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: month=%s totalWorkingDays=%d", firstOfMonth.Format("2006-01"), totalWorkingDays))
+
+	if totalWorkingDays == 0 {
+		l.Debug("calculateMonthlyFixedAmount: no working days in month, returning 0")
+		return 0
+	}
+
+	// Determine the effective start date for this month
+	effectiveStart := firstOfMonth
+	if startDate != nil && startDate.After(firstOfMonth) && !startDate.After(lastOfMonth) {
+		// Start date is within this month
+		effectiveStart = *startDate
+		l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: startDate=%s is within month, using as effectiveStart", startDate.Format("2006-01-02")))
+	} else if startDate != nil && startDate.After(lastOfMonth) {
+		// Start date is after this month - no working days
+		l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: startDate=%s is after month, returning 0", startDate.Format("2006-01-02")))
+		return 0
+	}
+
+	// Calculate actual working days from effective start to end of month
+	actualWorkingDays := countWorkingDays(effectiveStart, lastOfMonth)
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: effectiveStart=%s actualWorkingDays=%d", effectiveStart.Format("2006-01-02"), actualWorkingDays))
+
+	// Prorate the amount
+	amount := monthlyFixed * float64(actualWorkingDays) / float64(totalWorkingDays)
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: monthlyFixed=%.2f * (%d/%d) = %.2f", monthlyFixed, actualWorkingDays, totalWorkingDays, amount))
+
+	// Round up to nearest thousand
+	roundedAmount := math.Ceil(amount/1000) * 1000
+	l.Debug(fmt.Sprintf("calculateMonthlyFixedAmount: rounded up to nearest thousand: %.2f -> %.2f", amount, roundedAmount))
+
+	return roundedAmount
+}
+
+// GetPayoutStatus retrieves the status of a payout entry
+func (s *ContractorPayoutsService) GetPayoutStatus(ctx context.Context, payoutPageID string) (string, error) {
+	if payoutPageID == "" {
+		return "", fmt.Errorf("payout page ID is required")
+	}
+
+	page, err := s.client.FindPageByID(ctx, payoutPageID)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch payout page: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return "", fmt.Errorf("failed to cast payout page properties")
+	}
+
+	// Extract Status from select property
+	if statusProp, ok := props["Status"]; ok && statusProp.Select != nil {
+		return statusProp.Select.Name, nil
+	}
+
+	return "", fmt.Errorf("status property not found")
+}
+
+// DeletePayout deletes a payout entry by archiving the page
+func (s *ContractorPayoutsService) DeletePayout(ctx context.Context, payoutPageID string) error {
+	if payoutPageID == "" {
+		return fmt.Errorf("payout page ID is required")
+	}
+
+	archived := true
+	updateParams := nt.UpdatePageParams{
+		Archived: &archived,
+	}
+
+	_, err := s.client.UpdatePage(ctx, payoutPageID, updateParams)
+	if err != nil {
+		return fmt.Errorf("failed to archive payout: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("archived payout page: %s", payoutPageID))
+	return nil
 }

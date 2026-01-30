@@ -1456,3 +1456,155 @@ func generateDefaultServiceFeeDescription(month string) string {
 		startDate.Format("Jan"), startDate.Day(),
 		endDate.Format("Jan"), endDate.Day())
 }
+
+// GenerateContractorInvoiceWithForceSync generates invoice with proactive force sync
+// This is the admin command version that ensures all data is synced before generating invoices
+//
+// Flow:
+// 1. Sync task order logs with force=true (bypass status checks)
+// 2. Create contractor payouts with force=true (bypass status checks)
+// 3. Generate invoice
+//
+// Supports both specific contractor and "all" with concurrent processing
+func (c *controller) GenerateContractorInvoiceWithForceSync(
+	ctx context.Context,
+	discord string,
+	month string,
+	batch int,
+	invoiceType *ContractorInvoiceOptions,
+) (*ContractorInvoiceData, error) {
+	l := c.logger.Fields(logger.Fields{
+		"controller": "invoice",
+		"method":     "GenerateContractorInvoiceWithForceSync",
+		"discord":    discord,
+		"month":      month,
+		"batch":      batch,
+	})
+
+	// Step 1: Force sync task order logs and create payouts
+	l.Debug("running force sync before invoice generation")
+
+	if discord == "all" {
+		// Batch mode: sync all contractors concurrently
+		l.Debug("batch mode: syncing all contractors with force")
+		err := c.forceSyncAllContractors(ctx, month, batch)
+		if err != nil {
+			l.Error(err, "failed to force sync all contractors")
+			return nil, fmt.Errorf("force sync failed for batch: %w", err)
+		}
+		l.Debug("force sync completed for all contractors")
+	} else {
+		// Single contractor mode: sync specific contractor
+		l.Debug(fmt.Sprintf("single contractor mode: syncing %s with force", discord))
+		err := c.forceSyncSingleContractor(ctx, discord, month)
+		if err != nil {
+			l.Error(err, "failed to force sync contractor")
+			return nil, fmt.Errorf("force sync failed for contractor %s: %w", discord, err)
+		}
+		l.Debug("force sync completed for contractor")
+	}
+
+	// Step 2: Generate invoice (now that data is synced)
+	l.Debug("generating invoice after force sync")
+	invoiceData, err := c.GenerateContractorInvoice(ctx, discord, month, invoiceType)
+	if err != nil {
+		l.Error(err, "invoice generation failed after force sync")
+		return nil, fmt.Errorf("invoice generation failed: %w", err)
+	}
+
+	l.Debug("invoice generated successfully")
+	return invoiceData, nil
+}
+
+// forceSyncSingleContractor syncs data for a specific contractor with force mode
+func (c *controller) forceSyncSingleContractor(ctx context.Context, discord string, month string) error {
+	l := c.logger.Fields(logger.Fields{
+		"method":  "forceSyncSingleContractor",
+		"discord": discord,
+		"month":   month,
+	})
+
+	// Get contractor page ID
+	ratesService := notion.NewContractorRatesService(c.config, c.logger)
+	rateData, err := ratesService.QueryRatesByDiscordAndMonth(ctx, discord, month)
+	if err != nil {
+		return fmt.Errorf("contractor not found: %w", err)
+	}
+
+	contractorPageID := rateData.ContractorPageID
+	l.Debug(fmt.Sprintf("found contractor pageID=%s", contractorPageID))
+
+	// Create contractor payouts with force=true
+	// This queries Task Order Log (all statuses), filters by discord username,
+	// and creates Contractor Payout entries
+	l.Debug("creating contractor payouts with force mode")
+	payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+	if payoutsService != nil {
+		err = payoutsService.ProcessContractorPayrollPayoutsWithForce(ctx, contractorPageID, discord, month)
+		if err != nil {
+			l.Error(err, "failed to create contractor payouts")
+			return fmt.Errorf("payout creation failed: %w", err)
+		}
+		l.Debug("contractor payouts created successfully")
+	}
+
+	return nil
+}
+
+// forceSyncAllContractors syncs data for all contractors with force mode using concurrency
+func (c *controller) forceSyncAllContractors(ctx context.Context, month string, batch int) error {
+	l := c.logger.Fields(logger.Fields{
+		"method": "forceSyncAllContractors",
+		"month":  month,
+		"batch":  batch,
+	})
+
+	// Get all contractors for the batch
+	ratesService := notion.NewContractorRatesService(c.config, c.logger)
+	contractors, err := ratesService.QueryAllContractorsByMonthAndBatch(ctx, month, batch)
+	if err != nil {
+		return fmt.Errorf("failed to query contractors: %w", err)
+	}
+
+	l.Debug(fmt.Sprintf("found %d contractors to sync", len(contractors)))
+
+	if len(contractors) == 0 {
+		l.Debug("no contractors found for batch, nothing to sync")
+		return nil
+	}
+
+	// Create payouts for all contractors concurrently
+	l.Debug("creating payouts for all contractors with concurrency")
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	payoutErrors := []error{}
+
+	payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+	if payoutsService != nil {
+		for _, contractor := range contractors {
+			wg.Add(1)
+			go func(contractorPageID string, contractorDiscord string) {
+				defer wg.Done()
+
+				err := payoutsService.ProcessContractorPayrollPayoutsWithForce(ctx, contractorPageID, contractorDiscord, month)
+				if err != nil {
+					mu.Lock()
+					payoutErrors = append(payoutErrors, fmt.Errorf("contractor %s: %w", contractorPageID, err))
+					mu.Unlock()
+					l.Error(err, fmt.Sprintf("failed to create payouts for %s", contractorPageID))
+				}
+			}(contractor.PageID, contractor.Discord)
+		}
+
+		wg.Wait()
+		l.Debug(fmt.Sprintf("payout creation completed with %d errors", len(payoutErrors)))
+	}
+
+	// Report errors but don't fail completely (some contractors may succeed)
+	if len(payoutErrors) > 0 {
+		l.Debug(fmt.Sprintf("force sync completed with errors: payout=%d", len(payoutErrors)))
+		// Continue to invoice generation - some contractors may still succeed
+	}
+
+	return nil
+}
