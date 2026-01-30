@@ -324,6 +324,51 @@ func (g *googleService) DownloadInvoicePDF(invoice *model.Invoice, dirName strin
 	return io.ReadAll(resp.Body)
 }
 
+// FindContractorInvoiceFileID finds a contractor invoice PDF in Google Drive
+// Searches in the contractor's subfolder under the contractor invoice parent folder
+// Returns the file ID if found, empty string if not found
+func (g *googleService) FindContractorInvoiceFileID(contractorName, invoiceID string) (string, error) {
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+		return "", err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return "", err
+	}
+
+	// Slug the contractor name to match folder naming convention
+	folderName := slugContractorName(contractorName)
+
+	g.logger.Debug(fmt.Sprintf("[DEBUG] FindContractorInvoiceFileID: searching for invoiceID=%s in contractorName=%s (folderName=%s)",
+		invoiceID, contractorName, folderName))
+
+	// Find contractor's subfolder
+	contractorDir, err := g.searchFile(folderName, g.appConfig.Invoice.ContractorInvoiceDirID, true)
+	if err != nil {
+		return "", fmt.Errorf("failed to search contractor directory: %w", err)
+	}
+	if contractorDir == nil {
+		g.logger.Debug(fmt.Sprintf("[DEBUG] FindContractorInvoiceFileID: contractor folder not found: %s", folderName))
+		return "", nil
+	}
+
+	g.logger.Debug(fmt.Sprintf("[DEBUG] FindContractorInvoiceFileID: found contractor folder id=%s name=%s", contractorDir.Id, contractorDir.Name))
+
+	// Search for the PDF file in contractor's folder
+	fileName := invoiceID + ".pdf"
+	file, err := g.searchFile(fileName, contractorDir.Id, false)
+	if err != nil {
+		return "", fmt.Errorf("failed to search invoice file: %w", err)
+	}
+	if file == nil {
+		g.logger.Debug(fmt.Sprintf("[DEBUG] FindContractorInvoiceFileID: invoice file not found: %s", fileName))
+		return "", nil
+	}
+
+	g.logger.Debug(fmt.Sprintf("[DEBUG] FindContractorInvoiceFileID: found file id=%s name=%s", file.Id, file.Name))
+	return file.Id, nil
+}
+
 // ShareFileWithEmail shares a Google Drive file with the specified email address
 // Google automatically sends a notification email to the recipient
 // Uses spawn@d.foundation (TeamGoogleRefreshToken) for sharing

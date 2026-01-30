@@ -73,42 +73,6 @@ func TestIsValidMonthFormat(t *testing.T) {
 	}
 }
 
-func TestExtractFileIDFromURL(t *testing.T) {
-	tests := []struct {
-		name     string
-		url      string
-		expected string
-	}{
-		{
-			name:     "valid_drive_url",
-			url:      "https://drive.google.com/file/d/1ABC123xyz_-def/view",
-			expected: "1ABC123xyz_-def",
-		},
-		{
-			name:     "valid_drive_url_long_id",
-			url:      "https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view",
-			expected: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
-		},
-		{
-			name:     "url_without_view",
-			url:      "https://drive.google.com/file/d/1ABC123/",
-			expected: "1ABC123/",
-		},
-		{
-			name:     "empty_url",
-			url:      "",
-			expected: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := extractFileIDFromURL(tt.url)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestHandleGenInvoice_InvalidJSON(t *testing.T) {
 	// Setup
 	l := logger.NewLogrusLogger("debug")

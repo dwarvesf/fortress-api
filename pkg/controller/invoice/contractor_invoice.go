@@ -51,8 +51,9 @@ type ContractorInvoiceData struct {
 	SubtotalUSD        float64 // SubtotalUSDFromVND + SubtotalUSDItems
 
 	// Notion relation IDs (for creating Contractor Payables record)
-	ContractorPageID string   // Contractor page ID from rates query
-	PayoutPageIDs    []string // Payout Item page IDs from pending payouts
+	ContractorPageID    string   // Contractor page ID from rates query
+	ContractorEmail     string   // Contractor email for sharing
+	PayoutPageIDs       []string // Payout Item page IDs from pending payouts
 
 	// PayDay for Period calculation
 	PayDay int // Pay day of month (1 or 15)
@@ -642,7 +643,8 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		SubtotalUSD:        subtotalUSD, // Direct sum of AmountUSD from line items
 
 		// Notion relation IDs (for creating Contractor Payables record)
-		ContractorPageID: rateData.ContractorPageID,
+		ContractorPageID:  rateData.ContractorPageID,
+		ContractorEmail:   rateData.TeamEmail, // For sharing PDF with contractor
 
 		// PayDay for Period calculation
 		PayDay: payDay,

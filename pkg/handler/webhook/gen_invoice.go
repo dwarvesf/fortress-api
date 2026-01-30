@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -174,24 +173,50 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 	// Step 6: Process each pending payable separately
 	l.Debug(fmt.Sprintf("step 6: processing %d payable(s)", len(payables)))
 	successCount := 0
+	contractorName := rateData.ContractorName
+
 	for i, payable := range payables {
 		l.Debug(fmt.Sprintf("processing payable %d/%d: pageID=%s invoiceID=%s hasFileURL=%v",
 			i+1, len(payables), payable.PageID, payable.InvoiceID, payable.FileURL != ""))
 
-		// Check if PDF is available
-		if payable.FileURL == "" {
-			l.Debug(fmt.Sprintf("payable %s has no PDF attached yet - skipping", payable.PageID))
+		// Check if PDF is available (either in FileURL or we can search for it)
+		if payable.InvoiceID == "" {
+			l.Debug(fmt.Sprintf("payable %s has no invoice ID - skipping", payable.PageID))
 			continue
 		}
 
-		// Extract file ID from URL for sharing
-		fileID := extractFileIDFromURL(payable.FileURL)
+		// Search for the file in Google Drive by contractor name and invoice ID
+		// Files are stored under: ContractorInvoiceDirID/<contractor_name>/<invoice_id>.pdf
+		l.Debug(fmt.Sprintf("searching for invoice file in Google Drive: contractorName=%s invoiceID=%s", contractorName, payable.InvoiceID))
+
+		fileID, err := h.service.GoogleDrive.FindContractorInvoiceFileID(contractorName, payable.InvoiceID)
+		if err != nil {
+			l.Errorf(err, fmt.Sprintf("failed to search Google Drive for payable %s", payable.PageID))
+			// If search fails, fall back to showing Notion link if available
+			if payable.FileURL != "" {
+				h.updateDMWithSuccessNoShare(l, req.DMChannelID, req.DMMessageID, req.Month, payable)
+				successCount++
+			}
+			continue
+		}
+
 		if fileID == "" {
-			l.Error(nil, fmt.Sprintf("failed to extract file ID from URL for payable %s", payable.PageID))
+			l.Debug(fmt.Sprintf("invoice file not found in Google Drive for payable %s", payable.PageID))
+			// File not in Google Drive yet, show Notion link if available
+			if payable.FileURL != "" {
+				h.updateDMWithSuccessNoShare(l, req.DMChannelID, req.DMMessageID, req.Month, payable)
+				successCount++
+			} else {
+				l.Debug(fmt.Sprintf("payable %s has no file URL and not found in Google Drive - skipping", payable.PageID))
+			}
 			continue
 		}
 
-		l.Debug(fmt.Sprintf("extracted file ID: %s", fileID))
+		l.Debug(fmt.Sprintf("found file in Google Drive: fileID=%s", fileID))
+
+		// Update payable FileURL with Google Drive URL for display
+		googleDriveURL := fmt.Sprintf("https://drive.google.com/file/d/%s/view", fileID)
+		payable.FileURL = googleDriveURL
 
 		// Share file with contractor email
 		if err := h.service.GoogleDrive.ShareFileWithEmail(fileID, personalEmail); err != nil {
@@ -244,6 +269,49 @@ func (h *handler) updateDMWithSuccess(l logger.Logger, channelID, messageID, mon
 			{
 				Name:   "Email Notification",
 				Value:  fmt.Sprintf("A notification has been sent to %s", email),
+				Inline: false,
+			},
+			{
+				Name:   "Status",
+				Value:  payable.Status,
+				Inline: true,
+			},
+			{
+				Name:   "Amount",
+				Value:  fmt.Sprintf("%.2f %s", payable.Total, payable.Currency),
+				Inline: true,
+			},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{successEmbed}, nil)
+	if err != nil {
+		l.Errorf(err, "failed to update discord DM with success")
+	} else {
+		l.Debug("successfully updated discord DM with success status")
+	}
+}
+
+// updateDMWithSuccessNoShare updates the Discord DM with success status (file found, no sharing)
+func (h *handler) updateDMWithSuccessNoShare(l logger.Logger, channelID, messageID, month string, payable *notion.PayableInfo) {
+	l.Debug(fmt.Sprintf("updating DM with success (no share): channelID=%s messageID=%s", channelID, messageID))
+
+	// Check if Discord service is available
+	if h.service == nil || h.service.Discord == nil {
+		l.Error(nil, "Discord service not available, cannot update DM")
+		return
+	}
+
+	// Build success embed
+	successEmbed := &discordgo.MessageEmbed{
+		Title:       "✅ Invoice Ready",
+		Description: "Your invoice has been found and is ready for download.",
+		Color:       3066993, // Green
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "File",
+				Value:  fmt.Sprintf("[Download Invoice](%s)", payable.FileURL),
 				Inline: false,
 			},
 			{
@@ -352,6 +420,21 @@ func (h *handler) updateDMWithPartialSuccess(l logger.Logger, channelID, message
 		return
 	}
 
+	// Truncate file URL for display (Discord embed field limit is 1024 chars)
+	fileURL := payable.FileURL
+	displayURL := truncateString(fileURL, 200) // Keep URL short for display
+
+	// Format issue message with truncated error
+	issueMsg := fmt.Sprintf("Failed to share with %s", email)
+	if shareErr != nil {
+		errStr := shareErr.Error()
+		// Truncate error message to keep embed field under 1024 chars
+		if len(errStr) > 100 {
+			errStr = errStr[:100] + "..."
+		}
+		issueMsg = fmt.Sprintf("%s: %s", issueMsg, errStr)
+	}
+
 	warningEmbed := &discordgo.MessageEmbed{
 		Title:       "⚠️ Invoice Found (Partial Success)",
 		Description: "Your invoice has been found but we couldn't send the email notification.",
@@ -359,12 +442,12 @@ func (h *handler) updateDMWithPartialSuccess(l logger.Logger, channelID, message
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "File",
-				Value:  fmt.Sprintf("[View Invoice](%s)", payable.FileURL),
+				Value:  fmt.Sprintf("[View Invoice](%s)", displayURL),
 				Inline: false,
 			},
 			{
 				Name:   "Issue",
-				Value:  fmt.Sprintf("Failed to share with %s: %v", email, shareErr),
+				Value:  truncateString(issueMsg, 500),
 				Inline: false,
 			},
 			{
@@ -419,11 +502,13 @@ func isValidMonthFormat(month string) bool {
 	return matched
 }
 
-// extractFileIDFromURL extracts the file ID from a Google Drive URL
-// URL format: https://drive.google.com/file/d/{fileID}/view
-func extractFileIDFromURL(url string) string {
-	// Remove the base URL and /view suffix
-	s := strings.Replace(url, "https://drive.google.com/file/d/", "", 1)
-	s = strings.Replace(s, "/view", "", 1)
-	return s
+// truncateString truncates a string to maxLen characters, adding "..." if truncated
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	if maxLen <= 3 {
+		return s[:maxLen]
+	}
+	return s[:maxLen-3] + "..."
 }

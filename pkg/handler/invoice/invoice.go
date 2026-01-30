@@ -492,6 +492,26 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		}
 
 		l.Debug(fmt.Sprintf("PDF uploaded: url=%s", fileURL))
+
+		// Share with contractor if requested
+		if req.Share && invoiceData.ContractorEmail != "" {
+			l.Debug(fmt.Sprintf("sharing PDF with contractor: email=%s", invoiceData.ContractorEmail))
+
+			// Extract file ID from URL (format: https://drive.google.com/file/d/{fileID}/view)
+			fileID := extractFileIDFromURL(fileURL)
+			if fileID != "" {
+				if err := h.service.GoogleDrive.ShareFileWithEmail(fileID, invoiceData.ContractorEmail); err != nil {
+					l.Error(err, fmt.Sprintf("failed to share PDF with contractor: email=%s", invoiceData.ContractorEmail))
+					// Non-fatal: PDF was uploaded, just sharing failed
+				} else {
+					l.Info(fmt.Sprintf("PDF shared with contractor: email=%s fileID=%s", invoiceData.ContractorEmail, fileID))
+				}
+			} else {
+				l.Warn(fmt.Sprintf("could not extract file ID from URL to share: %s", fileURL))
+			}
+		} else if req.Share && invoiceData.ContractorEmail == "" {
+			l.Warn("share requested but contractor email is empty, skipping share")
+		}
 	}
 
 	// 5.5 Create Contractor Payables record in Notion (skip in dry-run mode)
@@ -1173,4 +1193,21 @@ func (h *handler) GenerateSplits(c *gin.Context) {
 	// 3. Return success response
 	l.Infof("invoice splits generation job enqueued successfully: legacyNumber=%s pageID=%s", req.LegacyNumber, resp.InvoicePageID)
 	c.JSON(http.StatusOK, view.CreateResponse(resp, nil, nil, req, ""))
+}
+
+// extractFileIDFromURL extracts the Google Drive file ID from a URL
+// Expected format: https://drive.google.com/file/d/{fileID}/view
+func extractFileIDFromURL(url string) string {
+	// Format: https://drive.google.com/file/d/{fileID}/view
+	prefix := "https://drive.google.com/file/d/"
+	suffix := "/view"
+
+	if !strings.HasPrefix(url, prefix) {
+		return ""
+	}
+
+	url = strings.TrimPrefix(url, prefix)
+	url = strings.TrimSuffix(url, suffix)
+
+	return url
 }

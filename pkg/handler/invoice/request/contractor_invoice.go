@@ -9,6 +9,7 @@ type GenerateContractorInvoiceRequest struct {
 	GroupFeeByProject *bool  `json:"groupFeeByProject"` // Group Fee items by project (optional, default true)
 	InvoiceType       string `json:"invoiceType"`       // "service_and_refund" | "extra_payment" | "" (full invoice)
 	SkipUpload        bool   `json:"skipUpload"`        // Skip Google Drive upload, save PDF locally
+	Share             bool   `json:"share"`             // Share uploaded PDF with contractor's email
 	DryRun            bool   `json:"dryRun"`            // Skip Notion payable record creation (implies skipUpload)
 	Batch             int    `json:"batch"`             // Filter by payday batch (1 or 15) for "all" contractors
 	ChannelID         string `json:"channelId"`         // Discord channel ID for progress updates
