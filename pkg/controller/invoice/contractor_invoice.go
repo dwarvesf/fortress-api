@@ -379,6 +379,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			}
 		}
 
+		// Strip Notion formula patterns from descriptions (prefix and amount suffix)
+		description = stripDescriptionPrefixAndSuffix(description)
+
 		// New: Attempt hourly rate display for Service Fees
 		var lineItem ContractorInvoiceLineItem
 		isHourlyProcessed := false
@@ -1457,6 +1460,55 @@ func generateDefaultServiceFeeDescription(month string) string {
 	return fmt.Sprintf("Professional work from %s %d to %s %d",
 		startDate.Format("Jan"), startDate.Day(),
 		endDate.Format("Jan"), endDate.Day())
+}
+
+// stripDescriptionPrefixAndSuffix cleans Notion formula patterns from descriptions.
+// Prefix pattern: [PROJECT :: ...] - extracts and keeps PROJECT name
+// Suffix pattern: - $XX.XX USD at the end - removed
+//
+// Examples:
+// - "[RENAISS :: INV-DO5S8] Account Management Incentive... - $43.64 USD" → "RENAISS - Account Management Incentive..."
+// - "[PLOT :: INV-OBI5D] Sales Commission for Invoice... - $182.85 USD" → "PLOT - Sales Commission for Invoice..."
+// - "[FEE :: SCOUTQA :: nikkingtr] :: 9JHY6" → "9JHY6" (FEE prefix is stripped, not a project)
+func stripDescriptionPrefixAndSuffix(description string) string {
+	result := description
+	projectName := ""
+
+	// Extract project name and strip [PROJECT :: ...] prefix
+	if strings.HasPrefix(result, "[") {
+		closeBracket := strings.Index(result, "]")
+		if closeBracket != -1 {
+			// Extract content inside brackets: "RENAISS :: INV-DO5S8"
+			bracketContent := result[1:closeBracket]
+
+			// Get the first part before " :: " as project name
+			if sepIdx := strings.Index(bracketContent, " :: "); sepIdx != -1 {
+				firstPart := strings.TrimSpace(bracketContent[:sepIdx])
+				// Skip generic prefixes like "FEE", "PYT" - these are not project names
+				if firstPart != "FEE" && firstPart != "PYT" {
+					projectName = firstPart
+				}
+			}
+
+			result = strings.TrimLeft(result[closeBracket+1:], " ")
+		}
+	}
+
+	// Strip " - $XX.XX USD" suffix pattern
+	// Look for " - $" followed by amount and " USD" at the end
+	if idx := strings.LastIndex(result, " - $"); idx != -1 {
+		suffix := result[idx:]
+		if strings.HasSuffix(suffix, " USD") {
+			result = result[:idx]
+		}
+	}
+
+	// Prepend project name if extracted
+	if projectName != "" && result != "" {
+		result = projectName + " - " + result
+	}
+
+	return result
 }
 
 // GenerateContractorInvoiceWithForceSync generates invoice with proactive force sync

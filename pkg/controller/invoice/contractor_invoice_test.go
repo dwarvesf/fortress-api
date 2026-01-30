@@ -227,3 +227,113 @@ func TestHelper_ConcatenateDescriptions(t *testing.T) {
 	input := []string{"A", "", "  ", "B"}
 	assert.Equal(t, "A\n\nB", concatenateDescriptions(input))
 }
+
+func TestHelper_StripDescriptionPrefixAndSuffix(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		// Prefix tests - project name is kept
+		{
+			name:     "Commission prefix with invoice ID - keeps project name",
+			input:    "[RENAISS :: INV-DO5S8] Account Management Incentive for Invoice INV-DO5S8",
+			expected: "RENAISS - Account Management Incentive for Invoice INV-DO5S8",
+		},
+		{
+			name:     "Sales commission prefix - keeps project name",
+			input:    "[PLOT :: INV-OBI5D] Sales Commission for Invoice INV-OBI5D",
+			expected: "PLOT - Sales Commission for Invoice INV-OBI5D",
+		},
+		{
+			name:     "Fee prefix with contractor - FEE is stripped (not a project)",
+			input:    "[FEE :: SCOUTQA :: nikkingtr] :: 9JHY6",
+			expected: ":: 9JHY6",
+		},
+		{
+			name:     "PYT prefix - stripped (not a project)",
+			input:    "[PYT :: 202512] Some payment description",
+			expected: "Some payment description",
+		},
+		{
+			name:     "No prefix - returns unchanged",
+			input:    "Regular description without prefix",
+			expected: "Regular description without prefix",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Open bracket but no close bracket",
+			input:    "[incomplete prefix",
+			expected: "[incomplete prefix",
+		},
+		{
+			name:     "Prefix without separator - no project extracted",
+			input:    "[PREFIX]NoSpace",
+			expected: "NoSpace",
+		},
+		{
+			name:     "Prefix with multiple spaces",
+			input:    "[PROJECT :: ID]   Multiple spaces after",
+			expected: "PROJECT - Multiple spaces after",
+		},
+		{
+			name:     "Just prefix, no content after",
+			input:    "[PROJECT :: ID] ",
+			expected: "",
+		},
+		// Suffix tests
+		{
+			name:     "Amount suffix only",
+			input:    "Account Management Incentive - $43.64 USD",
+			expected: "Account Management Incentive",
+		},
+		{
+			name:     "Amount suffix with larger amount",
+			input:    "Sales Commission for Invoice INV-OBI5D - $182.85 USD",
+			expected: "Sales Commission for Invoice INV-OBI5D",
+		},
+		{
+			name:     "Amount suffix with whole number",
+			input:    "Sales Commission for Invoice INV-HD567 - $240 USD",
+			expected: "Sales Commission for Invoice INV-HD567",
+		},
+		// Combined prefix and suffix tests - project name kept, suffix stripped
+		{
+			name:     "Both prefix and suffix - keeps project name",
+			input:    "[RENAISS :: INV-DO5S8] Account Management Incentive (Jan 2026 Client Retention) - $43.64 USD",
+			expected: "RENAISS - Account Management Incentive (Jan 2026 Client Retention)",
+		},
+		{
+			name:     "Both prefix and suffix - sales commission keeps project",
+			input:    "[PLOT :: INV-OBI5D] Sales Commission for Invoice INV-OBI5D (Dec 2025 Services) - $182.85 USD",
+			expected: "PLOT - Sales Commission for Invoice INV-OBI5D (Dec 2025 Services)",
+		},
+		// Edge cases for suffix
+		{
+			name:     "Suffix without USD - not stripped",
+			input:    "Some description - $100",
+			expected: "Some description - $100",
+		},
+		{
+			name:     "Suffix with different currency - not stripped",
+			input:    "Some description - $100 EUR",
+			expected: "Some description - $100 EUR",
+		},
+		{
+			name:     "Dollar sign in middle - not stripped",
+			input:    "Item costs $50 USD for processing",
+			expected: "Item costs $50 USD for processing",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := stripDescriptionPrefixAndSuffix(tt.input)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
