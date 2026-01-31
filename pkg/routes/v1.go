@@ -488,6 +488,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 	{
 		notifyGroup.POST("/extra-payment/preview", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notify.PreviewExtraPaymentNotification)
 		notifyGroup.POST("/extra-payment/send", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notify.SendExtraPaymentNotification)
+		notifyGroup.POST("/extra-payment/send-one", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Notify.SendOneExtraPaymentNotification)
 	}
 
 	/////////////////

@@ -8,4 +8,6 @@ type IHandler interface {
 	PreviewExtraPaymentNotification(c *gin.Context)
 	// SendExtraPaymentNotification sends extra payment notification emails
 	SendExtraPaymentNotification(c *gin.Context)
+	// SendOneExtraPaymentNotification sends extra payment notification to a single contractor by page ID
+	SendOneExtraPaymentNotification(c *gin.Context)
 }

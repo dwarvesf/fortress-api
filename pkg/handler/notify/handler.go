@@ -33,6 +33,7 @@ func New(service *service.Service, logger logger.Logger, cfg *config.Config) IHa
 
 // ExtraPaymentContractor represents a contractor to be notified
 type ExtraPaymentContractor struct {
+	PageID  string  `json:"pageId"`
 	Name    string  `json:"name"`
 	Discord string  `json:"discord"`
 	Email   string  `json:"email"`
@@ -57,6 +58,14 @@ type SendExtraPaymentNotificationResponse struct {
 	Sent   int      `json:"sent"`
 	Failed int      `json:"failed"`
 	Errors []string `json:"errors,omitempty"`
+}
+
+// SendOneExtraPaymentNotificationResponse represents the single send response
+type SendOneExtraPaymentNotificationResponse struct {
+	Success bool   `json:"success"`
+	Email   string `json:"email"`
+	Name    string `json:"name"`
+	Error   string `json:"error,omitempty"`
 }
 
 // PreviewExtraPaymentNotification godoc
@@ -117,6 +126,7 @@ func (h *handler) PreviewExtraPaymentNotification(c *gin.Context) {
 
 	for _, entry := range entries {
 		contractors = append(contractors, ExtraPaymentContractor{
+			PageID:  entry.PageID,
 			Name:    entry.ContractorName,
 			Discord: entry.Discord,
 			Email:   entry.ContractorEmail,
@@ -314,6 +324,150 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 	}
 
 	l.Debugf("send complete: sent=%d failed=%d", sent, failed)
+
+	c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
+}
+
+// SendOneExtraPaymentNotification godoc
+// @Summary Send extra payment notification to a single contractor
+// @Description Sends email notification to a single contractor identified by page ID
+// @Tags Notify
+// @Accept json
+// @Produce json
+// @Param month query string true "Month in YYYY-MM format"
+// @Param page_id query string true "Notion payout page ID"
+// @Param test_email query string false "Optional test email to send notification to"
+// @Param body body SendExtraPaymentNotificationRequest false "Optional custom reasons"
+// @Success 200 {object} view.Response{data=SendOneExtraPaymentNotificationResponse}
+// @Failure 400 {object} view.ErrorResponse
+// @Failure 500 {object} view.ErrorResponse
+// @Router /api/v1/notify/extra-payment/send-one [post]
+func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "notify",
+		"method":  "SendOneExtraPaymentNotification",
+	})
+
+	// Parse query params
+	month := c.Query("month")
+	if month == "" {
+		l.Debug("month parameter is required")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, fmt.Errorf("month parameter is required (format: YYYY-MM)"), nil, ""))
+		return
+	}
+
+	// Validate month format
+	monthTime, err := time.Parse("2006-01", month)
+	if err != nil {
+		l.Debug("invalid month format")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, fmt.Errorf("invalid month format (expected: YYYY-MM)"), nil, ""))
+		return
+	}
+
+	pageID := c.Query("page_id")
+	if pageID == "" {
+		l.Debug("page_id parameter is required")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, fmt.Errorf("page_id parameter is required"), nil, ""))
+		return
+	}
+
+	testEmail := c.Query("test_email")
+
+	// Parse request body for custom reasons
+	var req SendExtraPaymentNotificationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		// Ignore JSON parsing errors - reasons are optional
+		l.Debugf("no custom reasons provided: %v", err)
+	}
+
+	l.Debugf("sending single extra payment notification pageID=%s month=%s testEmail=%s customReasons=%d",
+		pageID, month, testEmail, len(req.Reasons))
+
+	// Get the entry by page ID
+	notionService := h.service.Notion.ContractorPayouts
+	if notionService == nil {
+		l.Debug("contractor payouts service is not initialized")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, fmt.Errorf("contractor payouts service not initialized"), nil, ""))
+		return
+	}
+
+	entry, err := notionService.GetExtraPaymentEntryByPageID(c.Request.Context(), pageID)
+	if err != nil {
+		l.Error(err, "failed to get extra payment entry")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
+	}
+
+	// Format month for display (e.g., "January 2025")
+	formattedMonth := monthTime.Format("January 2006")
+
+	// Check Gmail service
+	gmailService := h.service.GoogleMail
+	if gmailService == nil {
+		l.Debug("gmail service is not initialized")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, fmt.Errorf("gmail service not initialized"), nil, ""))
+		return
+	}
+
+	// Determine email recipient
+	recipientEmail := entry.ContractorEmail
+	if testEmail != "" {
+		recipientEmail = testEmail
+	}
+
+	response := SendOneExtraPaymentNotificationResponse{
+		Name:  entry.ContractorName,
+		Email: recipientEmail,
+	}
+
+	if recipientEmail == "" {
+		errMsg := fmt.Sprintf("no email for contractor %s (discord: %s)", entry.ContractorName, entry.Discord)
+		l.Debug(errMsg)
+		response.Success = false
+		response.Error = errMsg
+		c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
+		return
+	}
+
+	// Determine reasons to use
+	var reasons []string
+	if len(req.Reasons) > 0 {
+		// Use custom reasons from request
+		reasons = req.Reasons
+	} else if entry.Description != "" {
+		// Use Notion description as single reason
+		reasons = []string{entry.Description}
+	}
+
+	// Format amount (use USD)
+	amountFormatted := fmt.Sprintf("$%.0f", entry.AmountUSD)
+	if entry.AmountUSD != float64(int(entry.AmountUSD)) {
+		amountFormatted = fmt.Sprintf("$%.2f", entry.AmountUSD)
+	}
+
+	// Build email data
+	emailData := &model.ExtraPaymentNotificationEmail{
+		ContractorName:  entry.ContractorName,
+		ContractorEmail: recipientEmail,
+		Month:           formattedMonth,
+		Amount:          entry.AmountUSD,
+		AmountFormatted: amountFormatted,
+		Reasons:         reasons,
+		SenderName:      "Team Dwarves",
+	}
+
+	// Send email
+	if err := gmailService.SendExtraPaymentNotificationMail(emailData); err != nil {
+		errMsg := fmt.Sprintf("failed to send email: %v", err)
+		l.Error(err, errMsg)
+		response.Success = false
+		response.Error = errMsg
+		c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
+		return
+	}
+
+	l.Debugf("sent extra payment notification to %s (%s)", entry.ContractorName, recipientEmail)
+	response.Success = true
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
 }

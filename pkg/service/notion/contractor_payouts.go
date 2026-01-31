@@ -2143,6 +2143,64 @@ func (s *ContractorPayoutsService) QueryPendingExtraPayments(ctx context.Context
 	return entries, nil
 }
 
+// GetExtraPaymentEntryByPageID fetches a single extra payment entry by its Notion page ID
+func (s *ContractorPayoutsService) GetExtraPaymentEntryByPageID(ctx context.Context, pageID string) (*ExtraPaymentEntry, error) {
+	s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] fetching entry by pageID=%s", pageID))
+
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("[EXTRA_PAYMENT] failed to fetch page %s", pageID))
+		return nil, fmt.Errorf("failed to fetch payout page: %w", err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, fmt.Errorf("failed to cast page properties")
+	}
+
+	// Extract basic payout entry data
+	amount := s.extractNumber(props, "Amount")
+	currency := s.extractSelect(props, "Currency")
+
+	// Convert to USD if currency is VND
+	amountUSD := amount
+	if strings.ToUpper(currency) == "VND" {
+		amountUSD = amount / DefaultVNDToUSDRate
+	}
+
+	entry := &ExtraPaymentEntry{
+		PageID:           page.ID,
+		Name:             s.extractTitle(props, "Name"),
+		Description:      s.extractRichText(props, "Description"),
+		Amount:           amount,
+		AmountUSD:        amountUSD,
+		Currency:         currency,
+		ContractorPageID: s.extractFirstRelationID(props, "Person"),
+	}
+
+	// Determine source type using existing logic
+	payoutEntry := PayoutEntry{
+		TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
+		InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
+		RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+		Description:     entry.Description,
+	}
+	entry.SourceType = s.determineSourceType(payoutEntry)
+
+	// Fetch contractor info
+	if entry.ContractorPageID != "" {
+		info := s.getContractorExtraPaymentInfo(ctx, entry.ContractorPageID)
+		entry.ContractorName = info.Name
+		entry.ContractorEmail = info.Email
+		entry.Discord = info.Discord
+	}
+
+	s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] entry fetched pageID=%s name=%s contractor=%s email=%s",
+		entry.PageID, entry.Name, entry.ContractorName, entry.ContractorEmail))
+
+	return entry, nil
+}
+
 // contractorExtraPaymentInfo holds contractor details for extra payment notifications
 type contractorExtraPaymentInfo struct {
 	Name    string
