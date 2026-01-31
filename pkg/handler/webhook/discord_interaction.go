@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -1756,12 +1757,12 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 		if agg, exists := contractors[key]; exists {
 			agg.Total += entry.AmountUSD
 			if entry.Description != "" {
-				agg.Reasons = append(agg.Reasons, entry.Description)
+				agg.Reasons = append(agg.Reasons, stripInvoiceIDFromReason(entry.Description))
 			}
 		} else {
 			var entryReasons []string
 			if entry.Description != "" {
-				entryReasons = []string{entry.Description}
+				entryReasons = []string{stripInvoiceIDFromReason(entry.Description)}
 			}
 			contractors[key] = &contractorAggregate{
 				Name:    entry.ContractorName,
@@ -1999,6 +2000,13 @@ func formatCurrency(amount float64) string {
 		ac.Precision = 0
 	}
 	return ac.FormatMoney(amount)
+}
+
+// stripInvoiceIDFromReason removes invoice ID from reason format
+// e.g., "[RENAISS :: INV-DO5S8] ..." → "[RENAISS] ..."
+func stripInvoiceIDFromReason(reason string) string {
+	re := regexp.MustCompile(`\[([^\]]+?)\s*::\s*INV-[A-Z0-9]+\]`)
+	return re.ReplaceAllString(reason, "[$1]")
 }
 
 // Ensure handler has Nocodb service
