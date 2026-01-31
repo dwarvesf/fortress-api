@@ -16,6 +16,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	nt "github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
+	"github.com/leekchan/accounting"
 
 	ctrlcontractorpayables "github.com/dwarvesf/fortress-api/pkg/controller/contractorpayables"
 	invoiceCtrl "github.com/dwarvesf/fortress-api/pkg/controller/invoice"
@@ -1817,11 +1818,8 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 				l.Debugf("using entry descriptions for %s: %v", agg.Name, emailReasons)
 			}
 
-			// Format total amount
-			amountFormatted := fmt.Sprintf("$%.0f", agg.Total)
-			if agg.Total != float64(int(agg.Total)) {
-				amountFormatted = fmt.Sprintf("$%.2f", agg.Total)
-			}
+			// Format total amount with comma separators
+			amountFormatted := formatCurrency(agg.Total)
 
 			// Build email data with aggregated total
 			emailData := &model.ExtraPaymentNotificationEmail{
@@ -1990,6 +1988,17 @@ func (h *handler) editInteractionResponse(l logger.Logger, appID, interactionTok
 		l.Errorf(nil, "discord returned non-200 status when editing interaction: status=%d body=%s", resp.StatusCode, string(bodyBytes))
 		return
 	}
+}
+
+// formatCurrency formats an amount as USD currency with comma separators
+// e.g., 2290.26 -> "$2,290.26", 1000 -> "$1,000"
+func formatCurrency(amount float64) string {
+	ac := accounting.Accounting{Symbol: "$", Precision: 2}
+	// If whole number, don't show decimals
+	if amount == float64(int(amount)) {
+		ac.Precision = 0
+	}
+	return ac.FormatMoney(amount)
 }
 
 // Ensure handler has Nocodb service
