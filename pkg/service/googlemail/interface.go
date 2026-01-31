@@ -68,4 +68,7 @@ type IService interface {
 	GetAttachment(ctx context.Context, messageID, attachmentID string) ([]byte, error)
 	AddLabel(ctx context.Context, messageID, labelID string) error
 	GetOrCreateLabel(ctx context.Context, labelName string) (string, error)
+
+	// Extra payment notification
+	SendExtraPaymentNotificationMail(data *model.ExtraPaymentNotificationEmail) error
 }

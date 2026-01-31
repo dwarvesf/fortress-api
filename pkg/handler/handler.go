@@ -32,6 +32,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/metrics"
 	"github.com/dwarvesf/fortress-api/pkg/handler/news"
 	"github.com/dwarvesf/fortress-api/pkg/handler/notion"
+	"github.com/dwarvesf/fortress-api/pkg/handler/notify"
 	"github.com/dwarvesf/fortress-api/pkg/handler/payroll"
 	"github.com/dwarvesf/fortress-api/pkg/handler/profile"
 	"github.com/dwarvesf/fortress-api/pkg/handler/project"
@@ -83,6 +84,7 @@ type Handler struct {
 	Youtube            yt.IHandler
 	DynamicEvents      dynamicevents.IHandler
 	InvoiceEmail       handlerinvoiceemail.IHandler
+	Notify             notify.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -128,5 +130,6 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 			}
 			return handlerinvoiceemail.New(service.InvoiceEmailProcessor, logger, cfg)
 		}(),
+		Notify: notify.New(service, logger, cfg),
 	}
 }

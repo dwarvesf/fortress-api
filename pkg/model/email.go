@@ -34,3 +34,14 @@ type TaskOrderRawEmail struct {
 	Month          string // YYYY-MM format
 	RawContent     string // Plain text content from Order page body
 }
+
+// ExtraPaymentNotificationEmail represents email data for extra payment notification
+type ExtraPaymentNotificationEmail struct {
+	ContractorName  string   // Full contractor name
+	ContractorEmail string   // Contractor email address
+	Month           string   // Display format (e.g., "January 2025")
+	Amount          float64  // Raw amount value
+	AmountFormatted string   // Formatted amount (e.g., "$500")
+	Reasons         []string // Multiple bullet points for reasons (from --reason flags or Notion Description)
+	SenderName      string   // Name of sender for signature
+}

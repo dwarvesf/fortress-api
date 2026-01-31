@@ -173,3 +173,47 @@ func convertPlainTextToHTML(text string) string {
 
 	return strings.Join(result, "\n")
 }
+
+// composeExtraPaymentNotificationContent generates email content for extra payment notification
+func composeExtraPaymentNotificationContent(appConfig *config.Config, data *model.ExtraPaymentNotificationEmail) (string, error) {
+	templatePath := appConfig.Invoice.TemplatePath
+	if appConfig.Env == "local" || templatePath == "" {
+		pwd, err := os.Getwd()
+		if err != nil {
+			pwd = os.Getenv("GOPATH") + "/src/github.com/dwarvesf/fortress-api"
+		}
+		templatePath = filepath.Join(pwd, "pkg/templates")
+	}
+
+	t, err := template.New("extraPaymentNotification.tpl").Funcs(template.FuncMap{
+		"contractorFirstName": func() string {
+			parts := strings.Fields(data.ContractorName)
+			if len(parts) > 0 {
+				return parts[len(parts)-1] // Use last name (family name) for Vietnamese names
+			}
+			return data.ContractorName
+		},
+		"signatureName": func() string {
+			if data.SenderName != "" {
+				return data.SenderName
+			}
+			return "Team Dwarves"
+		},
+		"signatureTitle": func() string {
+			return "People Operations"
+		},
+		"signatureNameSuffix": func() string {
+			return "" // No dot for extra payment emails
+		},
+	}).ParseFiles(filepath.Join(templatePath, "extraPaymentNotification.tpl"), filepath.Join(templatePath, "signature.tpl"))
+	if err != nil {
+		return "", fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	if err := t.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	return buf.String(), nil
+}

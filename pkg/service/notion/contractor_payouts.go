@@ -1961,3 +1961,233 @@ func (s *ContractorPayoutsService) DeletePayout(ctx context.Context, payoutPageI
 	s.logger.Debug(fmt.Sprintf("archived payout page: %s", payoutPageID))
 	return nil
 }
+
+// DefaultVNDToUSDRate is the default exchange rate for VND to USD conversion
+// Used when live exchange rate is not available
+const DefaultVNDToUSDRate = 25000.0
+
+// ExtraPaymentEntry represents a pending extra payment entry with contractor details
+type ExtraPaymentEntry struct {
+	PageID           string           // Payout page ID
+	Name             string           // Payout name
+	Description      string           // Description from Notion
+	Amount           float64          // Amount in original currency
+	AmountUSD        float64          // Amount converted to USD
+	Currency         string           // Currency (USD, VND)
+	SourceType       PayoutSourceType // Commission or Extra Payment
+	ContractorPageID string           // Contractor relation page ID
+	ContractorName   string           // Full Name from Contractor record
+	ContractorEmail  string           // Email from Contractor record
+	Discord          string           // Discord username from Contractor record
+}
+
+// QueryPendingExtraPayments queries pending Commission or Extra Payment payouts on or before the given month.
+// If discordUsername is provided, filters to that specific contractor.
+// Month should be in YYYY-MM format (e.g., "2025-01").
+// Returns all pending extra payments where the entry month <= given month.
+func (s *ContractorPayoutsService) QueryPendingExtraPayments(ctx context.Context, month string, discordUsername string) ([]ExtraPaymentEntry, error) {
+	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
+	if payoutsDBID == "" {
+		return nil, errors.New("contractor payouts database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] querying pending extra payments month=%s discord=%s", month, discordUsername))
+
+	// Build filter: Status = Pending
+	// Source type filtering is done in memory since it's determined by relation presence
+	// Note: Month filtering removed as formula filters can be slow/unreliable
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "Pending",
+				},
+			},
+		},
+	}
+
+	// Add Discord filter if provided (Discord is a rollup from Person relation)
+	if discordUsername != "" {
+		filters = append(filters, nt.DatabaseQueryFilter{
+			Property: "Discord",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Rollup: &nt.RollupDatabaseQueryFilter{
+					Any: &nt.DatabaseQueryPropertyFilter{
+						RichText: &nt.TextPropertyFilter{
+							Contains: discordUsername,
+						},
+					},
+				},
+			},
+		})
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
+		},
+		PageSize: 100,
+	}
+
+	var entries []ExtraPaymentEntry
+
+	// Add timeout to context to prevent hanging
+	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	// Query with pagination
+	for {
+		s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] executing query on database=%s", payoutsDBID))
+
+		resp, err := s.client.QueryDatabase(queryCtx, payoutsDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[EXTRA_PAYMENT] failed to query database: %v", err))
+			return nil, fmt.Errorf("failed to query contractor payouts database: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] found %d payout entries in this page", len(resp.Results)))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug("[EXTRA_PAYMENT] failed to cast page properties")
+				continue
+			}
+
+			// Filter by month in memory (formula filters can be slow)
+			// Include entries on or before the given month (YYYY-MM format allows lexicographic comparison)
+			if month != "" {
+				entryMonth := s.extractFormulaString(props, "Month")
+				if entryMonth == "" || entryMonth > month {
+					s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] skipping pageID=%s month=%s (cutoff %s)", page.ID, entryMonth, month))
+					continue
+				}
+			}
+
+			// Extract basic payout entry data
+			amount := s.extractNumber(props, "Amount")
+			currency := s.extractSelect(props, "Currency")
+
+			// Convert to USD if currency is VND
+			amountUSD := amount
+			if strings.ToUpper(currency) == "VND" {
+				amountUSD = amount / DefaultVNDToUSDRate
+			}
+
+			entry := ExtraPaymentEntry{
+				PageID:           page.ID,
+				Name:             s.extractTitle(props, "Name"),
+				Description:      s.extractRichText(props, "Description"),
+				Amount:           amount,
+				AmountUSD:        amountUSD,
+				Currency:         currency,
+				ContractorPageID: s.extractFirstRelationID(props, "Person"),
+			}
+
+			// Determine source type using existing logic
+			payoutEntry := PayoutEntry{
+				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+				Description:     entry.Description,
+			}
+			entry.SourceType = s.determineSourceType(payoutEntry)
+
+			// Only include Commission or Extra Payment types
+			if entry.SourceType != PayoutSourceTypeCommission && entry.SourceType != PayoutSourceTypeExtraPayment {
+				s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] skipping pageID=%s sourceType=%s (not Commission/Extra Payment)", entry.PageID, entry.SourceType))
+				continue
+			}
+
+			s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] including entry pageID=%s name=%s sourceType=%s amount=%.2f %s (USD: %.2f)",
+				entry.PageID, entry.Name, entry.SourceType, entry.Amount, entry.Currency, entry.AmountUSD))
+
+			entries = append(entries, entry)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+		s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] fetching next page with cursor=%s", *resp.NextCursor))
+	}
+
+	s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] total extra payment entries found=%d, fetching contractor info", len(entries)))
+
+	// Fetch contractor info in parallel
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+
+	for i := range entries {
+		if entries[i].ContractorPageID != "" {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				info := s.getContractorExtraPaymentInfo(ctx, entries[idx].ContractorPageID)
+				mu.Lock()
+				entries[idx].ContractorName = info.Name
+				entries[idx].ContractorEmail = info.Email
+				entries[idx].Discord = info.Discord
+				mu.Unlock()
+				s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] contractor info idx=%d name=%s email=%s discord=%s",
+					idx, info.Name, info.Email, info.Discord))
+			}(i)
+		}
+	}
+
+	wg.Wait()
+	s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] completed: total entries=%d", len(entries)))
+
+	return entries, nil
+}
+
+// contractorExtraPaymentInfo holds contractor details for extra payment notifications
+type contractorExtraPaymentInfo struct {
+	Name    string
+	Email   string
+	Discord string
+}
+
+// getContractorExtraPaymentInfo fetches Full Name, Email, and Discord from a Contractor page
+func (s *ContractorPayoutsService) getContractorExtraPaymentInfo(ctx context.Context, pageID string) contractorExtraPaymentInfo {
+	info := contractorExtraPaymentInfo{}
+
+	page, err := s.client.FindPageByID(ctx, pageID)
+	if err != nil {
+		s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] failed to fetch contractor page %s: %v", pageID, err))
+		return info
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] failed to cast page properties for %s", pageID))
+		return info
+	}
+
+	// Get Full Name from Title property
+	if prop, ok := props["Full Name"]; ok && len(prop.Title) > 0 {
+		info.Name = prop.Title[0].PlainText
+	} else if prop, ok := props["Name"]; ok && len(prop.Title) > 0 {
+		info.Name = prop.Title[0].PlainText
+	}
+
+	// Get Email from rich_text or email property
+	if prop, ok := props["Email"]; ok {
+		if len(prop.RichText) > 0 {
+			info.Email = prop.RichText[0].PlainText
+		} else if prop.Email != nil {
+			info.Email = *prop.Email
+		}
+	}
+
+	// Get Discord username from rich_text property
+	if prop, ok := props["Discord"]; ok && len(prop.RichText) > 0 {
+		info.Discord = prop.RichText[0].PlainText
+	}
+
+	s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] contractor info pageID=%s name=%s email=%s discord=%s",
+		pageID, info.Name, info.Email, info.Discord))
+	return info
+}

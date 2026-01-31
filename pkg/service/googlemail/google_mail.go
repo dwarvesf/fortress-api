@@ -716,3 +716,33 @@ func (g *googleService) IsAliasVerified(userId, email string) (bool, error) {
 
 	return sendAs.VerificationStatus == "accepted", nil
 }
+
+// SendExtraPaymentNotificationMail sends an extra payment notification email to a contractor
+func (g *googleService) SendExtraPaymentNotificationMail(data *model.ExtraPaymentNotificationEmail) error {
+	// Use team refresh token (spawn@d.foundation)
+	if err := g.ensureToken(g.appConfig.Google.TeamGoogleRefreshToken); err != nil {
+		return err
+	}
+	if err := g.prepareService(); err != nil {
+		return err
+	}
+
+	// Use team email ID
+	id := g.appConfig.Google.TeamEmailID
+
+	// Parse template and compose content
+	content, err := composeExtraPaymentNotificationContent(g.appConfig, data)
+	if err != nil {
+		return fmt.Errorf("failed to compose email content: %w", err)
+	}
+
+	// Send email
+	_, err = g.service.Users.Messages.Send(id, &gmail.Message{
+		Raw: base64.URLEncoding.EncodeToString([]byte(content)),
+	}).Do()
+	if err != nil {
+		return fmt.Errorf("failed to send extra payment notification email: %w", err)
+	}
+
+	return nil
+}
