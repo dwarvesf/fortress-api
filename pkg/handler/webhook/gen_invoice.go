@@ -106,7 +106,15 @@ func (h *handler) HandleGenInvoice(c *gin.Context) {
 	go h.processGenInvoice(l, req)
 }
 
-// processGenInvoice handles the async payable lookup process
+// processGenInvoice handles the async payable lookup and generation process
+// Flow:
+// 1. Query contractor rates
+// 2. Calculate period dates
+// 3. Lookup ALL payables (any status) for contractor + period
+// 4. Branch based on payable status:
+//   - No payable exists → generate invoice, create payable, share PDF
+//   - Status = "New" → regenerate invoice, update payable, share PDF
+//   - Status = "Pending" → find existing PDF and share (existing behavior)
 func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 	ctx := context.Background()
 
@@ -131,35 +139,72 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 	l.Debug(fmt.Sprintf("found contractor: pageID=%s payDay=%d", rateData.ContractorPageID, rateData.PayDay))
 
 	// Step 2: Calculate period dates
+	// Period start is calculated based on next month's payday
+	// e.g., for month=2025-01 with payDay=15, periodStart = 2025-02-15
 	monthTime, _ := time.Parse("2006-01", req.Month)
 	payDay := rateData.PayDay
 	if payDay == 0 {
 		payDay = 15 // Default to 15
 	}
-	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payDay, 0, 0, 0, 0, time.UTC)
+	nextMonth := monthTime.AddDate(0, 1, 0)
+	periodStart := time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
 
 	l.Debug(fmt.Sprintf("calculated period start: %s", periodStart.Format("2006-01-02")))
 
-	// Step 3: Lookup existing pending payables
-	l.Debug("step 3: looking up pending payables")
-	payables, err := h.service.Notion.ContractorPayables.FindPayableByContractorAndPeriod(ctx, rateData.ContractorPageID, periodStart.Format("2006-01-02"))
+	// Step 3: Lookup ALL existing payables (any status)
+	l.Debug("step 3: looking up all payables (any status)")
+	allPayables, err := h.service.Notion.ContractorPayables.FindPayableByContractorAndPeriodAllStatus(ctx, rateData.ContractorPageID, periodStart.Format("2006-01-02"))
 	if err != nil {
 		l.Errorf(err, "failed to lookup payables")
 		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to lookup invoice. Please try again later.")
 		return
 	}
 
-	// Step 4: Check if any pending payables found
-	if len(payables) == 0 {
-		l.Debug("no pending payables found - invoice being processed")
-		h.updateDMWithNotReady(l, req.DMChannelID, req.DMMessageID, req.Month)
+	l.Debug(fmt.Sprintf("found %d payable(s) of any status", len(allPayables)))
+
+	// Step 4: Branch based on payable status
+	// Priority: Pending > New > None
+	var pendingPayables []*notion.PayableInfo
+	var newPayable *notion.PayableInfo
+
+	for _, p := range allPayables {
+		l.Debug(fmt.Sprintf("payable: pageID=%s status=%s invoiceID=%s", p.PageID, p.Status, p.InvoiceID))
+		switch p.Status {
+		case "Pending":
+			pendingPayables = append(pendingPayables, p)
+		case "New":
+			if newPayable == nil {
+				newPayable = p // Keep first "New" payable for regeneration
+			}
+		}
+	}
+
+	// Case 1: Pending payables exist → share existing PDF (existing behavior)
+	if len(pendingPayables) > 0 {
+		l.Debug(fmt.Sprintf("found %d pending payable(s) - using existing behavior", len(pendingPayables)))
+		h.processExistingPendingPayables(l, req, rateData, pendingPayables)
 		return
 	}
 
-	l.Debug(fmt.Sprintf("found %d pending payable(s)", len(payables)))
+	// Case 2: New payable exists → regenerate invoice and update payable
+	if newPayable != nil {
+		l.Debug(fmt.Sprintf("found payable with status=New (pageID=%s) - regenerating invoice", newPayable.PageID))
+		h.generateAndCreatePayable(ctx, l, req, rateData, newPayable.PageID)
+		return
+	}
 
-	// Step 5: Get contractor personal email (once for all payables)
-	l.Debug("step 5: fetching contractor personal email")
+	// Case 3: No payable exists → generate new invoice and create payable
+	l.Debug("no payable exists - generating new invoice")
+	h.generateAndCreatePayable(ctx, l, req, rateData, "")
+}
+
+// processExistingPendingPayables handles the existing flow for pending payables
+// This is the original behavior: find existing PDF and share with contractor
+func (h *handler) processExistingPendingPayables(l logger.Logger, req GenInvoiceRequest, rateData *notion.ContractorRateData, payables []*notion.PayableInfo) {
+	ctx := context.Background()
+
+	// Get contractor personal email
+	l.Debug("fetching contractor personal email")
 	taskOrderLogService := h.service.Notion.TaskOrderLog
 	personalEmail := taskOrderLogService.GetContractorPersonalEmail(ctx, rateData.ContractorPageID)
 	if personalEmail == "" {
@@ -170,8 +215,8 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 
 	l.Debug(fmt.Sprintf("found personal email: %s", personalEmail))
 
-	// Step 6: Process each pending payable separately
-	l.Debug(fmt.Sprintf("step 6: processing %d payable(s)", len(payables)))
+	// Process each pending payable separately
+	l.Debug(fmt.Sprintf("processing %d pending payable(s)", len(payables)))
 	successCount := 0
 	contractorName := rateData.ContractorName
 
@@ -234,7 +279,7 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 		successCount++
 	}
 
-	// Step 7: Check if any payables were processed
+	// Check if any payables were processed
 	if successCount == 0 {
 		l.Debug("no payables with PDF found")
 		h.updateDMWithNotReady(l, req.DMChannelID, req.DMMessageID, req.Month)
@@ -511,4 +556,283 @@ func truncateString(s string, maxLen int) string {
 		return s[:maxLen]
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// extractFileIDFromURL extracts the file ID from a Google Drive URL
+// URL format: https://drive.google.com/file/d/{FILE_ID}/view
+// Returns empty string if URL format doesn't match
+func extractFileIDFromURL(url string) string {
+	// Pattern: https://drive.google.com/file/d/{FILE_ID}/view
+	prefix := "https://drive.google.com/file/d/"
+	suffix := "/view"
+
+	if len(url) <= len(prefix)+len(suffix) {
+		return ""
+	}
+
+	// Check if URL starts with prefix
+	if url[:len(prefix)] != prefix {
+		return ""
+	}
+
+	// Remove prefix
+	remainder := url[len(prefix):]
+
+	// Find /view suffix and extract file ID
+	viewIdx := len(remainder) - len(suffix)
+	if viewIdx <= 0 {
+		return ""
+	}
+
+	if remainder[viewIdx:] != suffix {
+		return ""
+	}
+
+	return remainder[:viewIdx]
+}
+
+// updateDMWithGenerating updates the Discord DM with "generating invoice" progress message
+func (h *handler) updateDMWithGenerating(l logger.Logger, channelID, messageID, month string) {
+	l.Debug(fmt.Sprintf("updating DM with generating status: channelID=%s messageID=%s", channelID, messageID))
+
+	if h.service == nil || h.service.Discord == nil {
+		l.Error(nil, "Discord service not available, cannot update DM")
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "⏳ Generating Invoice",
+		Description: "Your invoice is being generated. This may take a moment...",
+		Color:       3447003, // Blue
+		Fields: []*discordgo.MessageEmbedField{
+			{Name: "Month", Value: month, Inline: true},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Errorf(err, "failed to update Discord DM with generating status")
+	} else {
+		l.Debug("successfully updated Discord DM with generating status")
+	}
+}
+
+// updateDMWithInvoiceGenerated updates the Discord DM with success status for newly generated invoice
+func (h *handler) updateDMWithInvoiceGenerated(l logger.Logger, channelID, messageID, month string, invoiceNumber string, total float64, currency string, fileURL string, email string) {
+	l.Debug(fmt.Sprintf("updating DM with invoice generated: channelID=%s messageID=%s invoiceNumber=%s", channelID, messageID, invoiceNumber))
+
+	if h.service == nil || h.service.Discord == nil {
+		l.Error(nil, "Discord service not available, cannot update DM")
+		return
+	}
+
+	successEmbed := &discordgo.MessageEmbed{
+		Title:       "✅ Invoice Generated",
+		Description: "Your invoice has been generated and is ready for review.",
+		Color:       3066993, // Green
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Invoice Number",
+				Value:  invoiceNumber,
+				Inline: true,
+			},
+			{
+				Name:   "Amount",
+				Value:  fmt.Sprintf("%.2f %s", total, currency),
+				Inline: true,
+			},
+			{
+				Name:   "File",
+				Value:  fmt.Sprintf("[View Invoice](%s)", fileURL),
+				Inline: false,
+			},
+			{
+				Name:   "Email Notification",
+				Value:  fmt.Sprintf("A notification has been sent to %s", email),
+				Inline: false,
+			},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{successEmbed}, nil)
+	if err != nil {
+		l.Errorf(err, "failed to update Discord DM with invoice generated")
+	} else {
+		l.Debug("successfully updated Discord DM with invoice generated status")
+	}
+}
+
+// updateDMWithNoPayouts updates the Discord DM with "no pending payouts" message
+func (h *handler) updateDMWithNoPayouts(l logger.Logger, channelID, messageID, month string) {
+	l.Debug(fmt.Sprintf("updating DM with no payouts: channelID=%s messageID=%s", channelID, messageID))
+
+	if h.service == nil || h.service.Discord == nil {
+		l.Error(nil, "Discord service not available, cannot update DM")
+		return
+	}
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "ℹ️ No Pending Payouts",
+		Description: fmt.Sprintf("No pending payouts found for %s.", month),
+		Color:       3447003, // Blue
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Note",
+				Value:  "Payouts are typically available after payday. If you believe this is an error, please contact HR.",
+				Inline: false,
+			},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+
+	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	if err != nil {
+		l.Errorf(err, "failed to update Discord DM with no payouts")
+	} else {
+		l.Debug("successfully updated Discord DM with no payouts status")
+	}
+}
+
+// generateAndCreatePayable generates a contractor invoice, creates/updates payable in Notion, and shares with contractor
+// existingPayablePageID is empty for new payables, or the page ID to update for regeneration
+func (h *handler) generateAndCreatePayable(
+	ctx context.Context,
+	l logger.Logger,
+	req GenInvoiceRequest,
+	rateData *notion.ContractorRateData,
+	existingPayablePageID string,
+) {
+	// Update DM with generating status
+	h.updateDMWithGenerating(l, req.DMChannelID, req.DMMessageID, req.Month)
+
+	// Step 1: Generate invoice data
+	l.Debug("step 1: generating contractor invoice data")
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month, nil)
+	if err != nil {
+		l.Errorf(err, "failed to generate contractor invoice")
+		// Check if it's a "no pending payouts" error
+		if err.Error() == fmt.Sprintf("no pending payouts found for contractor=%s", req.DiscordUsername) {
+			h.updateDMWithNoPayouts(l, req.DMChannelID, req.DMMessageID, req.Month)
+		} else {
+			h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to generate invoice. Please try again later.")
+		}
+		return
+	}
+
+	l.Debug(fmt.Sprintf("invoice data generated: invoiceNumber=%s total=%.2f currency=%s lineItems=%d",
+		invoiceData.InvoiceNumber, invoiceData.TotalUSD, invoiceData.Currency, len(invoiceData.LineItems)))
+
+	// Step 2: Generate PDF
+	l.Debug("step 2: generating invoice PDF")
+	pdfBytes, err := h.controller.Invoice.GenerateContractorInvoicePDF(l, invoiceData)
+	if err != nil {
+		l.Errorf(err, "failed to generate invoice PDF")
+		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to generate PDF. Please try again later.")
+		return
+	}
+
+	l.Debug(fmt.Sprintf("PDF generated: size=%d bytes", len(pdfBytes)))
+
+	// Step 3: Get contractor personal email for sharing
+	l.Debug("step 3: fetching contractor personal email")
+	taskOrderLogService := h.service.Notion.TaskOrderLog
+	personalEmail := taskOrderLogService.GetContractorPersonalEmail(ctx, rateData.ContractorPageID)
+	if personalEmail == "" {
+		l.Debug(fmt.Sprintf("personal email not found for contractor: %s, using team email", rateData.ContractorPageID))
+		personalEmail = rateData.TeamEmail // Fallback to team email
+	}
+
+	l.Debug(fmt.Sprintf("using email for sharing: %s", personalEmail))
+
+	// Step 4: Upload PDF to Google Drive
+	l.Debug("step 4: uploading PDF to Google Drive")
+	fileName := invoiceData.InvoiceNumber + ".pdf"
+	// UploadContractorInvoicePDF returns a full Google Drive URL, not just the file ID
+	uploadedURL, err := h.service.GoogleDrive.UploadContractorInvoicePDF(invoiceData.ContractorName, fileName, pdfBytes)
+	if err != nil {
+		l.Errorf(err, "failed to upload PDF to Google Drive")
+		// Non-fatal: continue to create payable without Google Drive file
+		// The PDF is still in Notion attachment
+	} else {
+		l.Debug(fmt.Sprintf("PDF uploaded to Google Drive: url=%s", uploadedURL))
+	}
+
+	// Step 5: Calculate period dates for payable
+	payDay := invoiceData.PayDay
+	if payDay == 0 {
+		payDay = 15 // Default to 15
+	}
+	monthTime, _ := time.Parse("2006-01", req.Month)
+	nextMonth := monthTime.AddDate(0, 1, 0)
+
+	// Period start: payday of invoice month (next month after work month)
+	periodStart := time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
+	// Period end: payday of the following month
+	periodEndMonth := nextMonth.AddDate(0, 1, 0)
+	periodEnd := time.Date(periodEndMonth.Year(), periodEndMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
+
+	l.Debug(fmt.Sprintf("calculated period: start=%s end=%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
+
+	// Step 6: Create or update payable in Notion
+	l.Debug("step 6: creating/updating payable in Notion")
+	payableInput := notion.CreatePayableInput{
+		ContractorPageID: rateData.ContractorPageID,
+		Total:            invoiceData.TotalUSD,
+		Currency:         "USD",
+		PeriodStart:      periodStart.Format("2006-01-02"),
+		PeriodEnd:        periodEnd.Format("2006-01-02"),
+		InvoiceDate:      invoiceData.Date.Format("2006-01-02"),
+		InvoiceID:        invoiceData.InvoiceNumber,
+		PayoutItemIDs:    invoiceData.PayoutPageIDs,
+		ContractorType:   "Individual", // Default
+		ExchangeRate:     invoiceData.ExchangeRate,
+		PDFBytes:         pdfBytes,
+	}
+
+	payablePageID, err := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)
+	if err != nil {
+		l.Errorf(err, "failed to create/update payable in Notion")
+		// Non-fatal: PDF is still available, just couldn't create payable record
+		// Continue with sharing
+	} else {
+		l.Debug(fmt.Sprintf("payable created/updated: pageID=%s", payablePageID))
+	}
+
+	// Step 7: Share file with contractor's personal email (if Google Drive upload succeeded)
+	var googleDriveURL string
+	if uploadedURL != "" {
+		googleDriveURL = uploadedURL // Already a full URL from UploadContractorInvoicePDF
+
+		// Extract file ID from URL for sharing
+		// URL format: https://drive.google.com/file/d/{FILE_ID}/view
+		fileID := extractFileIDFromURL(uploadedURL)
+		if fileID != "" {
+			l.Debug("step 7: sharing file with contractor email")
+			if err := h.service.GoogleDrive.ShareFileWithEmail(fileID, personalEmail); err != nil {
+				l.Errorf(err, fmt.Sprintf("failed to share file with email: %s", personalEmail))
+				// Non-fatal: file exists, just couldn't share
+			} else {
+				l.Debug(fmt.Sprintf("file shared with email: %s", personalEmail))
+			}
+		} else {
+			l.Debug(fmt.Sprintf("could not extract file ID from URL: %s", uploadedURL))
+		}
+	}
+
+	// Step 8: Update DM with success
+	l.Debug("step 8: updating DM with success")
+	if googleDriveURL != "" {
+		h.updateDMWithInvoiceGenerated(l, req.DMChannelID, req.DMMessageID, req.Month,
+			invoiceData.InvoiceNumber, invoiceData.TotalUSD, invoiceData.Currency, googleDriveURL, personalEmail)
+	} else {
+		// Fallback: no Google Drive URL, show partial success
+		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID,
+			fmt.Sprintf("Invoice generated (ID: %s, Amount: %.2f %s) but failed to upload to Google Drive. Please try again later.",
+				invoiceData.InvoiceNumber, invoiceData.TotalUSD, invoiceData.Currency))
+	}
+
+	l.Info(fmt.Sprintf("invoice generation completed: discord_username=%s month=%s invoiceNumber=%s total=%.2f",
+		req.DiscordUsername, req.Month, invoiceData.InvoiceNumber, invoiceData.TotalUSD))
 }

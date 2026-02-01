@@ -173,6 +173,96 @@ type PayableInfo struct {
 	PaymentDate *time.Time // Only for "Paid" status
 }
 
+// FindPayableByContractorAndPeriodAllStatus finds all payables by contractor and period start date regardless of status
+// Returns all payables (New, Pending, Paid, etc.)
+// Returns empty slice if no payables found
+func (s *ContractorPayablesService) FindPayableByContractorAndPeriodAllStatus(ctx context.Context, contractorPageID, periodStart string) ([]*PayableInfo, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("looking up all payables (any status): contractor=%s periodStart=%s", contractorPageID, periodStart))
+
+	// Build filter: Contractor + Period start date (NO status filter)
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Contractor",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Relation: &nt.RelationDatabaseQueryFilter{
+						Contains: contractorPageID,
+					},
+				},
+			},
+			{
+				Property: "Period",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Date: &nt.DatePropertyFilter{
+						Equals: func() *time.Time {
+							t, _ := time.Parse("2006-01-02", periodStart)
+							return &t
+						}(),
+					},
+				},
+			},
+		},
+	}
+
+	// Query ALL payables for this contractor + period
+	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
+		Filter: filter,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query payables: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Debug("no payables found (any status)")
+		return []*PayableInfo{}, nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d payable(s) for contractor=%s period=%s", len(resp.Results), contractorPageID, periodStart))
+
+	// Extract all payables
+	var payables []*PayableInfo
+	for _, page := range resp.Results {
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			s.logger.Debug(fmt.Sprintf("failed to cast properties for pageID=%s", page.ID))
+			continue
+		}
+
+		payableInfo := &PayableInfo{
+			PageID:    page.ID,
+			Status:    s.extractStatus(props, "Payment Status"),
+			Total:     s.extractNumber(props, "Total"),
+			Currency:  s.extractSelect(props, "Currency"),
+			InvoiceID: s.extractRichText(props, "Invoice ID"),
+		}
+
+		// Extract payment date if paid
+		if dateProp, ok := props["Payment Date"]; ok && dateProp.Date != nil {
+			payableInfo.PaymentDate = &dateProp.Date.Start.Time
+		}
+
+		// Extract PDF file URL from Attachments field
+		if filesProp, ok := props["Attachments"]; ok && len(filesProp.Files) > 0 {
+			// Get the first file (should be the PDF)
+			if len(filesProp.Files[0].File.URL) > 0 {
+				payableInfo.FileURL = filesProp.Files[0].File.URL
+			} else if len(filesProp.Files[0].External.URL) > 0 {
+				payableInfo.FileURL = filesProp.Files[0].External.URL
+			}
+		}
+
+		payables = append(payables, payableInfo)
+	}
+
+	s.logger.Debug(fmt.Sprintf("returning %d payable(s) (any status)", len(payables)))
+	return payables, nil
+}
+
 // FindPayableByContractorAndPeriod finds all PENDING payables by contractor and period start date
 // Returns all pending payables (multiple invoices are supported)
 // Returns empty slice if no pending payables found
@@ -979,6 +1069,14 @@ func (s *ContractorPayablesService) extractSelect(props nt.DatabasePagePropertie
 		return ""
 	}
 	return prop.Select.Name
+}
+
+func (s *ContractorPayablesService) extractStatus(props nt.DatabasePageProperties, propName string) string {
+	prop, ok := props[propName]
+	if !ok || prop.Status == nil {
+		return ""
+	}
+	return prop.Status.Name
 }
 
 func (s *ContractorPayablesService) extractRichText(props nt.DatabasePageProperties, propName string) string {
