@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -28,6 +29,7 @@ import (
 // @Param contractor query string false "Discord username to filter by specific contractor (e.g., chinhld)"
 // @Param project query string false "Project code/name to filter by specific project (e.g., kafi, nghenhan)"
 // @Param force query bool false "Fetch all timesheets regardless of approval status (default: false)"
+// @Param batch query int false "Payday batch filter (1 or 15). Only processes contractors with matching payday"
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -64,7 +66,21 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	forceParam := strings.TrimSpace(c.Query("force"))
 	skipStatusCheck := forceParam == "true"
 
-	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v", month, contractorDiscord, projectID, skipStatusCheck))
+	// Parse batch parameter (optional, values: 1 or 15)
+	batchParam := strings.TrimSpace(c.Query("batch"))
+	var batchFilter int
+	if batchParam != "" {
+		batch, err := strconv.Atoi(batchParam)
+		if err != nil || (batch != 1 && batch != 15) {
+			l.Error(fmt.Errorf("invalid batch value"), fmt.Sprintf("batch=%s", batchParam))
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil,
+				fmt.Errorf("invalid batch value, expected 1 or 15"), nil, ""))
+			return
+		}
+		batchFilter = batch
+	}
+
+	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v batch=%d", month, contractorDiscord, projectID, skipStatusCheck, batchFilter))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -122,6 +138,31 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	l.Debug("grouping timesheets by contractor and project")
 	contractorGroups := groupTimesheetsByContractor(timesheets)
 	l.Debug(fmt.Sprintf("grouped into %d contractors", len(contractorGroups)))
+
+	// Filter contractors by batch/payday if specified
+	if batchFilter > 0 {
+		l.Debug(fmt.Sprintf("filtering contractors by batch: %d", batchFilter))
+
+		filteredGroups := make(map[string][]*notion.TimesheetEntry)
+		contractorPayablesService := h.service.Notion.ContractorPayables
+
+		for contractorID, timesheets := range contractorGroups {
+			payday, err := contractorPayablesService.GetContractorPayDay(ctx, contractorID)
+			if err != nil {
+				l.Debug(fmt.Sprintf("skipping contractor %s: failed to get payday: %v", contractorID, err))
+				continue
+			}
+
+			if payday == batchFilter {
+				filteredGroups[contractorID] = timesheets
+			} else {
+				l.Debug(fmt.Sprintf("excluding contractor %s: payday=%d != batch=%d", contractorID, payday, batchFilter))
+			}
+		}
+
+		contractorGroups = filteredGroups
+		l.Debug(fmt.Sprintf("after batch filtering: %d contractors remain", len(contractorGroups)))
+	}
 
 	// Step 3: Process each contractor concurrently
 	var (
@@ -199,6 +240,7 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	// Return response
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
 		"month":                 month,
+		"batch":                 batchFilter,
 		"orders_created":        ordersCreated,
 		"line_items_created":    lineItemsCreated,
 		"line_items_updated":    lineItemsUpdated,
