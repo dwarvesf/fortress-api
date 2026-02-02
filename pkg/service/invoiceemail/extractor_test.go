@@ -35,26 +35,26 @@ func TestExtractInvoiceIDFromSubject(t *testing.T) {
 	}{
 		{
 			name:    "valid Invoice ID in subject",
-			subject: "Invoice CONTR-202501-A1B2 for January 2025",
-			wantID:  "CONTR-202501-A1B2",
+			subject: "Invoice INVC-202501-JOHN-A1B2 for January 2025",
+			wantID:  "INVC-202501-JOHN-A1B2",
 			wantErr: false,
 		},
 		{
 			name:    "Invoice ID at beginning of subject",
-			subject: "CONTR-202512-XYZ9 - Monthly Invoice",
-			wantID:  "CONTR-202512-XYZ9",
+			subject: "INVC-202512-JANE-XYZ9 - Monthly Invoice",
+			wantID:  "INVC-202512-JANE-XYZ9",
 			wantErr: false,
 		},
 		{
 			name:    "Invoice ID at end of subject",
-			subject: "Please process invoice CONTR-202506-1234",
-			wantID:  "CONTR-202506-1234",
+			subject: "Please process invoice INVC-202506-BOB-1234",
+			wantID:  "INVC-202506-BOB-1234",
 			wantErr: false,
 		},
 		{
-			name:    "Invoice ID with long suffix",
-			subject: "Invoice CONTR-202501-ABCD1234",
-			wantID:  "CONTR-202501-ABCD1234",
+			name:    "Invoice ID with long name",
+			subject: "Invoice INVC-202501-QUANG-ABCD",
+			wantID:  "INVC-202501-QUANG-ABCD",
 			wantErr: false,
 		},
 		{
@@ -70,20 +70,26 @@ func TestExtractInvoiceIDFromSubject(t *testing.T) {
 			errContains: "invoice ID not found",
 		},
 		{
-			name:        "invalid format - missing CONTR prefix",
-			subject:     "Invoice 202501-A1B2",
+			name:        "invalid format - missing INVC prefix",
+			subject:     "Invoice 202501-JOHN-A1B2",
 			wantErr:     true,
 			errContains: "invoice ID not found",
 		},
 		{
 			name:        "invalid format - wrong date format",
-			subject:     "Invoice CONTR-2025-A1B2",
+			subject:     "Invoice INVC-2025-JOHN-A1B2",
 			wantErr:     true,
 			errContains: "invoice ID not found",
 		},
 		{
-			name:        "invalid format - lowercase suffix",
-			subject:     "Invoice CONTR-202501-a1b2",
+			name:        "invalid format - lowercase name",
+			subject:     "Invoice INVC-202501-john-A1B2",
+			wantErr:     true,
+			errContains: "invoice ID not found",
+		},
+		{
+			name:        "invalid format - old 3-part format",
+			subject:     "Invoice INVC-202501-A1B2",
 			wantErr:     true,
 			errContains: "invoice ID not found",
 		},
@@ -119,14 +125,14 @@ func TestExtractInvoiceIDFromPDF(t *testing.T) {
 	}{
 		{
 			name:    "Invoice ID in PDF text",
-			pdfText: "Invoice Number: CONTR-202501-A1B2\nAmount: $1000",
-			wantID:  "CONTR-202501-A1B2",
+			pdfText: "Invoice Number: INVC-202501-JOHN-A1B2\nAmount: $1000",
+			wantID:  "INVC-202501-JOHN-A1B2",
 			wantErr: false,
 		},
 		{
 			name:    "Invoice ID embedded in text",
-			pdfText: "Please pay invoice CONTR-202512-XYZ9 by end of month",
-			wantID:  "CONTR-202512-XYZ9",
+			pdfText: "Please pay invoice INVC-202512-JANE-XYZ9 by end of month",
+			wantID:  "INVC-202512-JANE-XYZ9",
 			wantErr: false,
 		},
 		{
@@ -182,25 +188,25 @@ func TestExtractInvoiceID(t *testing.T) {
 	}{
 		{
 			name:    "Invoice ID in subject - no PDF needed",
-			subject: "Invoice CONTR-202501-A1B2",
+			subject: "Invoice INVC-202501-JOHN-A1B2",
 			hasPDF:  false,
-			wantID:  "CONTR-202501-A1B2",
+			wantID:  "INVC-202501-JOHN-A1B2",
 			wantErr: false,
 		},
 		{
 			name:    "Invoice ID in subject - PDF present but not used",
-			subject: "Invoice CONTR-202501-A1B2",
-			pdfText: "Different CONTR-202501-XYZ9",
+			subject: "Invoice INVC-202501-JOHN-A1B2",
+			pdfText: "Different INVC-202501-JANE-XYZ9",
 			hasPDF:  true,
-			wantID:  "CONTR-202501-A1B2", // Subject takes priority
+			wantID:  "INVC-202501-JOHN-A1B2", // Subject takes priority
 			wantErr: false,
 		},
 		{
 			name:    "No Invoice ID in subject - fall back to PDF",
 			subject: "Invoice for January",
-			pdfText: "Invoice: CONTR-202501-PDF1",
+			pdfText: "Invoice: INVC-202501-BOB-PDF1",
 			hasPDF:  true,
-			wantID:  "CONTR-202501-PDF1",
+			wantID:  "INVC-202501-BOB-PDF1",
 			wantErr: false,
 		},
 		{
@@ -252,23 +258,26 @@ func TestExtractInvoiceID(t *testing.T) {
 
 func TestInvoiceIDPattern(t *testing.T) {
 	// Test the regex pattern directly
+	// Format: INVC-YYYYMM-NAME-XXXX (e.g., INVC-202601-QUANG-4DRE)
 	tests := []struct {
 		input   string
 		matches bool
 		match   string
 	}{
-		{"CONTR-202501-A1B2", true, "CONTR-202501-A1B2"},
-		{"CONTR-202512-XYZ9", true, "CONTR-202512-XYZ9"},
-		{"CONTR-202506-1234", true, "CONTR-202506-1234"},
-		{"CONTR-202501-ABCD1234", true, "CONTR-202501-ABCD1234"},
-		{"CONTR-202501-A", true, "CONTR-202501-A"},  // Single char suffix is valid
-		{"prefix CONTR-202501-X1 suffix", true, "CONTR-202501-X1"},
-		{"contr-202501-A1B2", false, ""},            // lowercase prefix not matched
-		{"CONTR-2025-A1B2", false, ""},              // wrong date format
-		{"CONTR-20251-A1B2", false, ""},             // 5-digit date
-		{"CONTR-2025010-A1B2", false, ""},           // 7-digit date
-		{"INV-202501-A1B2", false, ""},              // wrong prefix
-		{"CONTR-202501-a1b2", false, ""},            // lowercase suffix
+		{"INVC-202501-JOHN-A1B2", true, "INVC-202501-JOHN-A1B2"},
+		{"INVC-202512-JANE-XYZ9", true, "INVC-202512-JANE-XYZ9"},
+		{"INVC-202506-BOB-1234", true, "INVC-202506-BOB-1234"},
+		{"INVC-202601-QUANG-4DRE", true, "INVC-202601-QUANG-4DRE"},
+		{"INVC-202501-A-B", true, "INVC-202501-A-B"}, // Single char name and suffix is valid
+		{"prefix INVC-202501-TEST-X1 suffix", true, "INVC-202501-TEST-X1"},
+		{"invc-202501-JOHN-A1B2", false, ""},         // lowercase prefix not matched
+		{"INVC-2025-JOHN-A1B2", false, ""},           // wrong date format (4 digits)
+		{"INVC-20251-JOHN-A1B2", false, ""},          // 5-digit date
+		{"INVC-2025010-JOHN-A1B2", false, ""},        // 7-digit date
+		{"INV-202501-JOHN-A1B2", false, ""},          // wrong prefix
+		{"INVC-202501-john-A1B2", false, ""},         // lowercase name
+		{"INVC-202501-JOHN-a1b2", false, ""},         // lowercase suffix
+		{"INVC-202501-A1B2", false, ""},              // old 3-part format (missing name)
 	}
 
 	for _, tt := range tests {

@@ -30,7 +30,7 @@ func main() {
 	// Generate single invoice with combined line items
 	l.Info("Generating contractor invoice...")
 	testData := &invoice.ContractorInvoiceData{
-		InvoiceNumber:     "CONTR-202512-TEST",
+		InvoiceNumber:     "INVC-202512-TEST-0001",
 		ContractorName:    "Test Contractor",
 		Month:             "2025-12",
 		Date:              time.Now(),

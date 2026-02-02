@@ -266,7 +266,7 @@ lets(
       "rich_text": [
         {
           "text": {
-            "content": "CONTR-202512-A1B2"
+            "content": "INVC-202512-A1B2"
           }
         }
       ]

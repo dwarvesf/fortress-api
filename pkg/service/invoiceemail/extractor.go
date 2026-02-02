@@ -13,9 +13,9 @@ var (
 	ErrInvoiceIDNotFound = errors.New("invoice ID not found")
 )
 
-// Invoice ID pattern: CONTR-YYYYMM-XXXX (e.g., CONTR-202501-A1B2)
-// YYYYMM is a 6-digit date, XXXX is alphanumeric characters
-var invoiceIDPattern = regexp.MustCompile(`CONTR-\d{6}-[A-Z0-9]+`)
+// Invoice ID pattern: INVC-YYYYMM-NAME-XXXX (e.g., INVC-202601-QUANG-4DRE)
+// YYYYMM is a 6-digit date, NAME is identifier, XXXX is random suffix
+var invoiceIDPattern = regexp.MustCompile(`INVC-\d{6}-[A-Z0-9]+-[A-Z0-9]+`)
 
 // Extractor handles Invoice ID extraction from various sources
 type Extractor struct {

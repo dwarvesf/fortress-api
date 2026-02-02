@@ -72,12 +72,12 @@ func (p *Processor) ProcessIncomingInvoices(ctx context.Context) (*ProcessorStat
 	}
 
 	// Primary filter: emails to target WITHOUT processed label
-	// Additional filter: subject contains "CONTR-" (Invoice ID pattern) OR has PDF attachment
+	// Additional filter: subject contains "INVC-" (Invoice ID pattern) OR has PDF attachment
 	// This distinguishes contractor invoice emails from other emails
-	query := fmt.Sprintf("to:%s -label:%s (subject:CONTR- OR has:attachment filename:pdf)",
+	query := fmt.Sprintf("to:%s -label:%s (subject:INVC- OR has:attachment filename:pdf)",
 		targetEmail, strings.ReplaceAll(processedLabel, "/", "-"))
 
-	l.Debugf("filtering for contractor invoice emails (subject:CONTR- OR PDF attachment)")
+	l.Debugf("filtering for contractor invoice emails (subject:INVC- OR PDF attachment)")
 
 	l.Debugf("querying Gmail with: %s", query)
 

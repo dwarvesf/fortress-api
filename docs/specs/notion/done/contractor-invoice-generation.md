@@ -75,7 +75,7 @@ The system shall provide a REST API endpoint `POST /api/v1/invoices/contractor/g
 **Success Response:**
 ```json
 {
-  "invoiceNumber": "CONTR-adeki_-202512-001",
+  "invoiceNumber": "INVC-adeki_-202512-001",
   "contractorName": "adeki_",
   "month": "2025-12",
   "billingType": "Monthly Fixed",
@@ -147,7 +147,7 @@ The system shall generate PDF invoices with:
 - Professional layout matching contractor-invoice-template.html
 - Dynamic table structure based on billing type
 - Proper currency formatting (VND: no decimals, USD: 2 decimals)
-- Invoice number format: `CONTR-{discord}-{YYYYMM}-001`
+- Invoice number format: `INVC-{discord}-{YYYYMM}-001`
 - Invoice date: First day of the month
 - Due date: Last day of the month
 
@@ -157,8 +157,8 @@ The system shall generate PDF invoices with:
 The system shall upload generated PDFs to Google Drive with:
 - Parent folder ID: Read from env `CONTRACTOR_INVOICE_DIR_ID` (default: `1_9Ai9erlvc39vDMoYCswroQxWzajKUX2`)
 - Subfolder: `{contractor_full_name}/` (create if not exists)
-- File naming: `{invoice_number}.pdf` (e.g., `CONTR-202512-A7K9.pdf`)
-- Full path: `{CONTRACTOR_INVOICE_DIR_ID}/{contractor_full_name}/CONTR-202512-A7K9.pdf`
+- File naming: `{invoice_number}.pdf` (e.g., `INVC-202512-A7K9.pdf`)
+- Full path: `{CONTRACTOR_INVOICE_DIR_ID}/{contractor_full_name}/INVC-202512-A7K9.pdf`
 - Public access URL returned in response
 
 ### 2.2 Non-Functional Requirements
@@ -300,7 +300,7 @@ type GenerateContractorInvoiceRequest struct {
 ```json
 {
   "data": {
-    "invoiceNumber": "CONTR-202512-A7K9",
+    "invoiceNumber": "INVC-202512-A7K9",
     "contractorName": "adeki_",
     "month": "2025-12",
     "billingType": "Monthly Fixed",
@@ -349,7 +349,7 @@ type GenerateContractorInvoiceRequest struct {
 
 ```go
 type ContractorInvoiceResponse struct {
-    InvoiceNumber  string  `json:"invoiceNumber"`  // CONTR-{YYYYMM}-{random-4-chars}
+    InvoiceNumber  string  `json:"invoiceNumber"`  // INVC-{YYYYMM}-{random-4-chars}
     ContractorName string  `json:"contractorName"` // Discord username
     Month          string  `json:"month"`          // YYYY-MM
     BillingType    string  `json:"billingType"`    // "Monthly Fixed" or "Hourly Rate"
@@ -366,7 +366,7 @@ type ContractorInvoiceResponse struct {
 
 ### 5.1 Invoice Number Generation
 
-**Format**: `CONTR-{YYYYMM}-{random-4-chars}`
+**Format**: `INVC-{YYYYMM}-{random-4-chars}`
 
 **Algorithm**:
 1. Extract year and month from request (remove hyphen) → YYYYMM
@@ -380,9 +380,9 @@ type ContractorInvoiceResponse struct {
 - Total combinations: 36^4 = 1,679,616 unique IDs per month
 
 **Examples**:
-- Month: "2025-12" → `CONTR-202512-A7K9`
-- Month: "2025-11" → `CONTR-202511-X3M2`
-- Month: "2025-12" → `CONTR-202512-P5Q1`
+- Month: "2025-12" → `INVC-202512-A7K9`
+- Month: "2025-11" → `INVC-202511-X3M2`
+- Month: "2025-12" → `INVC-202512-P5Q1`
 
 ### 5.2 Date Calculation
 
@@ -1187,7 +1187,7 @@ func (c *controller) GenerateContractorInvoice(
 
     // Step 5: Generate Invoice Number
     randomChars := generateRandomAlphanumeric(4)
-    invoiceNumber := fmt.Sprintf("CONTR-%s-%s",
+    invoiceNumber := fmt.Sprintf("INVC-%s-%s",
         strings.ReplaceAll(month, "-", ""),
         randomChars)
 
@@ -1587,11 +1587,11 @@ func TestGenerateContractorInvoice_MissingContractor(t *testing.T) {}
 
 | Month | Invoice Number | Notes |
 |-------|----------------|-------|
-| 2025-12 | CONTR-202512-A7K9 | Random suffix: A7K9 |
-| 2025-11 | CONTR-202511-X3M2 | Random suffix: X3M2 |
-| 2025-12 | CONTR-202512-P5Q1 | Random suffix: P5Q1 |
+| 2025-12 | INVC-202512-A7K9 | Random suffix: A7K9 |
+| 2025-11 | INVC-202511-X3M2 | Random suffix: X3M2 |
+| 2025-12 | INVC-202512-P5Q1 | Random suffix: P5Q1 |
 
-**Format**: `CONTR-{YYYYMM}-{random-4-chars}`
+**Format**: `INVC-{YYYYMM}-{random-4-chars}`
 - Random characters: 4 uppercase alphanumeric (A-Z, 0-9)
 - Total combinations per month: 1,679,616
 

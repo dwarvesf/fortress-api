@@ -29,7 +29,7 @@ type CreatePayableInput struct {
 	PeriodStart      string   // YYYY-MM-DD start of period - payday of invoice month (required)
 	PeriodEnd        string   // YYYY-MM-DD end of period - payday of next month (required)
 	InvoiceDate      string   // YYYY-MM-DD (required)
-	InvoiceID        string   // Invoice number e.g., CONTR-202512-A1B2 (required)
+	InvoiceID        string   // Invoice number e.g., INVC-202512-QUANG-A1B2 (required)
 	PayoutItemIDs    []string // Relation to Payout Items (required)
 	ContractorType   string   // "Individual", "Sole Proprietor", "LLC", etc. (optional, defaults to "Individual")
 	ExchangeRate     float64  // Exchange rate for currency conversion (optional)
