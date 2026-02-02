@@ -1084,16 +1084,15 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, invoiceType s
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Expense Reimbursement section with %d items", len(refundItems)))
 	}
 
-	// Fee section: Service Fee items from InvoiceSplit only
-	// These are items with "Delivery Lead" or "Account Management" in Description
+	// Fee section: Service Fee items NOT from TaskOrder (i.e., from InvoiceSplit or other sources)
+	// These include items like "Delivery Lead" or "Account Management"
 	var feeItems []ContractorInvoiceLineItem
 	for _, item := range items {
-		// Include only Service Fee items that are NOT from TaskOrder
+		// Include Service Fee items that are NOT from TaskOrder
 		// (TaskOrder items go to Development Work section)
 		if item.Type == string(notion.PayoutSourceTypeServiceFee) {
-			// Verify it's from InvoiceSplit by checking TaskOrderID is empty
-			// and ServiceRateID is empty (ServiceRateID indicates Development Work)
-			if item.TaskOrderID == "" && item.ServiceRateID == "" {
+			// ServiceFee without TaskOrderID goes to Fee section
+			if item.TaskOrderID == "" {
 				feeItems = append(feeItems, item)
 			}
 		}
@@ -1106,7 +1105,7 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, invoiceType s
 			Items:        feeItems,
 		})
 
-		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Fee section with %d Service Fee items from InvoiceSplit", len(feeItems)))
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created Fee section with %d Service Fee items (non-TaskOrder)", len(feeItems)))
 	}
 
 	// Extra Payment section: Commission items + ExtraPayment items

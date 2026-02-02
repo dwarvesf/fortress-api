@@ -387,12 +387,8 @@ func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx co
 			// Determine source type based on which relation is set
 			entry.SourceType = s.determineSourceType(entry)
 
-			// Only include Refund, Commission, or Other types (exclude Service Fee)
-			if entry.SourceType == PayoutSourceTypeServiceFee {
-				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: skipping entry pageID=%s sourceType=%s (Service Fee excluded from before-date query)", entry.PageID, entry.SourceType))
-				continue
-			}
-
+			// Include all payout types to ensure payouts with Date before cutoff are captured
+			// even if their Month formula doesn't match the target month
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: including entry pageID=%s name=%s sourceType=%s amount=%.2f currency=%s",
 				entry.PageID, entry.Name, entry.SourceType, entry.Amount, entry.Currency))
 
