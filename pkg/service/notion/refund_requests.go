@@ -223,6 +223,94 @@ func (s *RefundRequestsService) extractFormulaString(props nt.DatabasePageProper
 	return ""
 }
 
+// QueryApprovedRefundsByContractor queries approved refund requests for a specific contractor.
+// This is optimized for invoice generation - filters by contractor at query time.
+func (s *RefundRequestsService) QueryApprovedRefundsByContractor(ctx context.Context, contractorPageID string) ([]*ApprovedRefundData, error) {
+	if contractorPageID == "" {
+		return nil, errors.New("contractor page ID is required")
+	}
+
+	refundRequestsDBID := s.cfg.Notion.Databases.RefundRequest
+	if refundRequestsDBID == "" {
+		return nil, errors.New("refund requests database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: querying approved refunds for contractor=%s", contractorPageID))
+
+	// Build filter: Status=Approved AND Contractor contains contractorPageID
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							Equals: "Approved",
+						},
+					},
+				},
+				{
+					Property: "Contractor",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							Contains: contractorPageID,
+						},
+					},
+				},
+			},
+		},
+		PageSize: 100,
+	}
+
+	var refunds []*ApprovedRefundData
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, refundRequestsDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] refund_requests: failed to query database for contractor=%s: %v", contractorPageID, err))
+			return nil, fmt.Errorf("failed to query refund requests database: %w", err)
+		}
+
+		s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: found %d refund entries in this page for contractor=%s", len(resp.Results), contractorPageID))
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			refund := &ApprovedRefundData{
+				PageID:               page.ID,
+				RefundID:             s.extractTitle(props, "Refund ID"),
+				Amount:               s.extractNumber(props, "Amount"),
+				Currency:             s.extractSelect(props, "Currency"),
+				ContractorPageID:     s.extractFirstRelationID(props, "Contractor"),
+				ContractorName:       s.extractRollupText(props, "Person"),
+				Reason:               s.extractSelect(props, "Reason"),
+				Description:          s.extractRichText(props, "Description"),
+				DescriptionFormatted: s.extractFormulaString(props, "Description Formatted"),
+				DateRequested:        s.extractDate(props, "Date Requested"),
+			}
+
+			s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: parsed refund pageID=%s refundID=%s amount=%.2f currency=%s",
+				refund.PageID, refund.RefundID, refund.Amount, refund.Currency))
+
+			refunds = append(refunds, refund)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] refund_requests: total approved refunds for contractor=%s: %d", contractorPageID, len(refunds)))
+
+	return refunds, nil
+}
+
 // UpdateRefundRequestStatus updates a refund request's Status to a new value
 // Uses Status property type (not Select)
 func (s *RefundRequestsService) UpdateRefundRequestStatus(ctx context.Context, pageID string, status string) error {

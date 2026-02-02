@@ -51,9 +51,9 @@ type ContractorInvoiceData struct {
 	SubtotalUSD        float64 // SubtotalUSDFromVND + SubtotalUSDItems
 
 	// Notion relation IDs (for creating Contractor Payables record)
-	ContractorPageID    string   // Contractor page ID from rates query
-	ContractorEmail     string   // Contractor email for sharing
-	PayoutPageIDs       []string // Payout Item page IDs from pending payouts
+	ContractorPageID string   // Contractor page ID from rates query
+	ContractorEmail  string   // Contractor email for sharing
+	PayoutPageIDs    []string // Payout Item page IDs from pending payouts
 
 	// PayDay for Period calculation
 	PayDay int // Pay day of month (1 or 15)
@@ -141,13 +141,14 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	l.Debug(fmt.Sprintf("found contractor rate: contractor=%s billingType=%s currency=%s monthlyFixed=%.2f hourlyRate=%.2f contractorPageID=%s",
 		rateData.ContractorName, rateData.BillingType, rateData.Currency, rateData.MonthlyFixed, rateData.HourlyRate, rateData.ContractorPageID))
 
-	// 2. Query Pending Payouts, Refund/Commission before Payday, AND Bank Account in parallel
-	l.Debug("[DEBUG] contractor_invoice: starting parallel queries for payouts, refund/commission, and bank account")
+	// 2. Query Pending Payouts, Refund/Commission before Payday, Bank Account, AND Approved Refunds in parallel
+	l.Debug("[DEBUG] contractor_invoice: starting parallel queries for payouts, refund/commission, bank account, and approved refunds")
 
 	var payouts []notion.PayoutEntry
 	var refundCommissionPayouts []notion.PayoutEntry
 	var bankAccount *notion.BankAccountData
-	var payoutsErr, refundCommissionErr, bankAccountErr error
+	var approvedRefunds []*notion.ApprovedRefundData
+	var payoutsErr, refundCommissionErr, bankAccountErr, approvedRefundsErr error
 	var wg sync.WaitGroup
 
 	// Calculate issue date for cutoff date calculation
@@ -215,6 +216,20 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: bank account query completed, err=%v", bankAccountErr))
 	}()
 
+	// Query Approved Refunds for this contractor (to check/create missing payouts)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		l.Debug("[DEBUG] contractor_invoice: querying approved refunds for contractor (parallel)")
+		refundRequestsService := notion.NewRefundRequestsService(c.config, c.logger)
+		if refundRequestsService == nil {
+			approvedRefundsErr = fmt.Errorf("failed to create refund requests service")
+			return
+		}
+		approvedRefunds, approvedRefundsErr = refundRequestsService.QueryApprovedRefundsByContractor(ctx, rateData.ContractorPageID)
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: approved refunds query completed, found=%d err=%v", len(approvedRefunds), approvedRefundsErr))
+	}()
+
 	wg.Wait()
 	l.Debug("[DEBUG] contractor_invoice: parallel queries completed")
 
@@ -234,7 +249,147 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		return nil, fmt.Errorf("bank account not found: %w", bankAccountErr)
 	}
 
-	l.Debug(fmt.Sprintf("found %d pending payouts (month filter), %d Refund/Commission/Other payouts (before payday)", len(payouts), len(refundCommissionPayouts)))
+	// Note: approvedRefundsErr is non-fatal - just log and continue
+	if approvedRefundsErr != nil {
+		l.Error(approvedRefundsErr, "[DEBUG] contractor_invoice: failed to query approved refunds - continuing without auto-creating payouts")
+	}
+
+	l.Debug(fmt.Sprintf("found %d pending payouts (month filter), %d Refund/Commission/Other payouts (before payday), %d approved refunds",
+		len(payouts), len(refundCommissionPayouts), len(approvedRefunds)))
+
+	// 2.1 Check and create missing refund payouts (runs in parallel for speed)
+	// This ensures approved refunds are included in the invoice even if payouts weren't created yet
+	if len(approvedRefunds) > 0 {
+		l.Debug("[DEBUG] contractor_invoice: checking for missing refund payouts")
+
+		// Collect all existing payout refund request IDs from fetched payouts
+		existingRefundPayouts := make(map[string]bool)
+
+		// Build a combined list of all payouts to check for existing refunds
+		allPayouts := append(payouts, refundCommissionPayouts...)
+		payoutsService := notion.NewContractorPayoutsService(c.config, c.logger)
+		if payoutsService != nil {
+			// Batch check which approved refunds already have payouts
+			refundPageIDs := make([]string, len(approvedRefunds))
+			for i, refund := range approvedRefunds {
+				refundPageIDs[i] = refund.PageID
+			}
+
+			existingPayoutsMap, err := payoutsService.CheckPayoutsExistByRefundRequests(ctx, refundPageIDs)
+			if err != nil {
+				l.Error(err, "[DEBUG] contractor_invoice: failed to batch check existing refund payouts - will skip auto-creation")
+			} else {
+				for refundID := range existingPayoutsMap {
+					existingRefundPayouts[refundID] = true
+				}
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: found %d existing refund payouts via batch check", len(existingPayoutsMap)))
+			}
+		}
+
+		// Also check the fetched payouts for refund relations (belt and suspenders)
+		for _, p := range allPayouts {
+			if p.RefundRequestID != "" {
+				existingRefundPayouts[p.RefundRequestID] = true
+			}
+		}
+
+		// Find refunds that need payouts created
+		var refundsNeedingPayouts []*notion.ApprovedRefundData
+		for _, refund := range approvedRefunds {
+			if !existingRefundPayouts[refund.PageID] {
+				refundsNeedingPayouts = append(refundsNeedingPayouts, refund)
+			}
+		}
+
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: %d approved refunds need payouts created", len(refundsNeedingPayouts)))
+
+		// Create missing payouts in parallel (limit concurrency to avoid overwhelming Notion API)
+		if len(refundsNeedingPayouts) > 0 && payoutsService != nil {
+			const maxWorkers = 5
+			refundsChan := make(chan *notion.ApprovedRefundData, len(refundsNeedingPayouts))
+			type createResult struct {
+				refund   *notion.ApprovedRefundData
+				payoutID string
+				err      error
+			}
+			resultsChan := make(chan createResult, len(refundsNeedingPayouts))
+
+			// Start workers
+			var createWg sync.WaitGroup
+			workerCount := len(refundsNeedingPayouts)
+			if workerCount > maxWorkers {
+				workerCount = maxWorkers
+			}
+
+			for i := 0; i < workerCount; i++ {
+				createWg.Add(1)
+				go func(workerID int) {
+					defer createWg.Done()
+					for refund := range refundsChan {
+						// Build payout name
+						payoutName := refund.Reason
+						if payoutName == "" {
+							payoutName = "Refund"
+						}
+						if refund.Description != "" {
+							payoutName = fmt.Sprintf("%s - %s", payoutName, refund.Description)
+						}
+
+						l.Debug(fmt.Sprintf("[refund-worker-%d] creating payout for refund=%s name=%s", workerID, refund.PageID, payoutName))
+
+						payoutInput := notion.CreateRefundPayoutInput{
+							Name:             payoutName,
+							ContractorPageID: refund.ContractorPageID,
+							RefundRequestID:  refund.PageID,
+							Amount:           refund.Amount,
+							Currency:         refund.Currency,
+							Date:             refund.DateRequested,
+						}
+
+						payoutID, err := payoutsService.CreateRefundPayout(ctx, payoutInput)
+						resultsChan <- createResult{refund: refund, payoutID: payoutID, err: err}
+					}
+				}(i)
+			}
+
+			// Send refunds to workers
+			for _, refund := range refundsNeedingPayouts {
+				refundsChan <- refund
+			}
+			close(refundsChan)
+
+			// Wait for all workers to complete
+			createWg.Wait()
+			close(resultsChan)
+
+			// Collect results and convert successful creates to PayoutEntry
+			var newPayoutIDs []string
+			for result := range resultsChan {
+				if result.err != nil {
+					l.Error(result.err, fmt.Sprintf("[DEBUG] contractor_invoice: failed to create payout for refund=%s", result.refund.PageID))
+				} else {
+					l.Info(fmt.Sprintf("[DEBUG] contractor_invoice: created payout=%s for refund=%s", result.payoutID, result.refund.PageID))
+					newPayoutIDs = append(newPayoutIDs, result.payoutID)
+
+					// Convert to PayoutEntry and add to refundCommissionPayouts
+					// This will be merged with main payouts in the existing merge logic
+					newPayout := notion.PayoutEntry{
+						PageID:          result.payoutID,
+						Name:            result.refund.Reason,
+						Amount:          result.refund.Amount,
+						Currency:        result.refund.Currency,
+						Status:          "Pending",
+						SourceType:      "Refund",
+						Description:     result.refund.DescriptionFormatted,
+						RefundRequestID: result.refund.PageID,
+					}
+					refundCommissionPayouts = append(refundCommissionPayouts, newPayout)
+				}
+			}
+
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: created %d new refund payouts", len(newPayoutIDs)))
+		}
+	}
 
 	// Merge Refund/Commission/Other payouts with main payouts (deduplicate by PageID)
 	existingPageIDs := make(map[string]bool)
@@ -646,8 +801,8 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		SubtotalUSD:        subtotalUSD, // Direct sum of AmountUSD from line items
 
 		// Notion relation IDs (for creating Contractor Payables record)
-		ContractorPageID:  rateData.ContractorPageID,
-		ContractorEmail:   rateData.TeamEmail, // For sharing PDF with contractor
+		ContractorPageID: rateData.ContractorPageID,
+		ContractorEmail:  rateData.TeamEmail, // For sharing PDF with contractor
 
 		// PayDay for Period calculation
 		PayDay: payDay,
