@@ -139,15 +139,15 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 	l.Debug(fmt.Sprintf("found contractor: pageID=%s payDay=%d", rateData.ContractorPageID, rateData.PayDay))
 
 	// Step 2: Calculate period dates
-	// Period start is calculated based on next month's payday
-	// e.g., for month=2025-01 with payDay=15, periodStart = 2025-02-15
+	// Period start is payday of the invoice month (work month)
+	// Period end is payday of the next month
+	// e.g., for month=2026-01 with payDay=15: periodStart=2026-01-15, periodEnd=2026-02-15
 	monthTime, _ := time.Parse("2006-01", req.Month)
 	payDay := rateData.PayDay
 	if payDay == 0 {
 		payDay = 15 // Default to 15
 	}
-	nextMonth := monthTime.AddDate(0, 1, 0)
-	periodStart := time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
+	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payDay, 0, 0, 0, 0, time.UTC)
 
 	l.Debug(fmt.Sprintf("calculated period start: %s", periodStart.Format("2006-01-02")))
 
@@ -760,6 +760,9 @@ func (h *handler) generateAndCreatePayable(
 	}
 
 	// Step 5: Calculate period dates for payable
+	// Period start: payday of the invoice month (work month)
+	// Period end: payday of the next month
+	// e.g., for month=2026-01 with payDay=15: periodStart=2026-01-15, periodEnd=2026-02-15
 	payDay := invoiceData.PayDay
 	if payDay == 0 {
 		payDay = 15 // Default to 15
@@ -767,11 +770,10 @@ func (h *handler) generateAndCreatePayable(
 	monthTime, _ := time.Parse("2006-01", req.Month)
 	nextMonth := monthTime.AddDate(0, 1, 0)
 
-	// Period start: payday of invoice month (next month after work month)
-	periodStart := time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
-	// Period end: payday of the following month
-	periodEndMonth := nextMonth.AddDate(0, 1, 0)
-	periodEnd := time.Date(periodEndMonth.Year(), periodEndMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
+	// Period start: payday of invoice month (work month)
+	periodStart := time.Date(monthTime.Year(), monthTime.Month(), payDay, 0, 0, 0, 0, time.UTC)
+	// Period end: payday of the next month
+	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
 
 	l.Debug(fmt.Sprintf("calculated period: start=%s end=%s", periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
 
