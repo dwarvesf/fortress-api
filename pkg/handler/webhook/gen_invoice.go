@@ -348,17 +348,13 @@ func (h *handler) updateDMWithSuccessNoShare(l logger.Logger, channelID, message
 		return
 	}
 
-	// Build success embed
+	// Build success embed - use Description for the link (4096 char limit vs 1024 for fields)
+	// This handles long Notion URLs that exceed Discord's field limit
 	successEmbed := &discordgo.MessageEmbed{
 		Title:       "✅ Invoice Ready",
-		Description: "Your invoice has been found and is ready for download.",
+		Description: fmt.Sprintf("Your invoice has been found and is ready for download.\n\n[📄 Download Invoice](%s)", payable.FileURL),
 		Color:       3066993, // Green
 		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "File",
-				Value:  fmt.Sprintf("[Download Invoice](%s)", payable.FileURL),
-				Inline: false,
-			},
 			{
 				Name:   "Status",
 				Value:  payable.Status,
