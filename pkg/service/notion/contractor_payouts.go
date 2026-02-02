@@ -2231,12 +2231,12 @@ func (s *ContractorPayoutsService) getContractorExtraPaymentInfo(ctx context.Con
 		info.Name = prop.Title[0].PlainText
 	}
 
-	// Get Email from rich_text or email property
-	if prop, ok := props["Email"]; ok {
-		if len(prop.RichText) > 0 {
-			info.Email = prop.RichText[0].PlainText
-		} else if prop.Email != nil {
+	// Get Email from Personal Email property
+	if prop, ok := props["Personal Email"]; ok {
+		if prop.Email != nil {
 			info.Email = *prop.Email
+		} else if len(prop.RichText) > 0 {
+			info.Email = prop.RichText[0].PlainText
 		}
 	}
 
