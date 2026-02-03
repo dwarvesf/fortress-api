@@ -119,10 +119,10 @@ func TestHelper_FetchHourlyRateData(t *testing.T) {
 func TestHelper_AggregateHourlyServiceFees(t *testing.T) {
 	l := logger.NewLogrusLogger("debug")
 
-	t.Run("Multiple Hourly Items", func(t *testing.T) {
+	t.Run("Multiple Hourly Items - Preserves First Item Title", func(t *testing.T) {
 		items := []ContractorInvoiceLineItem{
-			{IsHourlyRate: true, Hours: 10, Rate: 50, Amount: 500, AmountUSD: 500, Description: "Desc A", OriginalCurrency: "USD"},
-			{IsHourlyRate: true, Hours: 5, Rate: 50, Amount: 250, AmountUSD: 250, Description: "Desc B", OriginalCurrency: "USD"},
+			{IsHourlyRate: true, Hours: 10, Rate: 50, Amount: 500, AmountUSD: 500, Description: "Desc A", OriginalCurrency: "USD", Title: "Design Consulting Services Rendered (January 1-31, 2026)", TaskOrderID: "task-order-1"},
+			{IsHourlyRate: true, Hours: 5, Rate: 50, Amount: 250, AmountUSD: 250, Description: "Desc B", OriginalCurrency: "USD", Title: "Design Consulting Services Rendered (January 1-31, 2026)", TaskOrderID: "task-order-2"},
 		}
 
 		result := aggregateHourlyServiceFees(items, "2026-01", l)
@@ -136,6 +136,25 @@ func TestHelper_AggregateHourlyServiceFees(t *testing.T) {
 		assert.Equal(t, "USD", agg.OriginalCurrency)
 		assert.Contains(t, agg.Description, "Desc A")
 		assert.Contains(t, agg.Description, "Desc B")
+		// Title should be preserved from first item (payout description)
+		assert.Equal(t, "Design Consulting Services Rendered (January 1-31, 2026)", agg.Title)
+		// TaskOrderID should be preserved from first item
+		assert.Equal(t, "task-order-1", agg.TaskOrderID)
+	})
+
+	t.Run("Multiple Hourly Items - Fallback Title When Empty", func(t *testing.T) {
+		items := []ContractorInvoiceLineItem{
+			{IsHourlyRate: true, Hours: 10, Rate: 50, Amount: 500, AmountUSD: 500, Description: "Desc A", OriginalCurrency: "USD"},
+			{IsHourlyRate: true, Hours: 5, Rate: 50, Amount: 250, AmountUSD: 250, Description: "Desc B", OriginalCurrency: "USD"},
+		}
+
+		result := aggregateHourlyServiceFees(items, "2026-01", l)
+
+		assert.Len(t, result, 1)
+		agg := result[0]
+		assert.Equal(t, 15.0, agg.Hours)
+		assert.Equal(t, 750.0, agg.Amount)
+		// When first item has no Title, fallback to generated title
 		assert.Contains(t, agg.Title, "Service Fee")
 	})
 

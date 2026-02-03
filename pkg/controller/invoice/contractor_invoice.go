@@ -1487,13 +1487,26 @@ func aggregateHourlyServiceFees(
 	l.Debug(fmt.Sprintf("[AGGREGATE] totalHours=%.2f rate=%.2f totalAmount=%.2f totalAmountUSD=%.2f currency=%s",
 		agg.TotalHours, agg.HourlyRate, agg.TotalAmount, agg.TotalAmountUSD, agg.Currency))
 
-	// STEP 3: Generate title
-	title := generateServiceFeeTitle(month)
+	// STEP 3: Use first item's Title (contains payout description like "Design Consulting Services Rendered (January 1-31, 2026)")
+	// Fallback to generated title only if first item has no Title
+	title := hourlyItems[0].Title
+	if title == "" {
+		title = generateServiceFeeTitle(month)
+		l.Debug(fmt.Sprintf("[AGGREGATE] first item has no Title, using generated: %s", title))
+	} else {
+		l.Debug(fmt.Sprintf("[AGGREGATE] using first item's Title: %s", title))
+	}
 
 	// STEP 4: Concatenate descriptions
 	description := concatenateDescriptions(agg.Descriptions)
 
-	// STEP 5: Create aggregated line item
+	// STEP 5: Preserve TaskOrderID from aggregated items
+	taskOrderID := ""
+	if len(agg.TaskOrderIDs) > 0 {
+		taskOrderID = agg.TaskOrderIDs[0]
+	}
+
+	// STEP 6: Create aggregated line item
 	aggregatedItem := ContractorInvoiceLineItem{
 		Title:            title,
 		Description:      description,
@@ -1506,7 +1519,7 @@ func aggregateHourlyServiceFees(
 		OriginalCurrency: agg.Currency,
 		IsHourlyRate:     false, // Already aggregated
 		ServiceRateID:    "",
-		TaskOrderID:      "",
+		TaskOrderID:      taskOrderID,
 		PayoutPageIDs:    agg.PayoutPageIDs,
 	}
 
