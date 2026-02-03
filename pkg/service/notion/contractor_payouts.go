@@ -612,13 +612,26 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByContractorFees(ctx context
 	}
 
 	// Query payouts that have "00 Task Order" relation set (non-empty)
+	// AND Status is not "Cancelled" (cancelled payouts should be ignored)
 	// We'll filter by our target IDs in memory
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
-			Property: "00 Task Order",
-			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-				Relation: &nt.RelationDatabaseQueryFilter{
-					IsNotEmpty: true,
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "00 Task Order",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							IsNotEmpty: true,
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							DoesNotEqual: "Cancelled",
+						},
+					},
 				},
 			},
 		},
@@ -865,12 +878,25 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByRefundRequests(ctx context
 	}
 
 	// Query payouts that have "01 Refund" relation set (non-empty)
+	// AND Status is not "Cancelled" (cancelled payouts should be ignored)
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
-			Property: "01 Refund",
-			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-				Relation: &nt.RelationDatabaseQueryFilter{
-					IsNotEmpty: true,
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "01 Refund",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							IsNotEmpty: true,
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							DoesNotEqual: "Cancelled",
+						},
+					},
 				},
 			},
 		},
@@ -1084,12 +1110,25 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByInvoiceSplits(ctx context.
 	}
 
 	// Query payouts that have "02 Invoice Split" relation set (non-empty)
+	// AND Status is not "Cancelled" (cancelled payouts should be ignored)
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
-			Property: "02 Invoice Split",
-			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-				Relation: &nt.RelationDatabaseQueryFilter{
-					IsNotEmpty: true,
+			And: []nt.DatabaseQueryFilter{
+				{
+					Property: "02 Invoice Split",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Relation: &nt.RelationDatabaseQueryFilter{
+							IsNotEmpty: true,
+						},
+					},
+				},
+				{
+					Property: "Status",
+					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+						Status: &nt.StatusDatabaseQueryFilter{
+							DoesNotEqual: "Cancelled",
+						},
+					},
 				},
 			},
 		},
