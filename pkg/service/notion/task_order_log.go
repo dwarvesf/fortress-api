@@ -787,6 +787,41 @@ func (s *TaskOrderLogService) UpdateTimesheetLineItem(ctx context.Context, lineI
 	return nil
 }
 
+// UpdateLineItemHoursOnly updates only the Hours and Timesheet columns for an existing line item
+// This is used when update_hours_only=true to skip Proof of Works and Status updates
+func (s *TaskOrderLogService) UpdateLineItemHoursOnly(ctx context.Context, lineItemID string, hours float64, timesheetIDs []string) error {
+	s.logger.Debug(fmt.Sprintf("updating line item hours only: lineItemID=%s hours=%.2f timesheets=%d", lineItemID, hours, len(timesheetIDs)))
+
+	// Build timesheet relations
+	timesheetRelations := make([]nt.Relation, len(timesheetIDs))
+	for i, id := range timesheetIDs {
+		timesheetRelations[i] = nt.Relation{ID: id}
+	}
+
+	// Update only Line Item Hours and Timesheet - do NOT touch Proof of Works or Status
+	updateParams := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Line Item Hours": nt.DatabasePageProperty{
+				Type:   nt.DBPropTypeNumber,
+				Number: &hours,
+			},
+			"Timesheet": nt.DatabasePageProperty{
+				Type:     nt.DBPropTypeRelation,
+				Relation: timesheetRelations,
+			},
+		},
+	}
+
+	_, err := s.client.UpdatePage(ctx, lineItemID, updateParams)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to update line item hours only: %s", lineItemID))
+		return fmt.Errorf("failed to update line item hours only: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("successfully updated line item hours only: %s", lineItemID))
+	return nil
+}
+
 // GetLineItemDetails fetches existing line item data for comparison during upsert
 func (s *TaskOrderLogService) GetLineItemDetails(ctx context.Context, lineItemID string) (*LineItemDetails, error) {
 	s.logger.Debug(fmt.Sprintf("fetching line item details: lineItemID=%s", lineItemID))

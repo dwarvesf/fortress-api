@@ -30,6 +30,7 @@ import (
 // @Param project query string false "Project code/name to filter by specific project (e.g., kafi, nghenhan)"
 // @Param force query bool false "Fetch all timesheets regardless of approval status (default: false)"
 // @Param batch query int false "Payday batch filter (1 or 15). Only processes contractors with matching payday"
+// @Param update_hours_only query bool false "When true, only updates Hours and Timesheet columns for existing line items. Skips order/line item creation and proof of works summarization. Default: false"
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -80,7 +81,11 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		batchFilter = batch
 	}
 
-	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v batch=%d", month, contractorDiscord, projectID, skipStatusCheck, batchFilter))
+	// Parse update_hours_only parameter (optional, defaults to false)
+	updateHoursOnlyParam := strings.TrimSpace(c.Query("update_hours_only"))
+	updateHoursOnly := updateHoursOnlyParam == "true"
+
+	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v batch=%d update_hours_only=%v", month, contractorDiscord, projectID, skipStatusCheck, batchFilter, updateHoursOnly))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -195,9 +200,9 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		go func(workerID int) {
 			defer wg.Done()
 			for job := range jobs {
-				l.Debug(fmt.Sprintf("[Worker %d] processing contractor: %s", workerID, job.contractorID))
+				l.Debug(fmt.Sprintf("[Worker %d] processing contractor: %s (updateHoursOnly=%v)", workerID, job.contractorID, job.updateHoursOnly))
 
-				result := h.processContractorSync(ctx, job.contractorID, job.timesheets, month)
+				result := h.processContractorSync(ctx, job.contractorID, job.timesheets, month, job.updateHoursOnly)
 
 				l.Debug(fmt.Sprintf("[Worker %d] finished contractor: %s", workerID, job.contractorID))
 
@@ -209,8 +214,9 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	// Send jobs
 	for contractorID, timesheets := range contractorGroups {
 		jobs <- contractorJob{
-			contractorID: contractorID,
-			timesheets:   timesheets,
+			contractorID:    contractorID,
+			timesheets:      timesheets,
+			updateHoursOnly: updateHoursOnly,
 		}
 	}
 	close(jobs)
@@ -605,8 +611,9 @@ type contractorProcessResult struct {
 
 // contractorJob represents a job to process timesheets for a single contractor
 type contractorJob struct {
-	contractorID string
-	timesheets   []*notion.TimesheetEntry
+	contractorID    string
+	timesheets      []*notion.TimesheetEntry
+	updateHoursOnly bool
 }
 
 // contractorSyncResult holds the result of syncing timesheets for a single contractor
@@ -620,23 +627,28 @@ type contractorSyncResult struct {
 }
 
 // processContractorSync processes timesheets for a single contractor and returns the result
+// If updateHoursOnly is true, only updates Hours and Timesheet for existing line items,
+// skipping order/line item creation and proof of works summarization
 func (h *handler) processContractorSync(
 	ctx context.Context,
 	contractorID string,
 	contractorTimesheets []*notion.TimesheetEntry,
 	month string,
+	updateHoursOnly bool,
 ) contractorSyncResult {
 	l := h.logger.Fields(logger.Fields{
-		"handler":      "Notion",
-		"method":       "processContractorSync",
-		"contractorID": contractorID,
+		"handler":         "Notion",
+		"method":          "processContractorSync",
+		"contractorID":    contractorID,
+		"updateHoursOnly": updateHoursOnly,
 	})
 
 	result := contractorSyncResult{
 		contractorID: contractorID,
 		detail: map[string]any{
-			"contractor_id": contractorID,
-			"projects":      []map[string]any{},
+			"contractor_id":    contractorID,
+			"projects":         []map[string]any{},
+			"update_hours_only": updateHoursOnly,
 		},
 	}
 
@@ -650,7 +662,7 @@ func (h *handler) processContractorSync(
 	taskOrderLogService := h.service.Notion.TaskOrderLog
 	openRouterService := h.service.OpenRouter
 
-	l.Debug(fmt.Sprintf("processing contractor: %s (%d timesheets)", contractorID, len(contractorTimesheets)))
+	l.Debug(fmt.Sprintf("processing contractor: %s (%d timesheets, updateHoursOnly=%v)", contractorID, len(contractorTimesheets), updateHoursOnly))
 
 	// Step 3a: Group timesheets by project
 	projectGroups := groupTimesheetsByProject(contractorTimesheets)
@@ -665,6 +677,12 @@ func (h *handler) processContractorSync(
 	}
 
 	if !orderExists {
+		if updateHoursOnly {
+			// Skip this contractor - no order exists and we're in update_hours_only mode
+			l.Debug(fmt.Sprintf("skipping contractor %s: no order exists and update_hours_only=true", contractorID))
+			result.detail["skipped_reason"] = "no_order_exists"
+			return result
+		}
 		// Create new Order entry (without Deployment - ADR-002)
 		l.Debug(fmt.Sprintf("creating new order for contractor: %s", contractorID))
 		orderID, err = taskOrderLogService.CreateOrder(ctx, month)
@@ -718,37 +736,6 @@ func (h *handler) processContractorSync(
 
 		l.Debug(fmt.Sprintf("project %s: %.1f hours, %d proof of works", projectID, hours, len(proofOfWorks)))
 
-		// Check context before expensive LLM call
-		if ctx.Err() != nil {
-			l.Debug(fmt.Sprintf("context canceled, stopping processing for contractor: %s", contractorID))
-			result.err = ctx.Err()
-			return result
-		}
-
-		// Summarize proof of works using LLM
-		var summarizedPoW string
-		if len(proofOfWorks) > 0 {
-			l.Debug(fmt.Sprintf("summarizing %d proof of works for project: %s", len(proofOfWorks), projectID))
-			summarizedPoW, err = openRouterService.SummarizeProofOfWorks(ctx, proofOfWorks)
-			if err != nil {
-				l.Error(err, fmt.Sprintf("failed to summarize proof of works, using original text: project=%s", projectID))
-				// Fallback: use concatenated original text
-				var texts []string
-				for _, pow := range proofOfWorks {
-					texts = append(texts, pow.Text)
-				}
-				summarizedPoW = strings.Join(texts, "\n\n")
-			} else if strings.TrimSpace(summarizedPoW) == "" {
-				// OpenRouter returned empty summary, use original text
-				l.Debug(fmt.Sprintf("OpenRouter returned empty summary, using original text for project: %s", projectID))
-				var texts []string
-				for _, pow := range proofOfWorks {
-					texts = append(texts, pow.Text)
-				}
-				summarizedPoW = strings.Join(texts, "\n\n")
-			}
-		}
-
 		// Check if line item already exists
 		lineItemExists, lineItemID, err := taskOrderLogService.CheckLineItemExists(ctx, orderID, deploymentID)
 		if err != nil {
@@ -757,6 +744,49 @@ func (h *handler) processContractorSync(
 		}
 
 		if !lineItemExists {
+			if updateHoursOnly {
+				// Skip this project - no line item exists and we're in update_hours_only mode
+				l.Debug(fmt.Sprintf("skipping project %s: no line item exists and update_hours_only=true", projectID))
+				projectDetails := map[string]any{
+					"project_id":     projectID,
+					"skipped_reason": "no_line_item_exists",
+					"hours":          hours,
+				}
+				result.detail["projects"] = append(result.detail["projects"].([]map[string]any), projectDetails)
+				continue
+			}
+
+			// Check context before expensive LLM call
+			if ctx.Err() != nil {
+				l.Debug(fmt.Sprintf("context canceled, stopping processing for contractor: %s", contractorID))
+				result.err = ctx.Err()
+				return result
+			}
+
+			// Summarize proof of works using LLM
+			var summarizedPoW string
+			if len(proofOfWorks) > 0 {
+				l.Debug(fmt.Sprintf("summarizing %d proof of works for project: %s", len(proofOfWorks), projectID))
+				summarizedPoW, err = openRouterService.SummarizeProofOfWorks(ctx, proofOfWorks)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to summarize proof of works, using original text: project=%s", projectID))
+					// Fallback: use concatenated original text
+					var texts []string
+					for _, pow := range proofOfWorks {
+						texts = append(texts, pow.Text)
+					}
+					summarizedPoW = strings.Join(texts, "\n\n")
+				} else if strings.TrimSpace(summarizedPoW) == "" {
+					// OpenRouter returned empty summary, use original text
+					l.Debug(fmt.Sprintf("OpenRouter returned empty summary, using original text for project: %s", projectID))
+					var texts []string
+					for _, pow := range proofOfWorks {
+						texts = append(texts, pow.Text)
+					}
+					summarizedPoW = strings.Join(texts, "\n\n")
+				}
+			}
+
 			// Create timesheet line item
 			l.Debug(fmt.Sprintf("creating line item: project=%s hours=%.1f deployment=%s", projectID, hours, deploymentID))
 			lineItemID, err = taskOrderLogService.CreateTimesheetLineItem(ctx, orderID, deploymentID, projectID, hours, summarizedPoW, timesheetIDs, month)
@@ -790,11 +820,52 @@ func (h *handler) processContractorSync(
 					existingDetails.Hours, hours,
 					len(existingDetails.TimesheetIDs), len(timesheetIDs)))
 
-				// Update line item
-				err = taskOrderLogService.UpdateTimesheetLineItem(ctx, lineItemID, orderID, hours, summarizedPoW, timesheetIDs)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to update line item: %s", lineItemID))
-					continue
+				if updateHoursOnly {
+					// Update only Hours and Timesheet - skip Proof of Works and Status
+					l.Debug(fmt.Sprintf("update_hours_only=true: updating only hours and timesheet for line item: %s", lineItemID))
+					err = taskOrderLogService.UpdateLineItemHoursOnly(ctx, lineItemID, hours, timesheetIDs)
+					if err != nil {
+						l.Error(err, fmt.Sprintf("failed to update line item hours only: %s", lineItemID))
+						continue
+					}
+				} else {
+					// Check context before expensive LLM call
+					if ctx.Err() != nil {
+						l.Debug(fmt.Sprintf("context canceled, stopping processing for contractor: %s", contractorID))
+						result.err = ctx.Err()
+						return result
+					}
+
+					// Summarize proof of works using LLM
+					var summarizedPoW string
+					if len(proofOfWorks) > 0 {
+						l.Debug(fmt.Sprintf("summarizing %d proof of works for project: %s", len(proofOfWorks), projectID))
+						summarizedPoW, err = openRouterService.SummarizeProofOfWorks(ctx, proofOfWorks)
+						if err != nil {
+							l.Error(err, fmt.Sprintf("failed to summarize proof of works, using original text: project=%s", projectID))
+							// Fallback: use concatenated original text
+							var texts []string
+							for _, pow := range proofOfWorks {
+								texts = append(texts, pow.Text)
+							}
+							summarizedPoW = strings.Join(texts, "\n\n")
+						} else if strings.TrimSpace(summarizedPoW) == "" {
+							// OpenRouter returned empty summary, use original text
+							l.Debug(fmt.Sprintf("OpenRouter returned empty summary, using original text for project: %s", projectID))
+							var texts []string
+							for _, pow := range proofOfWorks {
+								texts = append(texts, pow.Text)
+							}
+							summarizedPoW = strings.Join(texts, "\n\n")
+						}
+					}
+
+					// Update line item with full data
+					err = taskOrderLogService.UpdateTimesheetLineItem(ctx, lineItemID, orderID, hours, summarizedPoW, timesheetIDs)
+					if err != nil {
+						l.Error(err, fmt.Sprintf("failed to update line item: %s", lineItemID))
+						continue
+					}
 				}
 
 				result.lineItemsUpdated++
