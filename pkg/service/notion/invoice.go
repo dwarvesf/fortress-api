@@ -539,7 +539,12 @@ func (n *notionService) ExtractClientInvoiceData(page *nt.Page) (*model.Invoice,
 						// Filter to only include valid emails (must contain "@")
 						// This filters out comma separators like ", " from the rich_text array
 						if rt.PlainText != "" && strings.Contains(rt.PlainText, "@") {
-							emails = append(emails, strings.TrimSpace(rt.PlainText))
+							// Clean up email: trim whitespace and trailing/leading commas
+							email := strings.TrimSpace(rt.PlainText)
+							email = strings.Trim(email, ",")
+							if email != "" {
+								emails = append(emails, email)
+							}
 						}
 					}
 				}
