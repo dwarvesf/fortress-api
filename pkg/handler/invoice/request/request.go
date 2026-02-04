@@ -24,6 +24,7 @@ type UpdateStatusRequest struct {
 // MarkPaidRequest is the request body for marking invoice as paid by number
 type MarkPaidRequest struct {
 	InvoiceNumber string `json:"invoice_number" binding:"required"`
+	ResendOnly    bool   `json:"resend_only"` // Only resend thank you email, skip status updates
 } // @name MarkPaidRequest
 
 // GenerateSplitsRequest is the request body for generating invoice splits by legacy number

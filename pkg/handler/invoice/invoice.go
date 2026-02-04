@@ -1112,10 +1112,10 @@ func (h *handler) MarkPaid(c *gin.Context) {
 		return
 	}
 
-	l.Debugf("received request: invoiceNumber=%s", req.InvoiceNumber)
+	l.Debugf("received request: invoiceNumber=%s resendOnly=%v", req.InvoiceNumber, req.ResendOnly)
 
 	// 2. Call controller
-	result, err := h.controller.Invoice.MarkInvoiceAsPaidByNumber(req.InvoiceNumber)
+	result, err := h.controller.Invoice.MarkInvoiceAsPaidByNumber(req.InvoiceNumber, req.ResendOnly)
 	if err != nil {
 		l.Error(err, "failed to mark invoice as paid")
 		if strings.Contains(err.Error(), "not found") {

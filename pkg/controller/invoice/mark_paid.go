@@ -37,11 +37,13 @@ func determineSource(pgFound, notionFound bool) string {
 
 // MarkInvoiceAsPaidByNumber handles marking invoice as paid from Discord command.
 // It searches both PostgreSQL and Notion, updates where found.
-func (c *controller) MarkInvoiceAsPaidByNumber(invoiceNumber string) (*MarkPaidResult, error) {
+// If resendOnly is true, it skips status validation/updates and only sends the thank you email.
+func (c *controller) MarkInvoiceAsPaidByNumber(invoiceNumber string, resendOnly bool) (*MarkPaidResult, error) {
 	l := c.logger.Fields(logger.Fields{
 		"controller":    "invoice",
 		"method":        "MarkInvoiceAsPaidByNumber",
 		"invoiceNumber": invoiceNumber,
+		"resendOnly":    resendOnly,
 	})
 
 	l.Debug("starting mark invoice as paid by number")
@@ -91,24 +93,28 @@ func (c *controller) MarkInvoiceAsPaidByNumber(invoiceNumber string) (*MarkPaidR
 		PaidAt:        time.Now(),
 	}
 
-	// 4. Validate statuses before proceeding
-	if pgInvoice != nil {
-		if pgInvoice.Status != model.InvoiceStatusSent && pgInvoice.Status != model.InvoiceStatusOverdue {
-			l.Debugf("PostgreSQL invoice status validation failed: currentStatus=%v", pgInvoice.Status)
-			return nil, fmt.Errorf("cannot mark as paid: PostgreSQL invoice status is %s (must be sent or overdue)", pgInvoice.Status)
-		}
-	}
-
-	if notionPage != nil {
-		notionStatus, err := c.service.Notion.GetNotionInvoiceStatus(notionPage)
-		if err != nil {
-			l.Debugf("failed to get Notion invoice status: %v", err)
-		} else {
-			l.Debugf("Notion invoice status: %s", notionStatus)
-			if notionStatus != "Sent" && notionStatus != "Overdue" {
-				return nil, fmt.Errorf("cannot mark as paid: Notion invoice status is %s (must be Sent or Overdue)", notionStatus)
+	// 4. Validate statuses before proceeding (skip if resendOnly mode)
+	if !resendOnly {
+		if pgInvoice != nil {
+			if pgInvoice.Status != model.InvoiceStatusSent && pgInvoice.Status != model.InvoiceStatusOverdue {
+				l.Debugf("PostgreSQL invoice status validation failed: currentStatus=%v", pgInvoice.Status)
+				return nil, fmt.Errorf("cannot mark as paid: PostgreSQL invoice status is %s (must be sent or overdue)", pgInvoice.Status)
 			}
 		}
+
+		if notionPage != nil {
+			notionStatus, err := c.service.Notion.GetNotionInvoiceStatus(notionPage)
+			if err != nil {
+				l.Debugf("failed to get Notion invoice status: %v", err)
+			} else {
+				l.Debugf("Notion invoice status: %s", notionStatus)
+				if notionStatus != "Sent" && notionStatus != "Overdue" {
+					return nil, fmt.Errorf("cannot mark as paid: Notion invoice status is %s (must be Sent or Overdue)", notionStatus)
+				}
+			}
+		}
+	} else {
+		l.Debug("resendOnly mode: skipping status validation")
 	}
 
 	// 5. Update PostgreSQL if exists (TEMPORARILY DISABLED)
@@ -130,7 +136,7 @@ func (c *controller) MarkInvoiceAsPaidByNumber(invoiceNumber string) (*MarkPaidR
 	// Note: skipEmailAndGDrive=false since PostgreSQL update is disabled
 	if notionPage != nil {
 		l.Debug("processing Notion invoice")
-		err := c.processNotionInvoicePaid(l, notionPage, false)
+		err := c.processNotionInvoicePaid(l, notionPage, false, resendOnly)
 		if err != nil {
 			l.Errorf(err, "failed to process Notion invoice")
 			// Continue - don't fail the whole operation
@@ -149,33 +155,39 @@ func (c *controller) MarkInvoiceAsPaidByNumber(invoiceNumber string) (*MarkPaidR
 
 // processNotionInvoicePaid handles updating a Notion invoice as paid and performing post-processing.
 // If skipEmailAndGDrive is true, it skips email and GDrive operations (used when PostgreSQL was also updated).
-func (c *controller) processNotionInvoicePaid(l logger.Logger, page *nt.Page, skipEmailAndGDrive bool) error {
-	l.Debugf("processNotionInvoicePaid: pageID=%s skipEmailAndGDrive=%v", page.ID, skipEmailAndGDrive)
+// If resendOnly is true, it skips all status updates and only sends the thank you email.
+func (c *controller) processNotionInvoicePaid(l logger.Logger, page *nt.Page, skipEmailAndGDrive bool, resendOnly bool) error {
+	l.Debugf("processNotionInvoicePaid: pageID=%s skipEmailAndGDrive=%v resendOnly=%v", page.ID, skipEmailAndGDrive, resendOnly)
 
-	// 1. Update Notion status to "Paid" and set Paid Date
-	paidDate := time.Now()
-	l.Debug("updating Notion invoice status to Paid")
-	if err := c.service.Notion.UpdateClientInvoiceStatus(page.ID, "Paid", &paidDate); err != nil {
-		l.Errorf(err, "failed to update Notion invoice status")
-		return fmt.Errorf("failed to update Notion status: %w", err)
-	}
-	l.Debug("Notion invoice status updated to Paid")
+	// In resendOnly mode, skip all status updates - only send email
+	if !resendOnly {
+		// 1. Update Notion status to "Paid" and set Paid Date
+		paidDate := time.Now()
+		l.Debug("updating Notion invoice status to Paid")
+		if err := c.service.Notion.UpdateClientInvoiceStatus(page.ID, "Paid", &paidDate); err != nil {
+			l.Errorf(err, "failed to update Notion invoice status")
+			return fmt.Errorf("failed to update Notion status: %w", err)
+		}
+		l.Debug("Notion invoice status updated to Paid")
 
-	// 1a. Update Line Items status to "Paid"
-	l.Debug("updating Line Items status to Paid")
-	if err := c.service.Notion.UpdateLineItemsStatus(page.ID, "Paid"); err != nil {
-		l.Errorf(err, "failed to update Line Items status")
-		// Log error but don't fail the whole operation - invoice itself was already updated
+		// 1a. Update Line Items status to "Paid"
+		l.Debug("updating Line Items status to Paid")
+		if err := c.service.Notion.UpdateLineItemsStatus(page.ID, "Paid"); err != nil {
+			l.Errorf(err, "failed to update Line Items status")
+			// Log error but don't fail the whole operation - invoice itself was already updated
+		} else {
+			l.Debug("Line Items status updated to Paid")
+		}
+
+		// 1b. Enqueue invoice splits generation job
+		l.Debug("enqueuing invoice splits generation job")
+		c.worker.Enqueue(worker.GenerateInvoiceSplitsMsg, worker.GenerateInvoiceSplitsPayload{
+			InvoicePageID: page.ID,
+		})
+		l.Debug("invoice splits generation job enqueued")
 	} else {
-		l.Debug("Line Items status updated to Paid")
+		l.Debug("resendOnly mode: skipping Notion status update, line items update, and splits generation")
 	}
-
-	// 1b. Enqueue invoice splits generation job
-	l.Debug("enqueuing invoice splits generation job")
-	c.worker.Enqueue(worker.GenerateInvoiceSplitsMsg, worker.GenerateInvoiceSplitsPayload{
-		InvoicePageID: page.ID,
-	})
-	l.Debug("invoice splits generation job enqueued")
 
 	// If PostgreSQL was also updated, skip email and GDrive to avoid duplicates
 	if skipEmailAndGDrive {
@@ -191,7 +203,19 @@ func (c *controller) processNotionInvoicePaid(l logger.Logger, page *nt.Page, sk
 		return fmt.Errorf("failed to extract invoice data: %w", err)
 	}
 
-	// 3. Run email and GDrive operations in parallel
+	// 3. Run email and GDrive operations
+	// In resendOnly mode, only send email (skip GDrive move)
+	if resendOnly {
+		l.Debug("resendOnly mode: sending thank you email only")
+		if err := c.service.GoogleMail.SendInvoiceThankYouMail(notionInvoice); err != nil {
+			l.Errorf(err, "failed to send thank you email for Notion invoice")
+			return fmt.Errorf("failed to send thank you email: %w", err)
+		}
+		l.Debug("thank you email sent for Notion invoice (resendOnly mode)")
+		return nil
+	}
+
+	// Normal mode: run email and GDrive operations in parallel
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 

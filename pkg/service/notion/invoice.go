@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -535,12 +536,15 @@ func (n *notionService) ExtractClientInvoiceData(page *nt.Page) (*model.Invoice,
 			for _, item := range recipientsProp.Rollup.Array {
 				if item.RichText != nil {
 					for _, rt := range item.RichText {
-						if rt.PlainText != "" {
-							emails = append(emails, rt.PlainText)
+						// Filter to only include valid emails (must contain "@")
+						// This filters out comma separators like ", " from the rich_text array
+						if rt.PlainText != "" && strings.Contains(rt.PlainText, "@") {
+							emails = append(emails, strings.TrimSpace(rt.PlainText))
 						}
 					}
 				}
 			}
+			l.Debugf("extracted %d valid emails from Recipients rollup", len(emails))
 			if len(emails) > 0 {
 				invoice.Email = emails[0]
 				// Build CC list: remaining recipients + accounting@d.foundation

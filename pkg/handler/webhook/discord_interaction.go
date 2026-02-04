@@ -150,7 +150,7 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 	}
 
 	if strings.HasPrefix(customID, "invoice_paid_confirm_") {
-		// Format: invoice_paid_confirm_{invoiceNumber}_{discordUserID}
+		// Format: invoice_paid_confirm_{invoiceNumber}_{discordUserID}_{resendFlag}
 		suffix := strings.TrimPrefix(customID, "invoice_paid_confirm_")
 		parts := strings.Split(suffix, "_")
 		if len(parts) < 1 || parts[0] == "" {
@@ -159,8 +159,13 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 			return
 		}
 		invoiceNumber := parts[0]
-		l.Debugf("parsed invoice_paid_confirm: invoiceNumber=%s", invoiceNumber)
-		h.handleInvoicePaidConfirmButton(c, l, interaction, invoiceNumber)
+		// Parse resendOnly flag (last part, "1" = true, "0" or missing = false)
+		resendOnly := false
+		if len(parts) >= 3 && parts[len(parts)-1] == "1" {
+			resendOnly = true
+		}
+		l.Debugf("parsed invoice_paid_confirm: invoiceNumber=%s resendOnly=%v", invoiceNumber, resendOnly)
+		h.handleInvoicePaidConfirmButton(c, l, interaction, invoiceNumber, resendOnly)
 		return
 	}
 
@@ -378,8 +383,8 @@ func (h *handler) handleLeaveRejectButton(c *gin.Context, l logger.Logger, inter
 }
 
 // handleInvoicePaidConfirmButton handles the invoice paid confirm button click
-func (h *handler) handleInvoicePaidConfirmButton(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, invoiceNumber string) {
-	l.Debugf("confirming invoice payment via button: invoiceNumber=%s user=%s", invoiceNumber, interaction.Member.User.Username)
+func (h *handler) handleInvoicePaidConfirmButton(c *gin.Context, l logger.Logger, interaction *discordgo.Interaction, invoiceNumber string, resendOnly bool) {
+	l.Debugf("confirming invoice payment via button: invoiceNumber=%s user=%s resendOnly=%v", invoiceNumber, interaction.Member.User.Username, resendOnly)
 
 	// Get channel and message IDs for later update
 	channelID := interaction.ChannelID
@@ -395,7 +400,7 @@ func (h *handler) handleInvoicePaidConfirmButton(c *gin.Context, l logger.Logger
 	h.respondWithProcessing(c, l, interaction, invoiceNumber)
 
 	// Process in background
-	go h.processInvoicePaidConfirm(l, channelID, messageID, invoiceNumber, actionBy)
+	go h.processInvoicePaidConfirm(l, channelID, messageID, invoiceNumber, actionBy, resendOnly)
 }
 
 // respondWithProcessing sends an immediate "Processing..." response to Discord
@@ -441,18 +446,18 @@ func (h *handler) respondWithProcessing(c *gin.Context, l logger.Logger, interac
 }
 
 // processInvoicePaidConfirm processes the invoice payment in background and updates Discord message
-func (h *handler) processInvoicePaidConfirm(l logger.Logger, channelID, messageID, invoiceNumber, actionBy string) {
-	l.Debugf("background processing invoice payment: invoiceNumber=%s channelID=%s messageID=%s", invoiceNumber, channelID, messageID)
+func (h *handler) processInvoicePaidConfirm(l logger.Logger, channelID, messageID, invoiceNumber, actionBy string, resendOnly bool) {
+	l.Debugf("background processing invoice payment: invoiceNumber=%s channelID=%s messageID=%s resendOnly=%v", invoiceNumber, channelID, messageID, resendOnly)
 
 	// Mark invoice as paid - searches both PostgreSQL and Notion
-	result, err := h.controller.Invoice.MarkInvoiceAsPaidByNumber(invoiceNumber)
+	result, err := h.controller.Invoice.MarkInvoiceAsPaidByNumber(invoiceNumber, resendOnly)
 	if err != nil {
 		l.Errorf(err, "failed to mark invoice as paid: %s", invoiceNumber)
 		h.updateInvoiceMessageWithError(l, channelID, messageID, invoiceNumber, err.Error())
 		return
 	}
 
-	l.Infof("invoice marked as paid via discord button: invoiceNumber=%s user=%s source=%s", invoiceNumber, actionBy, result.Source)
+	l.Infof("invoice marked as paid via discord button: invoiceNumber=%s user=%s source=%s resendOnly=%v", invoiceNumber, actionBy, result.Source, resendOnly)
 
 	// Log to Discord audit
 	if err := h.controller.Discord.Log(model.LogDiscordInput{
@@ -460,28 +465,38 @@ func (h *handler) processInvoicePaidConfirm(l logger.Logger, channelID, messageI
 		Data: map[string]interface{}{
 			"invoice_number": invoiceNumber,
 			"source":         result.Source,
+			"resend_only":    resendOnly,
 		},
 	}); err != nil {
 		l.Errorf(err, "failed to log invoice paid to discord")
 	}
 
 	// Update the message to show success
-	h.updateInvoiceMessageWithResult(l, channelID, messageID, result, actionBy)
+	h.updateInvoiceMessageWithResult(l, channelID, messageID, result, actionBy, resendOnly)
 }
 
 // updateInvoiceMessageWithResult updates the Discord message with MarkPaidResult
-func (h *handler) updateInvoiceMessageWithResult(l logger.Logger, channelID, messageID string, result *invoiceCtrl.MarkPaidResult, actionBy string) {
-	l.Debugf("updating invoice message with result: invoiceNumber=%s source=%s actionBy=%s channelID=%s messageID=%s", result.InvoiceNumber, result.Source, actionBy, channelID, messageID)
+func (h *handler) updateInvoiceMessageWithResult(l logger.Logger, channelID, messageID string, result *invoiceCtrl.MarkPaidResult, actionBy string, resendOnly bool) {
+	l.Debugf("updating invoice message with result: invoiceNumber=%s source=%s actionBy=%s channelID=%s messageID=%s resendOnly=%v", result.InvoiceNumber, result.Source, actionBy, channelID, messageID, resendOnly)
 
 	if channelID == "" || messageID == "" {
 		l.Warnf("cannot update message: missing channelID or messageID")
 		return
 	}
 
+	var title, statusValue string
+	if resendOnly {
+		title = fmt.Sprintf("Invoice %s - Email Resent", result.InvoiceNumber)
+		statusValue = "✅ Thank you email resent"
+	} else {
+		title = fmt.Sprintf("Invoice %s", result.InvoiceNumber)
+		statusValue = "✅ Paid"
+	}
+
 	fields := []*discordgo.MessageEmbedField{
 		{
 			Name:   "Status",
-			Value:  "✅ Paid",
+			Value:  statusValue,
 			Inline: false,
 		},
 		{
@@ -492,7 +507,7 @@ func (h *handler) updateInvoiceMessageWithResult(l logger.Logger, channelID, mes
 	}
 
 	successEmbed := &discordgo.MessageEmbed{
-		Title:     fmt.Sprintf("Invoice %s", result.InvoiceNumber),
+		Title:     title,
 		Color:     3066993, // Green
 		Fields:    fields,
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
