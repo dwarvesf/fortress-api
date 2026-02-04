@@ -174,7 +174,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	cutoffDate := issueDate.Format("2006-01-02")
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: cutoff date for Refund/Commission/Other payouts: %s (from issueDate)", cutoffDate))
 
-	// Query Payouts (by month)
+	// Query Payouts (by cutoffDate to include older pending payouts)
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -184,7 +184,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			payoutsErr = fmt.Errorf("failed to create contractor payouts service")
 			return
 		}
-		payouts, payoutsErr = payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID, month)
+		payouts, payoutsErr = payoutsService.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID, cutoffDate)
 		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payouts query completed, found=%d err=%v", len(payouts), payoutsErr))
 	}()
 

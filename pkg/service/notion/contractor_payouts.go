@@ -62,17 +62,18 @@ func NewContractorPayoutsService(cfg *config.Config, logger logger.Logger) *Cont
 }
 
 // QueryPendingPayoutsByContractor queries all pending payouts for a specific contractor
-// If month is provided (format: YYYY-MM), filters payouts by that month
-func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.Context, contractorPageID string, month string) ([]PayoutEntry, error) {
+// If cutoffDate is provided (format: YYYY-MM-DD), filters payouts where Date <= cutoffDate
+// This ensures older pending payouts from previous months are included in the current invoice
+func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.Context, contractorPageID string, cutoffDate string) ([]PayoutEntry, error) {
 	payoutsDBID := s.cfg.Notion.Databases.ContractorPayouts
 	if payoutsDBID == "" {
 		return nil, errors.New("contractor payouts database ID not configured")
 	}
 
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending payouts for contractor=%s month=%s", contractorPageID, month))
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: querying pending payouts for contractor=%s cutoffDate=%s", contractorPageID, cutoffDate))
 
 	// Build filter: Person relation contains contractorPageID AND Status=Pending
-	// If month provided, also filter by Month formula field
+	// If cutoffDate provided, also filter by Date <= cutoffDate
 	filters := []nt.DatabaseQueryFilter{
 		{
 			Property: "Person",
@@ -92,16 +93,19 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 		},
 	}
 
-	// Add month filter if provided
-	if month != "" {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: adding month filter=%s", month))
+	// Add date filter if cutoffDate is provided
+	if cutoffDate != "" {
+		cutoffDateTime, err := time.Parse("2006-01-02", cutoffDate)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("[DEBUG] contractor_payouts: failed to parse cutoffDate=%s", cutoffDate))
+			return nil, fmt.Errorf("invalid date format: %w", err)
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: adding date filter, Date <= %s", cutoffDate))
 		filters = append(filters, nt.DatabaseQueryFilter{
-			Property: "Month",
+			Property: "Date",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-				Formula: &nt.FormulaDatabaseQueryFilter{
-					String: &nt.TextPropertyFilter{
-						Equals: month,
-					},
+				Date: &nt.DatePropertyFilter{
+					OnOrBefore: &cutoffDateTime,
 				},
 			},
 		})
