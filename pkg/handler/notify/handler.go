@@ -2,7 +2,9 @@ package notify
 
 import (
 	"fmt"
+	"math"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -120,20 +122,35 @@ func (h *handler) PreviewExtraPaymentNotification(c *gin.Context) {
 		return
 	}
 
-	// Build response (use AmountUSD for consistent currency)
+	// Build response - convert amounts to USD using Wise service for accurate exchange rates
 	var contractors []ExtraPaymentContractor
 	var totalAmount float64
 
 	for _, entry := range entries {
+		// Convert to USD using Wise service (same as invoice generation)
+		amountUSD := entry.Amount
+		if strings.ToUpper(entry.Currency) != "USD" && h.service.Wise != nil {
+			convertedAmount, _, convErr := h.service.Wise.Convert(entry.Amount, entry.Currency, "USD")
+			if convErr != nil {
+				l.Error(convErr, fmt.Sprintf("failed to convert %s to USD for entry %s, using fallback", entry.Currency, entry.PageID))
+				// Fallback to the pre-calculated AmountUSD (uses hardcoded rate)
+				amountUSD = entry.AmountUSD
+			} else {
+				// Round to 2 decimal places
+				amountUSD = math.Round(convertedAmount*100) / 100
+				l.Debugf("converted %.2f %s to %.2f USD for entry %s", entry.Amount, entry.Currency, amountUSD, entry.PageID)
+			}
+		}
+
 		contractors = append(contractors, ExtraPaymentContractor{
 			PageID:  entry.PageID,
 			Name:    entry.ContractorName,
 			Discord: entry.Discord,
 			Email:   entry.ContractorEmail,
-			Amount:  entry.AmountUSD, // Use USD amount for display
+			Amount:  amountUSD,
 			Reason:  entry.Description,
 		})
-		totalAmount += entry.AmountUSD
+		totalAmount += amountUSD
 	}
 
 	response := PreviewExtraPaymentNotificationResponse{
@@ -279,10 +296,25 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 				reasons = []string{entry.Description}
 			}
 
+			// Convert to USD using Wise service for accurate exchange rates
+			amountUSD := entry.Amount
+			if strings.ToUpper(entry.Currency) != "USD" && h.service.Wise != nil {
+				convertedAmount, _, convErr := h.service.Wise.Convert(entry.Amount, entry.Currency, "USD")
+				if convErr != nil {
+					l.Error(convErr, fmt.Sprintf("failed to convert %s to USD for entry %s, using fallback", entry.Currency, entry.PageID))
+					// Fallback to the pre-calculated AmountUSD (uses hardcoded rate)
+					amountUSD = entry.AmountUSD
+				} else {
+					// Round to 2 decimal places
+					amountUSD = math.Round(convertedAmount*100) / 100
+					l.Debugf("converted %.2f %s to %.2f USD for entry %s", entry.Amount, entry.Currency, amountUSD, entry.PageID)
+				}
+			}
+
 			// Format amount (use USD)
-			amountFormatted := fmt.Sprintf("$%.0f", entry.AmountUSD)
-			if entry.AmountUSD != float64(int(entry.AmountUSD)) {
-				amountFormatted = fmt.Sprintf("$%.2f", entry.AmountUSD)
+			amountFormatted := fmt.Sprintf("$%.0f", amountUSD)
+			if amountUSD != float64(int(amountUSD)) {
+				amountFormatted = fmt.Sprintf("$%.2f", amountUSD)
 			}
 
 			// Build email data
@@ -290,7 +322,7 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 				ContractorName:  entry.ContractorName,
 				ContractorEmail: recipientEmail,
 				Month:           formattedMonth,
-				Amount:          entry.AmountUSD,
+				Amount:          amountUSD,
 				AmountFormatted: amountFormatted,
 				Reasons:         reasons,
 				SenderName:      "Team Dwarves",
@@ -439,10 +471,25 @@ func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
 		reasons = []string{entry.Description}
 	}
 
+	// Convert to USD using Wise service for accurate exchange rates
+	amountUSD := entry.Amount
+	if strings.ToUpper(entry.Currency) != "USD" && h.service.Wise != nil {
+		convertedAmount, _, convErr := h.service.Wise.Convert(entry.Amount, entry.Currency, "USD")
+		if convErr != nil {
+			l.Error(convErr, fmt.Sprintf("failed to convert %s to USD for entry %s, using fallback", entry.Currency, entry.PageID))
+			// Fallback to the pre-calculated AmountUSD (uses hardcoded rate)
+			amountUSD = entry.AmountUSD
+		} else {
+			// Round to 2 decimal places
+			amountUSD = math.Round(convertedAmount*100) / 100
+			l.Debugf("converted %.2f %s to %.2f USD for entry %s", entry.Amount, entry.Currency, amountUSD, entry.PageID)
+		}
+	}
+
 	// Format amount (use USD)
-	amountFormatted := fmt.Sprintf("$%.0f", entry.AmountUSD)
-	if entry.AmountUSD != float64(int(entry.AmountUSD)) {
-		amountFormatted = fmt.Sprintf("$%.2f", entry.AmountUSD)
+	amountFormatted := fmt.Sprintf("$%.0f", amountUSD)
+	if amountUSD != float64(int(amountUSD)) {
+		amountFormatted = fmt.Sprintf("$%.2f", amountUSD)
 	}
 
 	// Build email data
@@ -450,7 +497,7 @@ func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
 		ContractorName:  entry.ContractorName,
 		ContractorEmail: recipientEmail,
 		Month:           formattedMonth,
-		Amount:          entry.AmountUSD,
+		Amount:          amountUSD,
 		AmountFormatted: amountFormatted,
 		Reasons:         reasons,
 		SenderName:      "Team Dwarves",
