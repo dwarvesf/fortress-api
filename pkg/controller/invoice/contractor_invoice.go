@@ -1632,10 +1632,11 @@ func generateDefaultServiceFeeDescription(month string) string {
 // stripDescriptionPrefixAndSuffix cleans Notion formula patterns from descriptions.
 // Prefix pattern: [PROJECT :: ...] - extracts and keeps PROJECT name
 // Suffix pattern: - $XX.XX USD at the end - removed
+// Invoice reference pattern: "for Invoice INV-XXXX" - removed
 //
 // Examples:
 // - "[RENAISS :: INV-DO5S8] Account Management Incentive... - $43.64 USD" → "RENAISS - Account Management Incentive..."
-// - "[PLOT :: INV-OBI5D] Sales Commission for Invoice... - $182.85 USD" → "PLOT - Sales Commission for Invoice..."
+// - "[PLOT :: INV-OBI5D] Sales Commission for Invoice INV-OBI5D - $182.85 USD" → "PLOT - Sales Commission"
 // - "[FEE :: SCOUTQA :: nikkingtr] :: 9JHY6" → "9JHY6" (FEE prefix is stripped, not a project)
 func stripDescriptionPrefixAndSuffix(description string) string {
 	result := description
@@ -1668,6 +1669,18 @@ func stripDescriptionPrefixAndSuffix(description string) string {
 		if strings.HasSuffix(suffix, " USD") {
 			result = result[:idx]
 		}
+	}
+
+	// Strip "for Invoice INV-XXXX" pattern (where XXXX is typically 4-5 alphanumeric chars)
+	if idx := strings.Index(result, " for Invoice INV-"); idx != -1 {
+		// Find the end of the invoice reference (next space or end of string)
+		afterInv := idx + len(" for Invoice INV-")
+		endIdx := afterInv
+		for endIdx < len(result) && result[endIdx] != ' ' {
+			endIdx++
+		}
+		// Remove the invoice reference portion
+		result = strings.TrimSpace(result[:idx] + result[endIdx:])
 	}
 
 	// Prepend project name if extracted

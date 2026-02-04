@@ -253,16 +253,16 @@ func TestHelper_StripDescriptionPrefixAndSuffix(t *testing.T) {
 		input    string
 		expected string
 	}{
-		// Prefix tests - project name is kept
+		// Prefix tests - project name is kept, invoice reference stripped
 		{
-			name:     "Commission prefix with invoice ID - keeps project name",
+			name:     "Commission prefix with invoice ID - keeps project name, strips invoice ref",
 			input:    "[RENAISS :: INV-DO5S8] Account Management Incentive for Invoice INV-DO5S8",
-			expected: "RENAISS - Account Management Incentive for Invoice INV-DO5S8",
+			expected: "RENAISS - Account Management Incentive",
 		},
 		{
-			name:     "Sales commission prefix - keeps project name",
+			name:     "Sales commission prefix - keeps project name, strips invoice ref",
 			input:    "[PLOT :: INV-OBI5D] Sales Commission for Invoice INV-OBI5D",
-			expected: "PLOT - Sales Commission for Invoice INV-OBI5D",
+			expected: "PLOT - Sales Commission",
 		},
 		{
 			name:     "Fee prefix with contractor - FEE is stripped (not a project)",
@@ -311,14 +311,14 @@ func TestHelper_StripDescriptionPrefixAndSuffix(t *testing.T) {
 			expected: "Account Management Incentive",
 		},
 		{
-			name:     "Amount suffix with larger amount",
+			name:     "Amount suffix with larger amount - strips invoice ref",
 			input:    "Sales Commission for Invoice INV-OBI5D - $182.85 USD",
-			expected: "Sales Commission for Invoice INV-OBI5D",
+			expected: "Sales Commission",
 		},
 		{
-			name:     "Amount suffix with whole number",
+			name:     "Amount suffix with whole number - strips invoice ref",
 			input:    "Sales Commission for Invoice INV-HD567 - $240 USD",
-			expected: "Sales Commission for Invoice INV-HD567",
+			expected: "Sales Commission",
 		},
 		// Combined prefix and suffix tests - project name kept, suffix stripped
 		{
@@ -327,9 +327,9 @@ func TestHelper_StripDescriptionPrefixAndSuffix(t *testing.T) {
 			expected: "RENAISS - Account Management Incentive (Jan 2026 Client Retention)",
 		},
 		{
-			name:     "Both prefix and suffix - sales commission keeps project",
+			name:     "Both prefix and suffix - sales commission keeps project, strips invoice ref",
 			input:    "[PLOT :: INV-OBI5D] Sales Commission for Invoice INV-OBI5D (Dec 2025 Services) - $182.85 USD",
-			expected: "PLOT - Sales Commission for Invoice INV-OBI5D (Dec 2025 Services)",
+			expected: "PLOT - Sales Commission (Dec 2025 Services)",
 		},
 		// Edge cases for suffix
 		{
