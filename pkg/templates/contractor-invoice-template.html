@@ -251,7 +251,7 @@
                         {{range $section.Items}}
                         <tr>
                             <td style="word-wrap: break-word; padding-left: 24px;">
-                                {{formatProofOfWork .Description}}
+                                <div class="item-details">{{formatProofOfWork .Description}}</div>
                             </td>
                             <td>1</td>
                             <td>{{formatUSD .AmountUSD}}</td>
