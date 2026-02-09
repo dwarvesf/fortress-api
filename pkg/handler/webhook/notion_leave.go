@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -213,6 +214,48 @@ func (h *handler) getAMDLMentionsFromDeployments(
 	}
 
 	return mentions
+}
+
+// isValidLeaveRequestID validates the format of a leave request ID
+// Expected format: OOO-YYYY-USERNAME-CODE (e.g., "OOO-2026-nlk0211-GD5F")
+func isValidLeaveRequestID(requestID string) bool {
+	if requestID == "" {
+		return false
+	}
+
+	// Split by dash separator
+	parts := strings.Split(requestID, "-")
+
+	// Should have exactly 4 parts: OOO, YYYY, USERNAME, CODE
+	if len(parts) != 4 {
+		return false
+	}
+
+	// Validate part 1: prefix should be "OOO"
+	if parts[0] != "OOO" {
+		return false
+	}
+
+	// Validate part 2: year should be 4 digits
+	if len(parts[1]) != 4 {
+		return false
+	}
+	year, err := strconv.Atoi(parts[1])
+	if err != nil || year < 2020 || year > 2100 {
+		return false
+	}
+
+	// Validate part 3: username should not be empty
+	if parts[2] == "" {
+		return false
+	}
+
+	// Validate part 4: code should not be empty
+	if parts[3] == "" {
+		return false
+	}
+
+	return true
 }
 
 // sendNotionLeaveDiscordNotification sends an embed message to Discord auditlog channel
@@ -422,8 +465,35 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("fetched leave request: page_id=%s email=%s start_date=%v end_date=%v",
-		pageID, leave.Email, leave.StartDate, leave.EndDate))
+	l.Debug(fmt.Sprintf("fetched leave request: page_id=%s email=%s start_date=%v end_date=%v request_id=%s",
+		pageID, leave.Email, leave.StartDate, leave.EndDate, leave.LeaveRequestTitle))
+
+	// Wait for Request ID to be fully generated with valid format
+	// Retry up to 3 times with exponential backoff if Request ID is invalid/incomplete
+	// Backoff: 1s, 2s, 4s (total up to 7 seconds)
+	maxRetries := 3
+	baseDelay := 1 * time.Second
+	for i := 0; i < maxRetries && !isValidLeaveRequestID(leave.LeaveRequestTitle); i++ {
+		// Calculate exponential backoff: 1s, 2s, 4s
+		retryDelay := baseDelay * (1 << i) // 2^i seconds
+		l.Debug(fmt.Sprintf("leave request ID invalid or incomplete (attempt %d/%d): '%s', waiting %v",
+			i+1, maxRetries, leave.LeaveRequestTitle, retryDelay))
+		time.Sleep(retryDelay)
+
+		leave, err = leaveService.GetLeaveRequest(ctx, pageID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to fetch leave request on retry: page_id=%s", pageID))
+			break
+		}
+
+		l.Debug(fmt.Sprintf("retry %d: fetched request_id='%s'", i+1, leave.LeaveRequestTitle))
+	}
+
+	// Log warning if still invalid after retries
+	if !isValidLeaveRequestID(leave.LeaveRequestTitle) {
+		l.Warn(fmt.Sprintf("leave request ID still invalid after %d retries: page_id=%s request_id='%s'",
+			maxRetries, pageID, leave.LeaveRequestTitle))
+	}
 
 	// Update contractor relation if empty and fetch email
 	if len(payload.Data.Properties.Contractor.Relation) == 0 && createdByUserID != "" {
