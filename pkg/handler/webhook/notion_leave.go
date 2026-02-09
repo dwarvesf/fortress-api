@@ -469,12 +469,12 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		pageID, leave.Email, leave.StartDate, leave.EndDate, leave.LeaveRequestTitle))
 
 	// Wait for Request ID to be fully generated with valid format
-	// Retry up to 3 times with exponential backoff if Request ID is invalid/incomplete
-	// Backoff: 1s, 2s, 4s (total up to 7 seconds)
-	maxRetries := 3
+	// Retry up to 5 times with exponential backoff if Request ID is invalid/incomplete
+	// Backoff: 1s, 2s, 4s, 8s, 16s (total up to 31 seconds)
+	maxRetries := 5
 	baseDelay := 1 * time.Second
 	for i := 0; i < maxRetries && !isValidLeaveRequestID(leave.LeaveRequestTitle); i++ {
-		// Calculate exponential backoff: 1s, 2s, 4s
+		// Calculate exponential backoff: 1s, 2s, 4s, 8s, 16s
 		retryDelay := baseDelay * (1 << i) // 2^i seconds
 		l.Debug(fmt.Sprintf("leave request ID invalid or incomplete (attempt %d/%d): '%s', waiting %v",
 			i+1, maxRetries, leave.LeaveRequestTitle, retryDelay))
