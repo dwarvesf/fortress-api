@@ -344,6 +344,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 							Amount:           refund.Amount,
 							Currency:         refund.Currency,
 							Date:             refund.DateRequested,
+							Description:      refund.PayoutDescription(),
 						}
 
 						payoutID, err := payoutsService.CreateRefundPayout(ctx, payoutInput)
@@ -380,7 +381,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 						Currency:        result.refund.Currency,
 						Status:          "Pending",
 						SourceType:      "Refund",
-						Description:     result.refund.DescriptionFormatted,
+						Description:     result.refund.PayoutDescription(),
 						RefundRequestID: result.refund.PageID,
 					}
 					refundCommissionPayouts = append(refundCommissionPayouts, newPayout)

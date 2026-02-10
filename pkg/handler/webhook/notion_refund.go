@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	nt "github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
@@ -197,6 +198,9 @@ func (h *handler) HandleNotionRefund(c *gin.Context) {
 		l.Debug(fmt.Sprintf("contractor relation already set: %v", payload.Data.Properties.Contractor.Relation))
 	}
 
+	// Generate and update refund details asynchronously via LLM
+	go h.generateAndUpdateRefundDetails(payload.Data.ID)
+
 	// Return success to acknowledge receipt
 	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "processed"))
 }
@@ -297,4 +301,126 @@ func getCreatedByUserID(prop NotionCreatedByProperty) string {
 		return prop.CreatedBy.ID
 	}
 	return ""
+}
+
+// fetchDescriptionFormatted fetches the "Description Formatted" formula value from a refund page.
+// It retries with exponential backoff (1s, 2s, 4s, 8s, 16s) waiting for Notion to compute the formula.
+func (h *handler) fetchDescriptionFormatted(pageID string) (string, error) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "webhook",
+		"method":  "fetchDescriptionFormatted",
+		"page_id": pageID,
+	})
+
+	client := nt.NewClient(h.config.Notion.Secret)
+
+	maxRetries := 5
+	baseDelay := 1 * time.Second
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			retryDelay := baseDelay * (1 << (attempt - 1))
+			l.Debug(fmt.Sprintf("retry %d/%d: waiting %v for formula computation", attempt, maxRetries, retryDelay))
+			time.Sleep(retryDelay)
+		}
+
+		page, err := client.FindPageByID(context.Background(), pageID)
+		if err != nil {
+			l.Error(err, fmt.Sprintf("failed to fetch page on attempt %d", attempt))
+			continue
+		}
+
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			l.Debug("failed to cast page properties")
+			continue
+		}
+
+		prop, ok := props["Description Formatted"]
+		if !ok || prop.Formula == nil {
+			l.Debug(fmt.Sprintf("attempt %d: Description Formatted property not found or formula nil", attempt))
+			continue
+		}
+
+		if prop.Formula.String != nil && *prop.Formula.String != "" {
+			value := *prop.Formula.String
+			l.Debug(fmt.Sprintf("fetched Description Formatted: %d characters", len(value)))
+			return value, nil
+		}
+
+		l.Debug(fmt.Sprintf("attempt %d: formula string is empty", attempt))
+	}
+
+	return "", fmt.Errorf("Description Formatted still empty after %d retries", maxRetries)
+}
+
+// generateAndUpdateRefundDetails runs asynchronously to generate a short summary
+// from the "Description Formatted" formula and write it back to the "Details" field.
+func (h *handler) generateAndUpdateRefundDetails(pageID string) {
+	l := h.logger.Fields(logger.Fields{
+		"handler": "webhook",
+		"method":  "generateAndUpdateRefundDetails",
+		"page_id": pageID,
+	})
+
+	l.Debug("starting async refund details generation")
+
+	// Check if OpenRouter service is available
+	if h.service.OpenRouter == nil {
+		l.Error(fmt.Errorf("OpenRouter service is nil"), "skipping refund details generation")
+		return
+	}
+
+	// Fetch the formula value with retry
+	descFormatted, err := h.fetchDescriptionFormatted(pageID)
+	if err != nil {
+		l.Warn(fmt.Sprintf("skipping details generation: %v", err))
+		return
+	}
+
+	if descFormatted == "" {
+		l.Warn("Description Formatted is empty, skipping details generation")
+		return
+	}
+
+	l.Debug(fmt.Sprintf("generating details summary from %d characters of input", len(descFormatted)))
+
+	// Call LLM to generate a concise summary
+	systemPrompt := `Summarize the following refund request description into a concise phrase of 5-10 words. Be factual and specific. Output only the summary, nothing else.`
+	summary, err := h.service.OpenRouter.GenerateText(
+		context.Background(),
+		systemPrompt,
+		descFormatted,
+		"google/gemini-2.5-flash-lite",
+		150,
+		0.0,
+	)
+	if err != nil {
+		l.Error(err, "failed to generate refund details via LLM")
+		return
+	}
+
+	l.Debug(fmt.Sprintf("LLM generated summary: %s", summary))
+
+	// Update the refund page's Details rich text property
+	client := nt.NewClient(h.config.Notion.Secret)
+	updateParams := nt.UpdatePageParams{
+		DatabasePageProperties: nt.DatabasePageProperties{
+			"Details": nt.DatabasePageProperty{
+				RichText: []nt.RichText{
+					{
+						Text: &nt.Text{Content: summary},
+					},
+				},
+			},
+		},
+	}
+
+	_, err = client.UpdatePage(context.Background(), pageID, updateParams)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to update Details on page: %s", pageID))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("successfully updated Details on refund page: %s", pageID))
 }

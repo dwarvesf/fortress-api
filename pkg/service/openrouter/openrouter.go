@@ -151,6 +151,74 @@ Output: Bullet points only (use •), no introduction or headers.`
 	return summary, nil
 }
 
+// GenerateText calls the OpenRouter API with a specific model, prompts, maxTokens, and temperature.
+// This is a public wrapper around callAPIWithModel for use by other packages.
+func (s *OpenRouterService) GenerateText(ctx context.Context, systemPrompt, userPrompt, model string, maxTokens int, temperature float64) (string, error) {
+	if s.cfg.OpenRouter.APIKey == "" {
+		return "", fmt.Errorf("OpenRouter API key not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("GenerateText: calling model=%s maxTokens=%d temperature=%.1f", model, maxTokens, temperature))
+
+	reqBody := ChatCompletionRequest{
+		Model: model,
+		Messages: []Message{
+			{Role: "system", Content: systemPrompt},
+			{Role: "user", Content: userPrompt},
+		},
+		MaxTokens:   maxTokens,
+		Temperature: temperature,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", openRouterBaseURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.cfg.OpenRouter.APIKey))
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to call API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("GenerateText: response status=%d", resp.StatusCode))
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result ChatCompletionResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if result.Error != nil {
+		return "", fmt.Errorf("API error: %s (type: %s, code: %s)", result.Error.Message, result.Error.Type, result.Error.Code)
+	}
+
+	if len(result.Choices) == 0 {
+		return "", fmt.Errorf("no completion choices returned")
+	}
+
+	text := strings.TrimSpace(result.Choices[0].Message.Content)
+	s.logger.Debug(fmt.Sprintf("GenerateText: received %d characters", len(text)))
+
+	return text, nil
+}
+
 // callWithRetry calls OpenRouter API with exponential backoff retry and model rotation
 func (s *OpenRouterService) callWithRetry(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
 	var lastErr error

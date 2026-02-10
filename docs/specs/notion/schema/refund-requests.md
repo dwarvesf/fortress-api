@@ -23,6 +23,7 @@ The Refund Requests database tracks refund requests from contractors back to the
 | `Amount` | Number | `]Auv` | Refund amount |
 | `Currency` | Select | `hK_S` | VND, USD |
 | `Description` | Rich Text | `xGUO` | Refund description |
+| `Details` | Rich Text | | LLM-generated refund details (from `Description Formatted` formula) |
 | `Notes` | Rich Text | `bLWY` | Additional notes |
 | `Payout` | Rich Text | `zOMw` | Related payout reference |
 | `Date Requested` | Date | `JJjq` | When request was submitted |
@@ -88,6 +89,7 @@ The Refund Requests database tracks refund requests from contractors back to the
 | Property | Type | ID | Description |
 |----------|------|-----|-------------|
 | `Auto Name` | Formula | `~_b_` | Auto-generates name: `RFD-{YYYY}-{discord}-{obfuscatedID}` |
+| `Description Formatted` | Formula | | Formatted description used as LLM input for generating `Details` |
 
 ## Sample Data Structure
 

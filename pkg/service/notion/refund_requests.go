@@ -29,7 +29,17 @@ type ApprovedRefundData struct {
 	Reason               string  // Select: Advance Return, Deduction Reversal, etc.
 	Description          string  // Rich text
 	DescriptionFormatted string  // Formula: Description Formatted (for payout description)
+	Details              string  // Rich text: LLM-generated summary from Description Formatted
 	DateRequested        string  // Date
+}
+
+// PayoutDescription returns the best available description for payout creation.
+// It prefers Details (LLM-generated summary) and falls back to DescriptionFormatted.
+func (d *ApprovedRefundData) PayoutDescription() string {
+	if d.Details != "" {
+		return d.Details
+	}
+	return d.DescriptionFormatted
 }
 
 // NewRefundRequestsService creates a new Notion refund requests service
@@ -102,6 +112,7 @@ func (s *RefundRequestsService) QueryApprovedRefunds(ctx context.Context) ([]*Ap
 				Reason:               s.extractSelect(props, "Reason"),
 				Description:          s.extractRichText(props, "Description"),
 				DescriptionFormatted: s.extractFormulaString(props, "Description Formatted"),
+				Details:              s.extractRichText(props, "Details"),
 				DateRequested:        s.extractDate(props, "Date Requested"),
 			}
 
@@ -290,6 +301,7 @@ func (s *RefundRequestsService) QueryApprovedRefundsByContractor(ctx context.Con
 				Reason:               s.extractSelect(props, "Reason"),
 				Description:          s.extractRichText(props, "Description"),
 				DescriptionFormatted: s.extractFormulaString(props, "Description Formatted"),
+				Details:              s.extractRichText(props, "Details"),
 				DateRequested:        s.extractDate(props, "Date Requested"),
 			}
 
