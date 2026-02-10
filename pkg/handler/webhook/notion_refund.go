@@ -386,7 +386,7 @@ func (h *handler) generateAndUpdateRefundDetails(pageID string) {
 	l.Debug(fmt.Sprintf("generating details summary from %d characters of input", len(descFormatted)))
 
 	// Call LLM to generate a concise summary
-	systemPrompt := `Summarize the following refund request description into a concise phrase of 5-10 words. Be factual and specific. Output only the summary, nothing else.`
+	systemPrompt := `Summarize the following refund request description into a concise phrase of 5-10 words. Be factual and specific. Output is in English with only the summary, nothing else.`
 	summary, err := h.service.OpenRouter.GenerateText(
 		context.Background(),
 		systemPrompt,
