@@ -1118,8 +1118,8 @@ func (h *handler) getStakeholderEmailsFromDeployments(
 	// Get stakeholder IDs from deployments
 	stakeholderIDs := h.getStakeholderIDsFromDeployments(ctx, l, leaveService, teamEmail)
 	if len(stakeholderIDs) == 0 {
-		l.Info("no stakeholder IDs found, using fallback assignees: han@d.foundation, thanhpd@d.foundation")
-		return []string{"han@d.foundation", "thanhpd@d.foundation"}
+		l.Info("no stakeholder IDs found, using fallback assignees: thanhpd@d.foundation")
+		return []string{"thanhpd@d.foundation"}
 	}
 
 	// Convert stakeholder IDs to emails
@@ -1145,8 +1145,8 @@ func (h *handler) getStakeholderEmailsFromDeployments(
 
 	// Fallback: if no emails found, use default assignees
 	if len(emails) == 0 {
-		l.Info("no stakeholder emails found, using fallback assignees: han@d.foundation, thanhpd@d.foundation")
-		emails = []string{"han@d.foundation", "thanhpd@d.foundation"}
+		l.Info("no stakeholder emails found, using fallback assignees: thanhpd@d.foundation")
+		emails = []string{"thanhpd@d.foundation"}
 	}
 
 	return emails
