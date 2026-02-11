@@ -1731,7 +1731,7 @@ func (c *controller) GenerateContractorInvoiceWithForceSync(
 	} else {
 		// Single contractor mode: sync specific contractor
 		l.Debug(fmt.Sprintf("single contractor mode: syncing %s with force", discord))
-		err := c.forceSyncSingleContractor(ctx, discord, month)
+		err := c.ForceSyncSingleContractor(ctx, discord, month)
 		if err != nil {
 			l.Error(err, "failed to force sync contractor")
 			return nil, fmt.Errorf("force sync failed for contractor %s: %w", discord, err)
@@ -1751,8 +1751,8 @@ func (c *controller) GenerateContractorInvoiceWithForceSync(
 	return invoiceData, nil
 }
 
-// forceSyncSingleContractor syncs data for a specific contractor with force mode
-func (c *controller) forceSyncSingleContractor(ctx context.Context, discord string, month string) error {
+// ForceSyncSingleContractor syncs data for a specific contractor with force mode
+func (c *controller) ForceSyncSingleContractor(ctx context.Context, discord string, month string) error {
 	l := c.logger.Fields(logger.Fields{
 		"method":  "forceSyncSingleContractor",
 		"discord": discord,

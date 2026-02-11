@@ -39,3 +39,13 @@ type BatchInvoiceResult struct {
 	Currency   string  `json:"currency,omitempty"`
 	Error      string  `json:"error,omitempty"`
 }
+
+// BatchDryRunResponse represents the response for batch dry-run invoice generation.
+// Uses the same field names as the Discord bot's GenerateContractorInvoicesData for compatibility.
+type BatchDryRunResponse struct {
+	Month       string   `json:"month"`
+	Batch       int      `json:"batch"`
+	Total       float64  `json:"total,omitempty"`
+	Currency    string   `json:"currency,omitempty"`
+	Contractors []string `json:"contractors,omitempty"` // List of contractor discord handles
+}

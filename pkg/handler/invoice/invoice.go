@@ -400,8 +400,15 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	// 3. Handle batch processing for "all" contractors
-	if req.Contractor == "all" && req.Batch > 0 && !req.DryRun {
+	// 3. Handle batch dry-run for "all" contractors (synchronous)
+	if req.Contractor == "all" && req.Batch > 0 && req.DryRun {
+		l.Debug(fmt.Sprintf("batch dry-run mode: batch=%d month=%s", req.Batch, req.Month))
+		h.processBatchDryRun(c, l, req)
+		return
+	}
+
+	// 4. Handle batch processing for "all" contractors (async)
+	if req.Contractor == "all" && req.Batch > 0 {
 		l.Debug(fmt.Sprintf("batch processing mode: batch=%d channelID=%s messageID=%s", req.Batch, req.ChannelID, req.MessageID))
 
 		// Return 200 OK immediately and process asynchronously
@@ -425,15 +432,17 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		opts.GroupFeeByProject = *req.GroupFeeByProject
 	}
 
-	// 5. Generate invoice data with force sync
-	l.Debug("calling controller to generate contractor invoice data with force sync")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoiceWithForceSync(
-		c.Request.Context(),
-		req.Contractor,
-		req.Month,
-		req.Batch,
-		opts,
-	)
+	// 5. Generate invoice data
+	var invoiceData *invoiceCtrl.ContractorInvoiceData
+	var err error
+	if req.DryRun {
+		// Dry-run: skip force sync to avoid creating payout records in Notion
+		l.Debug("dry-run mode: generating invoice data without force sync")
+		invoiceData, err = h.controller.Invoice.GenerateContractorInvoice(c.Request.Context(), req.Contractor, req.Month, opts)
+	} else {
+		l.Debug("calling controller to generate contractor invoice data with force sync")
+		invoiceData, err = h.controller.Invoice.GenerateContractorInvoiceWithForceSync(c.Request.Context(), req.Contractor, req.Month, req.Batch, opts)
+	}
 	if err != nil {
 		l.Error(err, "failed to generate contractor invoice")
 		if strings.Contains(err.Error(), "not found") {
@@ -747,6 +756,82 @@ func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateCont
 
 	l.Info(fmt.Sprintf("batch invoice processing completed: batch=%d success=%d/%d total=%.2f workers=%d",
 		req.Batch, successCount, len(contractors), totalAmount, numWorkers))
+}
+
+// processBatchDryRun handles synchronous dry-run for all contractors in a batch.
+// It lists contractors, generates invoice data for each (no PDF/upload/payables),
+// and returns a summary response compatible with the Discord bot's GenerateContractorInvoicesData.
+func (h *handler) processBatchDryRun(c *gin.Context, l logger.Logger, req request.GenerateContractorInvoiceRequest) {
+	ctx := c.Request.Context()
+
+	// 1. Get list of contractors for this batch
+	ratesService := notion.NewContractorRatesService(h.config, h.logger)
+	if ratesService == nil {
+		l.Error(nil, "failed to create contractor rates service")
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, fmt.Errorf("failed to initialize contractor rates service"), req, ""))
+		return
+	}
+
+	contractors, err := ratesService.ListActiveContractorsByBatch(ctx, req.Month, req.Batch)
+	if err != nil {
+		l.Error(err, fmt.Sprintf("failed to list contractors for batch %d", req.Batch))
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, fmt.Errorf("failed to list contractors: %w", err), req, ""))
+		return
+	}
+
+	if len(contractors) == 0 {
+		l.Debug(fmt.Sprintf("no contractors found for batch %d", req.Batch))
+		c.JSON(http.StatusOK, view.CreateResponse(view.BatchDryRunResponse{
+			Month: req.Month,
+			Batch: req.Batch,
+		}, nil, nil, req, fmt.Sprintf("No contractors found for batch %d", req.Batch)))
+		return
+	}
+
+	l.Debug(fmt.Sprintf("batch dry-run: found %d contractors for batch %d", len(contractors), req.Batch))
+
+	// 2. Generate invoice data for each contractor (no PDF, no upload, no payables)
+	opts := &invoiceCtrl.ContractorInvoiceOptions{
+		GroupFeeByProject: false,
+		InvoiceType:       req.InvoiceType,
+	}
+
+	var contractorNames []string
+	var totalAmount float64
+
+	for _, contractor := range contractors {
+		l.Debug(fmt.Sprintf("batch dry-run: processing contractor %s", contractor.Discord))
+
+		// Dry-run: skip force sync to avoid creating payout records in Notion.
+		// Only preview what would happen with the current state.
+		invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, contractor.Discord, req.Month, opts)
+		if err != nil {
+			if strings.Contains(err.Error(), "no pending payouts") {
+				l.Debug(fmt.Sprintf("batch dry-run: skipping %s - no pending payouts", contractor.Discord))
+				contractorNames = append(contractorNames, fmt.Sprintf("%s (skipped: no pending payouts)", contractor.Discord))
+			} else {
+				l.Error(err, fmt.Sprintf("batch dry-run: failed for %s", contractor.Discord))
+				contractorNames = append(contractorNames, fmt.Sprintf("%s (error)", contractor.Discord))
+			}
+			continue
+		}
+
+		totalAmount += invoiceData.TotalUSD
+		contractorNames = append(contractorNames, fmt.Sprintf("%s (USD %.2f, %d items)", contractor.Discord, invoiceData.TotalUSD, len(invoiceData.LineItems)))
+	}
+
+	l.Debug(fmt.Sprintf("batch dry-run completed: %d contractors processed, total=%.2f", len(contractorNames), totalAmount))
+
+	response := view.BatchDryRunResponse{
+		Month:       req.Month,
+		Batch:       req.Batch,
+		Total:       totalAmount,
+		Currency:    "USD",
+		Contractors: contractorNames,
+	}
+
+	c.JSON(http.StatusOK, view.CreateResponse(response, nil, nil, req,
+		fmt.Sprintf("Dry run completed for %d contractors in batch %d. Total: USD %.2f", len(contractors), req.Batch, totalAmount)))
 }
 
 // invoiceWorker processes invoice jobs from the jobs channel and sends results to resultsChan
