@@ -207,3 +207,97 @@ func TestGetLatestPayoutDateByDiscord_EmptyDate(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, got)
 }
+
+func TestDetermineSourceType(t *testing.T) {
+	l := logger.NewLogrusLogger("debug")
+	service := &ContractorPayoutsService{logger: l}
+
+	tests := []struct {
+		name     string
+		entry    PayoutEntry
+		expected PayoutSourceType
+	}{
+		// TaskOrder takes priority
+		{
+			name:     "TaskOrder present - always ServiceFee",
+			entry:    PayoutEntry{TaskOrderID: "task-001"},
+			expected: PayoutSourceTypeServiceFee,
+		},
+		// InvoiceSplit: role-only descriptions → ServiceFee
+		{
+			name:     "InvoiceSplit with Delivery Lead role → ServiceFee",
+			entry:    PayoutEntry{InvoiceSplitID: "split-001", Description: "Delivery Lead"},
+			expected: PayoutSourceTypeServiceFee,
+		},
+		{
+			name:     "InvoiceSplit with Account Management role → ServiceFee",
+			entry:    PayoutEntry{InvoiceSplitID: "split-002", Description: "Account Management"},
+			expected: PayoutSourceTypeServiceFee,
+		},
+		{
+			name:     "InvoiceSplit with Delivery Lead and amount suffix → ServiceFee",
+			entry:    PayoutEntry{InvoiceSplitID: "split-003", Description: "[RENAISS :: INV-DO5S8] Delivery Lead - $43.64 USD"},
+			expected: PayoutSourceTypeServiceFee,
+		},
+		{
+			name:     "InvoiceSplit with Account Management and period → ServiceFee",
+			entry:    PayoutEntry{InvoiceSplitID: "split-004", Description: "Account Management (Jan 2026)"},
+			expected: PayoutSourceTypeServiceFee,
+		},
+		// InvoiceSplit: incentive/commission descriptions → Commission
+		{
+			name:     "InvoiceSplit with Account Management Incentive → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-005", Description: "Account Management Incentive for Invoice INV-DO5S8"},
+			expected: PayoutSourceTypeCommission,
+		},
+		{
+			name:     "InvoiceSplit with Account Management Incentive and prefix → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-006", Description: "[RENAISS :: INV-DO5S8] Account Management Incentive for Invoice INV-DO5S8 - $43.64 USD"},
+			expected: PayoutSourceTypeCommission,
+		},
+		{
+			name:     "InvoiceSplit with Sales Commission → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-007", Description: "[PLOT :: INV-OBI5D] Sales Commission for Invoice INV-OBI5D"},
+			expected: PayoutSourceTypeCommission,
+		},
+		{
+			name:     "InvoiceSplit with Bonus keyword → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-008", Description: "Account Management Bonus"},
+			expected: PayoutSourceTypeCommission,
+		},
+		{
+			name:     "InvoiceSplit with Delivery Lead supplemental fee → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-009", Description: "[NGHENHAN :: INV-J2JSB] Delivery Lead supplemental fee for Invoice INV-J2JSB (Dec 2025 Project Support) - $45 USD"},
+			expected: PayoutSourceTypeCommission,
+		},
+		{
+			name:     "InvoiceSplit with no matching keywords → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-010", Description: "Some other description"},
+			expected: PayoutSourceTypeCommission,
+		},
+		{
+			name:     "InvoiceSplit with empty description → Commission",
+			entry:    PayoutEntry{InvoiceSplitID: "split-011"},
+			expected: PayoutSourceTypeCommission,
+		},
+		// RefundRequest → Refund
+		{
+			name:     "RefundRequest present → Refund",
+			entry:    PayoutEntry{RefundRequestID: "refund-001"},
+			expected: PayoutSourceTypeRefund,
+		},
+		// No relations → ExtraPayment
+		{
+			name:     "No relations → ExtraPayment",
+			entry:    PayoutEntry{Description: "Standalone payment"},
+			expected: PayoutSourceTypeExtraPayment,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := service.determineSourceType(tt.entry)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}

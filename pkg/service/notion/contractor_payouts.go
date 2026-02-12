@@ -453,16 +453,30 @@ func (s *ContractorPayoutsService) determineSourceType(entry PayoutEntry) Payout
 		if entry.Description != "" {
 			desc := strings.ToLower(entry.Description)
 
-			// Service Fee: Delivery Lead or Account Management roles
-			// These keywords match the Notion formula logic
-			if strings.Contains(desc, "delivery lead") || strings.Contains(desc, "account management") {
-				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=ServiceFee (InvoiceSplitID=%s, keywords found in Description)", entry.InvoiceSplitID))
-				return PayoutSourceTypeServiceFee
+			// Commission indicators: if description contains these words, it's always Commission
+			// regardless of role keywords present (e.g. "Account Management Incentive" is Commission)
+			// "supplemental" catches "Delivery Lead supplemental fee" which is an extra charge, not regular service
+			commissionIndicators := []string{"incentive", "commission", "bonus", "supplemental"}
+			isCommission := false
+			for _, indicator := range commissionIndicators {
+				if strings.Contains(desc, indicator) {
+					isCommission = true
+					break
+				}
+			}
+
+			if !isCommission {
+				// Service Fee: Delivery Lead or Account Management roles
+				// Only when the description is a role name without commission indicators
+				if strings.Contains(desc, "delivery lead") || strings.Contains(desc, "account management") {
+					s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=ServiceFee (InvoiceSplitID=%s, role keyword found in Description)", entry.InvoiceSplitID))
+					return PayoutSourceTypeServiceFee
+				}
 			}
 		}
 
 		// Otherwise: Commission
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Commission (InvoiceSplitID=%s, no keywords)", entry.InvoiceSplitID))
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: sourceType=Commission (InvoiceSplitID=%s, no role keywords or has commission indicator)", entry.InvoiceSplitID))
 		return PayoutSourceTypeCommission
 	}
 
