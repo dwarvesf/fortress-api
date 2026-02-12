@@ -1255,6 +1255,7 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, invoiceType s
 	}
 
 	if len(feeItems) > 0 {
+		feeItems = groupItemsByDescription(feeItems)
 		sections = append(sections, ContractorInvoiceSection{
 			Name:         "Fee",
 			IsAggregated: false,
@@ -1280,6 +1281,7 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, invoiceType s
 	}
 
 	if len(extraPaymentItems) > 0 {
+		extraPaymentItems = groupItemsByDescription(extraPaymentItems)
 		sections = append(sections, ContractorInvoiceSection{
 			Name:         "Extra Payment",
 			IsAggregated: false,
@@ -1531,6 +1533,46 @@ func aggregateHourlyServiceFees(
 	return append(otherItems, aggregatedItem)
 }
 
+// groupItemsByDescription groups line items with identical descriptions into a single line
+// with summed amounts. Quantity (Hours) stays 1, Rate equals the summed AmountUSD.
+// Preserves order of first occurrence.
+func groupItemsByDescription(items []ContractorInvoiceLineItem) []ContractorInvoiceLineItem {
+	if len(items) <= 1 {
+		return items
+	}
+
+	type group struct {
+		item  ContractorInvoiceLineItem
+		count int
+	}
+
+	seen := make(map[string]int)    // description -> index in groups
+	groups := make([]group, 0, len(items))
+
+	for _, item := range items {
+		if idx, ok := seen[item.Description]; ok {
+			g := &groups[idx]
+			g.item.AmountUSD += item.AmountUSD
+			g.item.OriginalAmount += item.OriginalAmount
+			g.item.PayoutPageIDs = append(g.item.PayoutPageIDs, item.PayoutPageIDs...)
+			g.count++
+		} else {
+			seen[item.Description] = len(groups)
+			copied := item
+			groups = append(groups, group{item: copied, count: 1})
+		}
+	}
+
+	result := make([]ContractorInvoiceLineItem, 0, len(groups))
+	for _, g := range groups {
+		g.item.Hours = 1
+		g.item.Rate = g.item.AmountUSD
+		result = append(result, g.item)
+	}
+
+	return result
+}
+
 // generateServiceFeeTitle generates title with invoice month date range.
 func generateServiceFeeTitle(month string) string {
 	// STEP 1: Parse month
@@ -1670,18 +1712,6 @@ func stripDescriptionPrefixAndSuffix(description string) string {
 		if strings.HasSuffix(suffix, " USD") {
 			result = result[:idx]
 		}
-	}
-
-	// Strip "for Invoice INV-XXXX" pattern (where XXXX is typically 4-5 alphanumeric chars)
-	if idx := strings.Index(result, " for Invoice INV-"); idx != -1 {
-		// Find the end of the invoice reference (next space or end of string)
-		afterInv := idx + len(" for Invoice INV-")
-		endIdx := afterInv
-		for endIdx < len(result) && result[endIdx] != ' ' {
-			endIdx++
-		}
-		// Remove the invoice reference portion
-		result = strings.TrimSpace(result[:idx] + result[endIdx:])
 	}
 
 	// Prepend project name if extracted
