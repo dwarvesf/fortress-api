@@ -70,6 +70,10 @@
       text-align: right;
     }
 
+    .preserve-breaks {
+      white-space: pre-line;
+    }
+
     .table {
       width: 100%;
       table-layout: fixed;
@@ -204,7 +208,7 @@
       {{if haveDescription .Invoice.Description}}
       <tr>
         <td class="text-grey">Description:</td>
-        <td>{{.Invoice.Description}}</td>
+        <td class="preserve-breaks">{{.Invoice.Description}}</td>
       </tr>
       {{end}}
       {{if haveNote .Invoice.Note}}

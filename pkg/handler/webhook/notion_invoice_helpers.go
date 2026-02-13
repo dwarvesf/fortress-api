@@ -169,8 +169,20 @@ func (h *handler) extractInvoiceDataFromNotion(l logger.Logger, page nt.Page, pr
 
 	// Extract description and notes
 	description := ""
-	if descProp, ok := props["Description"]; ok && len(descProp.RichText) > 0 {
-		description = descProp.RichText[0].PlainText
+	if descProp, ok := props["Description"]; ok {
+		l.Debug(fmt.Sprintf("Description property found, RichText length: %d", len(descProp.RichText)))
+		if len(descProp.RichText) > 0 {
+			var parts []string
+			for _, segment := range descProp.RichText {
+				parts = append(parts, segment.PlainText)
+			}
+			description = strings.Join(parts, "")
+			l.Debug(fmt.Sprintf("extracted description metadata (length: %d, newlines: %d)", len(description), strings.Count(description, "\n")))
+		} else {
+			l.Debug("Description RichText is empty")
+		}
+	} else {
+		l.Debug("Description property not found in props")
 	}
 
 	notes := ""
