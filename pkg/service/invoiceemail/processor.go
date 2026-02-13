@@ -3,7 +3,7 @@ package invoiceemail
 import (
 	"context"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
@@ -15,13 +15,12 @@ import (
 
 // Processor handles incoming invoice email processing
 type Processor struct {
-	cfg               *config.Config
-	gmailService      googlemail.IService
-	extractor         IExtractor
-	payablesService   *notion.ContractorPayablesService
-	discordService    discord.IService
-	logger            logger.Logger
-	processedLabelID  string // Cached label ID
+	cfg             *config.Config
+	gmailService    googlemail.IService
+	extractor       IExtractor
+	payablesService *notion.ContractorPayablesService
+	discordService  discord.IService
+	logger          logger.Logger
 }
 
 // NewProcessor creates a new invoice email processor
@@ -43,7 +42,8 @@ func NewProcessor(
 	}
 }
 
-// ProcessIncomingInvoices processes unread invoice emails from the monitored inbox
+// ProcessIncomingInvoices fetches "New" payables from Notion and searches Gmail for matching emails.
+// Payable-first flow: Notion payables drive the search, not inbox scanning.
 func (p *Processor) ProcessIncomingInvoices(ctx context.Context) (*ProcessorStats, error) {
 	l := p.logger.Fields(logger.Fields{
 		"service": "invoiceemail",
@@ -55,71 +55,35 @@ func (p *Processor) ProcessIncomingInvoices(ctx context.Context) (*ProcessorStat
 		return &ProcessorStats{}, nil
 	}
 
-	l.Debug("starting invoice email processing")
+	l.Debug("starting payable-first invoice email processing")
 
 	stats := &ProcessorStats{
 		Results: make([]ProcessResult, 0),
 	}
 
-	// Build Gmail query: unread emails to the target address
 	targetEmail := p.cfg.InvoiceListener.Email
 	if targetEmail == "" {
 		l.Debug("no target email configured")
 		return stats, nil
 	}
 
-	// Query for emails to the target address that haven't been processed yet
-	// We rely ONLY on the processed label to track what's been handled
-	// NOT using is:unread - because emails could be read manually but not processed
-	processedLabel := p.cfg.InvoiceListener.ProcessedLabel
-	if processedLabel == "" {
-		processedLabel = "Processed" // Default label
-	}
-
-	// Primary filter: emails to target WITHOUT processed label
-	// Additional filter: subject contains "INVC-" (Invoice ID pattern) OR has PDF attachment
-	// This distinguishes contractor invoice emails from other emails
-	// Using in:anywhere to also search spam/junk, since group emails may be flagged as spam
-	query := fmt.Sprintf("in:anywhere to:%s -label:%s (subject:INVC- OR has:attachment filename:pdf)",
-		targetEmail, strings.ReplaceAll(processedLabel, "/", "-"))
-
-	l.Debugf("filtering for contractor invoice emails (subject:INVC- OR PDF attachment)")
-
-	l.Debugf("querying Gmail with: %s", query)
-
-	maxMessages := p.cfg.InvoiceListener.MaxMessages
-	if maxMessages == 0 {
-		maxMessages = 50
-	}
-
-	messages, err := p.gmailService.ListInboxMessages(ctx, query, maxMessages)
+	// Step 1: Query all "New" payables from Notion
+	newPayables, err := p.payablesService.QueryNewPayables(ctx)
 	if err != nil {
-		l.Error(err, "failed to list inbox messages")
-		return nil, fmt.Errorf("failed to list inbox messages: %w", err)
+		l.Error(err, "failed to query new payables from Notion")
+		return nil, fmt.Errorf("failed to query new payables: %w", err)
 	}
 
-	stats.TotalEmails = len(messages)
-	l.Debugf("found %d unread emails", len(messages))
+	stats.TotalEmails = len(newPayables)
+	l.Debugf("found %d new payables to match", len(newPayables))
 
-	if len(messages) == 0 {
+	if len(newPayables) == 0 {
 		return stats, nil
 	}
 
-	// Get or create the processed label
-	if processedLabel != "" && p.processedLabelID == "" {
-		labelID, err := p.gmailService.GetOrCreateLabel(ctx, processedLabel)
-		if err != nil {
-			l.Error(err, "failed to get/create processed label")
-			// Continue without labeling
-		} else {
-			p.processedLabelID = labelID
-			l.Debugf("using processed label ID: %s", labelID)
-		}
-	}
-
-	// Process each email
-	for _, msg := range messages {
-		result := p.processEmail(ctx, msg)
+	// Step 2: For each payable, search Gmail for matching email
+	for _, payable := range newPayables {
+		result := p.matchPayableToEmail(ctx, payable, targetEmail)
 		stats.Results = append(stats.Results, result)
 
 		switch result.Status {
@@ -138,99 +102,131 @@ func (p *Processor) ProcessIncomingInvoices(ctx context.Context) (*ProcessorStat
 	return stats, nil
 }
 
-// processEmail processes a single email message
-func (p *Processor) processEmail(ctx context.Context, msg googlemail.InboxMessage) ProcessResult {
+// matchPayableToEmail searches Gmail for an email matching the payable's Invoice ID.
+// First checks subject lines, then falls back to PDF attachment content.
+func (p *Processor) matchPayableToEmail(ctx context.Context, payable notion.NewPayable, targetEmail string) ProcessResult {
 	l := p.logger.Fields(logger.Fields{
 		"service":   "invoiceemail",
-		"method":    "processEmail",
-		"messageID": msg.ID,
+		"method":    "matchPayableToEmail",
+		"invoiceID": payable.InvoiceID,
+		"pageID":    payable.PageID,
 	})
 
 	result := ProcessResult{
-		MessageID: msg.ID,
-		Status:    "error",
+		InvoiceID: payable.InvoiceID,
+		Status:    "skipped",
 	}
 
-	// Get full message details
-	fullMsg, err := p.gmailService.GetMessage(ctx, msg.ID)
+	// Search Gmail: subject contains the Invoice ID
+	subjectQuery := fmt.Sprintf("in:anywhere to:%s subject:%s",
+		targetEmail, payable.InvoiceID)
+
+	l.Debugf("searching Gmail with subject query: %s", subjectQuery)
+
+	messages, err := p.gmailService.ListInboxMessages(ctx, subjectQuery, 1)
 	if err != nil {
-		l.Error(err, "failed to get message details")
+		l.Error(err, "failed to search Gmail by subject")
+		result.Status = "error"
+		result.Error = fmt.Sprintf("failed to search Gmail: %v", err)
+		return result
+	}
+
+	// If no subject match, optionally fall back to PDF attachment scanning
+	if len(messages) == 0 {
+		if !p.cfg.InvoiceListener.PDFFallback {
+			l.Debug("no subject match and PDF fallback disabled, will retry next poll")
+			result.Error = "no matching email found (PDF fallback disabled)"
+			return result
+		}
+
+		l.Debug("no subject match, searching for emails with PDF attachments")
+
+		pdfQuery := fmt.Sprintf("in:anywhere to:%s has:attachment filename:pdf",
+			targetEmail)
+
+		messages, err = p.gmailService.ListInboxMessages(ctx, pdfQuery, 20)
+		if err != nil {
+			l.Error(err, "failed to search Gmail for PDF emails")
+			result.Status = "error"
+			result.Error = fmt.Sprintf("failed to search Gmail for PDFs: %v", err)
+			return result
+		}
+
+		// Check each PDF email for the Invoice ID
+		var matchedMsg *googlemail.InboxMessage
+		for _, msg := range messages {
+			fullMsg, err := p.gmailService.GetMessage(ctx, msg.ID)
+			if err != nil {
+				l.Debugf("failed to get message %s: %v", msg.ID, err)
+				continue
+			}
+
+			if !fullMsg.HasPDF {
+				continue
+			}
+
+			pdfBytes, err := p.gmailService.GetAttachment(ctx, msg.ID, fullMsg.PDFPartID)
+			if err != nil {
+				l.Debugf("failed to get PDF from message %s: %v", msg.ID, err)
+				continue
+			}
+
+			// Check PDF size limit
+			maxSizeMB := p.cfg.InvoiceListener.PDFMaxSizeMB
+			if maxSizeMB == 0 {
+				maxSizeMB = 5
+			}
+			if len(pdfBytes) > maxSizeMB*1024*1024 {
+				l.Debugf("PDF too large in message %s: %d bytes", msg.ID, len(pdfBytes))
+				continue
+			}
+
+			extractedID, err := p.extractor.ExtractInvoiceIDFromPDF(pdfBytes)
+			if err != nil {
+				continue
+			}
+
+			if extractedID == payable.InvoiceID {
+				l.Debugf("found matching Invoice ID in PDF of message %s", msg.ID)
+				matchedMsg = fullMsg
+				break
+			}
+		}
+
+		if matchedMsg == nil {
+			l.Debug("no matching email found, will retry next poll")
+			result.Error = "no matching email found"
+			return result
+		}
+
+		// Found via PDF — proceed with this message
+		return p.handleMatchedEmail(ctx, matchedMsg, payable, l)
+	}
+
+	// Found via subject — get full message
+	fullMsg, err := p.gmailService.GetMessage(ctx, messages[0].ID)
+	if err != nil {
+		l.Error(err, "failed to get matched message details")
+		result.Status = "error"
 		result.Error = fmt.Sprintf("failed to get message: %v", err)
 		return result
 	}
 
-	l.Debugf("processing email subject: %s", fullMsg.Subject)
+	return p.handleMatchedEmail(ctx, fullMsg, payable, l)
+}
 
-	// Try to extract Invoice ID from subject first
-	invoiceID, err := p.extractor.ExtractInvoiceIDFromSubject(fullMsg.Subject)
-	if err != nil {
-		l.Debug("no Invoice ID in subject, checking PDF attachment")
-
-		// Check if there's a PDF attachment
-		if !fullMsg.HasPDF {
-			l.Debug("no PDF attachment found")
-			result.Status = "skipped"
-			result.Error = "no Invoice ID in subject and no PDF attachment"
-			p.markAsProcessed(ctx, msg.ID, l)
-			return result
-		}
-
-		// Get PDF attachment
-		pdfBytes, err := p.gmailService.GetAttachment(ctx, msg.ID, fullMsg.PDFPartID)
-		if err != nil {
-			l.Error(err, "failed to get PDF attachment")
-			result.Error = fmt.Sprintf("failed to get PDF: %v", err)
-			return result
-		}
-
-		// Check PDF size limit
-		maxSizeMB := p.cfg.InvoiceListener.PDFMaxSizeMB
-		if maxSizeMB == 0 {
-			maxSizeMB = 5
-		}
-		if len(pdfBytes) > maxSizeMB*1024*1024 {
-			l.Debugf("PDF too large: %d bytes (max %d MB)", len(pdfBytes), maxSizeMB)
-			result.Status = "skipped"
-			result.Error = fmt.Sprintf("PDF too large: %d bytes", len(pdfBytes))
-			p.markAsProcessed(ctx, msg.ID, l)
-			return result
-		}
-
-		// Extract Invoice ID from PDF
-		invoiceID, err = p.extractor.ExtractInvoiceIDFromPDF(pdfBytes)
-		if err != nil {
-			l.Debug("no Invoice ID found in PDF")
-			result.Status = "skipped"
-			result.Error = "no Invoice ID found in subject or PDF"
-			p.markAsProcessed(ctx, msg.ID, l)
-			return result
-		}
+// handleMatchedEmail processes a matched email: updates payable to Pending, labels email, sends Discord notification.
+func (p *Processor) handleMatchedEmail(ctx context.Context, msg *googlemail.InboxMessage, payable notion.NewPayable, l logger.Logger) ProcessResult {
+	result := ProcessResult{
+		InvoiceID: payable.InvoiceID,
+		MessageID: msg.ID,
+		Status:    "error",
 	}
 
-	result.InvoiceID = invoiceID
-	l.Debugf("extracted Invoice ID: %s", invoiceID)
-
-	// Find the payable in Notion
-	payable, err := p.payablesService.FindPayableByInvoiceID(ctx, invoiceID)
-	if err != nil {
-		l.Error(err, "failed to find payable by Invoice ID")
-		result.Error = fmt.Sprintf("failed to find payable: %v", err)
-		return result
-	}
-
-	if payable == nil {
-		l.Debugf("no payable found with Invoice ID: %s", invoiceID)
-		result.Status = "skipped"
-		result.Error = "no matching payable found with status 'New'"
-		p.sendDiscordWarning(fullMsg, invoiceID, l)
-		p.markAsProcessed(ctx, msg.ID, l)
-		return result
-	}
-
-	l.Debugf("found payable: pageID=%s status=%s", payable.PageID, payable.Status)
+	l.Debugf("matched email: messageID=%s subject=%s from=%s", msg.ID, msg.Subject, msg.From)
 
 	// Update payable status to "Pending"
-	err = p.payablesService.UpdatePayableStatus(ctx, payable.PageID, "Pending", "")
+	err := p.payablesService.UpdatePayableStatus(ctx, payable.PageID, "Pending", "")
 	if err != nil {
 		l.Error(err, "failed to update payable status")
 		result.Error = fmt.Sprintf("failed to update payable: %v", err)
@@ -241,11 +237,8 @@ func (p *Processor) processEmail(ctx context.Context, msg googlemail.InboxMessag
 	result.Status = "success"
 	l.Debugf("updated payable %s to Pending", payable.PageID)
 
-	// Send Discord notification to audit log
-	p.sendDiscordNotification(fullMsg, invoiceID, l)
-
-	// Mark email as processed
-	p.markAsProcessed(ctx, msg.ID, l)
+	// Send Discord notification
+	p.sendDiscordNotification(msg, payable.InvoiceID, l)
 
 	return result
 }
@@ -274,39 +267,48 @@ func (p *Processor) sendDiscordNotification(msg *googlemail.InboxMessage, invoic
 	}
 }
 
-// sendDiscordWarning sends a warning to Discord when an invoice email has no matching payable
-func (p *Processor) sendDiscordWarning(msg *googlemail.InboxMessage, invoiceID string, l logger.Logger) {
-	if p.discordService == nil {
-		return
+// StartPolling starts a background loop that polls for invoice emails at the configured interval.
+// It blocks until the context is cancelled.
+func (p *Processor) StartPolling(ctx context.Context) {
+	l := p.logger.Fields(logger.Fields{
+		"service": "invoiceemail",
+		"method":  "StartPolling",
+	})
+
+	interval := p.cfg.InvoiceListener.PollInterval
+	if interval == 0 {
+		interval = 5 * time.Minute
 	}
 
-	webhookURL := p.cfg.Discord.Webhooks.AuditLog
-	if webhookURL == "" {
-		return
+	l.Infof("invoice email polling started, interval=%s", interval)
+
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	// Run immediately on start
+	p.poll(ctx, l)
+
+	for {
+		select {
+		case <-ctx.Done():
+			l.Info("invoice email polling stopped")
+			return
+		case <-ticker.C:
+			p.poll(ctx, l)
+		}
 	}
+}
 
-	content := fmt.Sprintf("**⚠️ Contractor Invoice - No Matching Payable**\nInvoice ID: `%s`\nFrom: %s\nSubject: %s\nNo payable record found with status \"New\". Please verify the Invoice ID or create a payable entry.",
-		invoiceID, msg.From, msg.Subject)
-
-	_, err := p.discordService.SendMessage(model.DiscordMessage{
-		Content: content,
-	}, webhookURL)
+func (p *Processor) poll(ctx context.Context, l logger.Logger) {
+	stats, err := p.ProcessIncomingInvoices(ctx)
 	if err != nil {
-		l.Error(err, "failed to send Discord warning")
+		l.Error(err, "invoice email poll failed")
+		return
+	}
+
+	if stats.TotalEmails > 0 {
+		l.Infof("invoice email poll complete: total=%d processed=%d skipped=%d errors=%d",
+			stats.TotalEmails, stats.Processed, stats.Skipped, stats.Errors)
 	}
 }
 
-// markAsProcessed adds the processed label to the email
-func (p *Processor) markAsProcessed(ctx context.Context, messageID string, l logger.Logger) {
-	if p.processedLabelID == "" {
-		return
-	}
-
-	err := p.gmailService.AddLabel(ctx, messageID, p.processedLabelID)
-	if err != nil {
-		l.Error(err, "failed to add processed label")
-		// Non-fatal error, continue
-	} else {
-		l.Debug("marked email as processed")
-	}
-}

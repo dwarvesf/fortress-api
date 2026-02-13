@@ -83,6 +83,12 @@ func main() {
 		}
 	}
 
+	// Start invoice email polling
+	if svc.InvoiceEmailProcessor != nil && cfg.InvoiceListener.Enabled {
+		go svc.InvoiceEmailProcessor.StartPolling(ctx)
+		log.Info("Invoice email polling started")
+	}
+
 	queue := make(chan model.WorkerMessage, 1000)
 	w := worker.New(ctx, queue, svc, log)
 

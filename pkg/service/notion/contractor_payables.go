@@ -1007,6 +1007,53 @@ func (s *ContractorPayablesService) FindPayableByInvoiceID(ctx context.Context, 
 	}, nil
 }
 
+// FindPayableByInvoiceIDAnyStatus finds a payable by Invoice ID regardless of status.
+// Returns the payable if found, or nil if not found.
+func (s *ContractorPayablesService) FindPayableByInvoiceIDAnyStatus(ctx context.Context, invoiceID string) (*ExistingPayable, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	if invoiceID == "" {
+		return nil, errors.New("invoice ID is required")
+	}
+
+	filter := &nt.DatabaseQueryFilter{
+		Property: "Invoice ID",
+		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+			RichText: &nt.TextPropertyFilter{
+				Equals: invoiceID,
+			},
+		},
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 1,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query payables by invoice ID: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		return nil, nil
+	}
+
+	page := resp.Results[0]
+	status := ""
+	if props, ok := page.Properties.(nt.DatabasePageProperties); ok {
+		if statusProp, exists := props["Payment Status"]; exists && statusProp.Status != nil {
+			status = statusProp.Status.Name
+		}
+	}
+
+	return &ExistingPayable{
+		PageID: page.ID,
+		Status: status,
+	}, nil
+}
+
 // UpdatePayableStatusByInvoiceID updates a payable's Payment Status by Invoice ID.
 // invoiceID: Invoice ID to find the payable
 // status: New status value (e.g., "Pending")
@@ -1031,6 +1078,95 @@ func (s *ContractorPayablesService) UpdatePayableStatusByInvoiceID(ctx context.C
 
 	// Update the status (without payment date, as this is just status change)
 	return s.UpdatePayableStatus(ctx, payable.PageID, status, "")
+}
+
+// NewPayable represents a payable with status "New" fetched from Notion
+type NewPayable struct {
+	PageID           string
+	InvoiceID        string
+	ContractorPageID string
+}
+
+// QueryNewPayables queries all contractor payables with Payment Status="New" and a non-empty Invoice ID.
+// Returns paginated results of payables ready for email matching.
+func (s *ContractorPayablesService) QueryNewPayables(ctx context.Context) ([]NewPayable, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+
+	s.logger.Debug("[DEBUG] contractor_payables: querying new payables for email matching")
+
+	// Build filter: Payment Status = "New" AND Invoice ID is not empty
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Payment Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{
+						Equals: "New",
+					},
+				},
+			},
+			{
+				Property: "Invoice ID",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					RichText: &nt.TextPropertyFilter{
+						IsNotEmpty: true,
+					},
+				},
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 100,
+	}
+
+	var payables []NewPayable
+
+	// Query with pagination
+	for {
+		resp, err := s.client.QueryDatabase(ctx, payablesDBID, query)
+		if err != nil {
+			s.logger.Error(err, "[DEBUG] contractor_payables: failed to query new payables")
+			return nil, fmt.Errorf("failed to query new payables: %w", err)
+		}
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: failed to cast properties for pageID=%s", page.ID))
+				continue
+			}
+
+			invoiceID := s.extractRichText(props, "Invoice ID")
+			if invoiceID == "" {
+				continue
+			}
+
+			payable := NewPayable{
+				PageID:           page.ID,
+				InvoiceID:        invoiceID,
+				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
+			}
+
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found new payable pageID=%s invoiceID=%s contractor=%s",
+				payable.PageID, payable.InvoiceID, payable.ContractorPageID))
+
+			payables = append(payables, payable)
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: total new payables found=%d", len(payables)))
+	return payables, nil
 }
 
 // Helper functions for property extraction

@@ -432,6 +432,7 @@ type InvoiceListener struct {
 	ProcessedLabel string        // Gmail label for processed emails
 	MaxMessages    int64         // Maximum messages to process per batch
 	PDFMaxSizeMB   int           // Maximum PDF size in MB
+	PDFFallback    bool          // Enable PDF attachment fallback when subject match fails
 }
 
 // parseInvoiceListenerConfig parses InvoiceListener configuration from environment variables
@@ -451,6 +452,7 @@ func parseInvoiceListenerConfig(v ENV) InvoiceListener {
 		ProcessedLabel: getStringWithDefault(v, "INVOICE_LISTENER_LABEL", "fortress-api/processed"),
 		MaxMessages:    int64(getIntWithDefault(v, "INVOICE_LISTENER_MAX_MESSAGES", 50)),
 		PDFMaxSizeMB:   getIntWithDefault(v, "INVOICE_LISTENER_PDF_MAX_SIZE_MB", 5),
+		PDFFallback:    getBoolWithDefault(v, "INVOICE_LISTENER_PDF_FALLBACK", false),
 	}
 }
 

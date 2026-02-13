@@ -25,6 +25,10 @@ type IProcessor interface {
 	// ProcessIncomingInvoices processes unread invoice emails from the monitored inbox
 	// Returns processing statistics
 	ProcessIncomingInvoices(ctx context.Context) (*ProcessorStats, error)
+
+	// StartPolling starts a background loop that polls for invoice emails at the configured interval.
+	// It blocks until the context is cancelled.
+	StartPolling(ctx context.Context)
 }
 
 // IExtractor defines the interface for Invoice ID extraction
