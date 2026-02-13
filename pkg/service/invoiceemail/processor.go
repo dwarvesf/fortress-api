@@ -222,6 +222,7 @@ func (p *Processor) processEmail(ctx context.Context, msg googlemail.InboxMessag
 		l.Debugf("no payable found with Invoice ID: %s", invoiceID)
 		result.Status = "skipped"
 		result.Error = "no matching payable found with status 'New'"
+		p.sendDiscordWarning(fullMsg, invoiceID, l)
 		p.markAsProcessed(ctx, msg.ID, l)
 		return result
 	}
@@ -270,6 +271,28 @@ func (p *Processor) sendDiscordNotification(msg *googlemail.InboxMessage, invoic
 	}, webhookURL)
 	if err != nil {
 		l.Error(err, "failed to send Discord notification")
+	}
+}
+
+// sendDiscordWarning sends a warning to Discord when an invoice email has no matching payable
+func (p *Processor) sendDiscordWarning(msg *googlemail.InboxMessage, invoiceID string, l logger.Logger) {
+	if p.discordService == nil {
+		return
+	}
+
+	webhookURL := p.cfg.Discord.Webhooks.AuditLog
+	if webhookURL == "" {
+		return
+	}
+
+	content := fmt.Sprintf("**⚠️ Contractor Invoice - No Matching Payable**\nInvoice ID: `%s`\nFrom: %s\nSubject: %s\nNo payable record found with status \"New\". Please verify the Invoice ID or create a payable entry.",
+		invoiceID, msg.From, msg.Subject)
+
+	_, err := p.discordService.SendMessage(model.DiscordMessage{
+		Content: content,
+	}, webhookURL)
+	if err != nil {
+		l.Error(err, "failed to send Discord warning")
 	}
 }
 
