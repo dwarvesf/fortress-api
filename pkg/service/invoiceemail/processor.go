@@ -7,6 +7,8 @@ import (
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
+	"github.com/dwarvesf/fortress-api/pkg/service/discord"
 	"github.com/dwarvesf/fortress-api/pkg/service/googlemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 )
@@ -17,6 +19,7 @@ type Processor struct {
 	gmailService      googlemail.IService
 	extractor         IExtractor
 	payablesService   *notion.ContractorPayablesService
+	discordService    discord.IService
 	logger            logger.Logger
 	processedLabelID  string // Cached label ID
 }
@@ -27,6 +30,7 @@ func NewProcessor(
 	gmailService googlemail.IService,
 	extractor IExtractor,
 	payablesService *notion.ContractorPayablesService,
+	discordService discord.IService,
 	l logger.Logger,
 ) *Processor {
 	return &Processor{
@@ -34,6 +38,7 @@ func NewProcessor(
 		gmailService:    gmailService,
 		extractor:       extractor,
 		payablesService: payablesService,
+		discordService:  discordService,
 		logger:          l,
 	}
 }
@@ -235,10 +240,37 @@ func (p *Processor) processEmail(ctx context.Context, msg googlemail.InboxMessag
 	result.Status = "success"
 	l.Debugf("updated payable %s to Pending", payable.PageID)
 
+	// Send Discord notification to audit log
+	p.sendDiscordNotification(fullMsg, invoiceID, l)
+
 	// Mark email as processed
 	p.markAsProcessed(ctx, msg.ID, l)
 
 	return result
+}
+
+// sendDiscordNotification sends a notification to the Discord audit log channel
+func (p *Processor) sendDiscordNotification(msg *googlemail.InboxMessage, invoiceID string, l logger.Logger) {
+	if p.discordService == nil {
+		l.Debug("discord service not available, skipping notification")
+		return
+	}
+
+	webhookURL := p.cfg.Discord.Webhooks.AuditLog
+	if webhookURL == "" {
+		l.Debug("no audit log webhook URL configured, skipping notification")
+		return
+	}
+
+	content := fmt.Sprintf("**Contractor Invoice Received**\nInvoice ID: `%s`\nFrom: %s\nSubject: %s\nPayable status updated to **Pending**",
+		invoiceID, msg.From, msg.Subject)
+
+	_, err := p.discordService.SendMessage(model.DiscordMessage{
+		Content: content,
+	}, webhookURL)
+	if err != nil {
+		l.Error(err, "failed to send Discord notification")
+	}
 }
 
 // markAsProcessed adds the processed label to the email

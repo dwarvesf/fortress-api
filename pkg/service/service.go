@@ -337,7 +337,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 			extractor := invoiceemail.NewExtractor(pdfParserSvc, logger.L)
 			notionSvc := notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB())
 			payablesSvc := notion.NewContractorPayablesService(cfg, logger.L, notionSvc)
-			return invoiceemail.NewProcessor(cfg, googleMailSvc, extractor, payablesSvc, logger.L)
+			return invoiceemail.NewProcessor(cfg, googleMailSvc, extractor, payablesSvc, discord.New(cfg), logger.L)
 		}(),
 	}, nil
 }
