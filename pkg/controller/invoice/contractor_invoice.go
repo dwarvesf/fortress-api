@@ -866,6 +866,12 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 	l.Debug(fmt.Sprintf("generating contractor invoice PDF: invoiceNumber=%s billingType=%s total=%.2f",
 		data.InvoiceNumber, data.BillingType, data.Total))
 
+	// Zero-total guard: check if invoice has any line items or non-zero total
+	if len(data.LineItems) == 0 || data.Total == 0 {
+		l.Debug(fmt.Sprintf("zero-total guard triggered: lineItems=%d total=%.2f", len(data.LineItems), data.Total))
+		return nil, fmt.Errorf("no payouts found for this month")
+	}
+
 	// Setup currency formatter
 	currencyCode := data.Currency
 	if currencyCode == "" {
@@ -998,6 +1004,20 @@ func (c *controller) GenerateContractorInvoicePDF(l logger.Logger, data *Contrac
 		data.TotalUSD = filteredTotal
 		data.SubtotalUSD = filteredTotal
 		data.PayoutPageIDs = filteredPayoutPageIDs
+
+		// Guard: no sections remain after filtering → return descriptive error
+		if len(sections) == 0 || filteredTotal == 0 {
+			var invoiceTypeLabel string
+			switch data.InvoiceType {
+			case "extra_payment":
+				invoiceTypeLabel = "extra payment"
+			case "service_and_refund":
+				invoiceTypeLabel = "service"
+			default:
+				invoiceTypeLabel = data.InvoiceType
+			}
+			return nil, fmt.Errorf("no %s payouts found for this month", invoiceTypeLabel)
+		}
 	}
 
 	// Prepare template data
@@ -1301,17 +1321,15 @@ func groupLineItemsIntoSections(items []ContractorInvoiceLineItem, invoiceType s
 
 			switch invoiceType {
 			case "service_and_refund":
-				// Include: Development Work (aggregated Service Fee), Fee, Expense Reimbursement
-				// Section names: dynamic (from payout.Description), "Fee", "Expense Reimbursement"
+				// Development Work (ServiceFee from TaskOrder) + Expense Reimbursement (Refund)
 				if section.IsAggregated {
-					// Development Work section (aggregated Service Fee from TaskOrder)
 					include = true
-				} else if section.Name == "Fee" || section.Name == "Expense Reimbursement" {
+				} else if section.Name == "Expense Reimbursement" {
 					include = true
 				}
 			case "extra_payment":
-				// Include: Extra Payment only
-				if section.Name == "Extra Payment" {
+				// Fee (AM/DL from InvoiceSplit) + Extra Payment (Commission + ExtraPayment)
+				if section.Name == "Extra Payment" || section.Name == "Fee" {
 					include = true
 				}
 			default:

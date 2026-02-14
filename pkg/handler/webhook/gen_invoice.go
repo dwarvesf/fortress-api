@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	nt "github.com/dstotijn/go-notion"
 	"github.com/gin-gonic/gin"
 
+	"github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/ratelimit"
@@ -22,6 +25,7 @@ type GenInvoiceRequest struct {
 	Month           string `json:"month" binding:"required"` // Format: YYYY-MM
 	DMChannelID     string `json:"dm_channel_id" binding:"required"`
 	DMMessageID     string `json:"dm_message_id" binding:"required"`
+	InvoiceType     string `json:"invoice_type"` // "service_and_refund" | "extra_payment"
 }
 
 // GenInvoiceResponse represents the response for the gen-invoice webhook
@@ -57,8 +61,8 @@ func (h *handler) HandleGenInvoice(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("parsed request: discord_username=%s month=%s dm_channel_id=%s dm_message_id=%s",
-		req.DiscordUsername, req.Month, req.DMChannelID, req.DMMessageID))
+	l.Debug(fmt.Sprintf("parsed request: discord_username=%s month=%s dm_channel_id=%s dm_message_id=%s invoice_type=%s",
+		req.DiscordUsername, req.Month, req.DMChannelID, req.DMMessageID, req.InvoiceType))
 
 	// Validate month format (YYYY-MM)
 	if !isValidMonthFormat(req.Month) {
@@ -179,11 +183,34 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 		}
 	}
 
-	// Case 1: Pending payables exist → share existing PDF (existing behavior)
+	// Case 1: Pending payables exist
 	if len(pendingPayables) > 0 {
-		l.Debug(fmt.Sprintf("found %d pending payable(s) - using existing behavior", len(pendingPayables)))
-		h.processExistingPendingPayables(l, req, rateData, pendingPayables)
-		return
+		l.Debug(fmt.Sprintf("found %d pending payable(s)", len(pendingPayables)))
+
+		// If no specific invoice type requested, use existing behavior (return first pending payable)
+		if req.InvoiceType == "" {
+			l.Debug("no invoice type specified - returning existing pending payable(s)")
+			h.processExistingPendingPayables(l, req, rateData, pendingPayables)
+			return
+		}
+
+		// If invoice type is specified, check if pending payable matches the requested type
+		l.Debug(fmt.Sprintf("invoice type specified: %s - checking if pending payable matches", req.InvoiceType))
+
+		// Check the first pending payable (there should typically be only one per period)
+		firstPendingPayable := pendingPayables[0]
+		existingPayableType := h.determinePayableInvoiceType(ctx, l, firstPendingPayable, rateData.ContractorPageID)
+
+		l.Debug(fmt.Sprintf("existing payable type: %s, requested type: %s", existingPayableType, req.InvoiceType))
+
+		if existingPayableType == req.InvoiceType {
+			l.Debug("payable type matches - returning existing pending payable(s)")
+			h.processExistingPendingPayables(l, req, rateData, pendingPayables)
+			return
+		}
+
+		// Type doesn't match - fall through to generate new invoice
+		l.Debug("payable type doesn't match - will generate new invoice with requested type")
 	}
 
 	// Case 2: New payable exists → regenerate invoice and update payable
@@ -691,6 +718,133 @@ func (h *handler) updateDMWithNoPayouts(l logger.Logger, channelID, messageID, m
 	}
 }
 
+// determinePayableInvoiceType inspects a payable's linked payout items to determine its invoice type
+// Returns "service_and_refund" or "extra_payment" based on the payout source types
+func (h *handler) determinePayableInvoiceType(ctx context.Context, l logger.Logger, payable *notion.PayableInfo, contractorPageID string) string {
+	l.Debug(fmt.Sprintf("determining invoice type for payable: pageID=%s", payable.PageID))
+
+	// Step 1: Get payable page properties to extract Payout Items relation
+	l.Debug("step 1: fetching payable page properties")
+	page, err := h.service.Notion.GetPage(payable.PageID)
+	if err != nil {
+		l.Errorf(err, "failed to fetch payable page")
+		return "service_and_refund" // Default on error
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		l.Debug("failed to cast page properties")
+		return "service_and_refund" // Default on error
+	}
+
+	// Extract Payout Items relation IDs (using the same pattern as contractor_payables.go)
+	payoutItemIDs := extractAllRelationIDs(props, "Payout Items")
+	l.Debug(fmt.Sprintf("found %d payout items linked to payable", len(payoutItemIDs)))
+
+	if len(payoutItemIDs) == 0 {
+		l.Debug("no payout items found, defaulting to service_and_refund")
+		return "service_and_refund"
+	}
+
+	// Step 2: Query all payout entries for this contractor
+	// We don't have a specific cutoff date, so pass empty string to get all pending payouts
+	l.Debug("step 2: querying contractor payouts")
+	allPayouts, err := h.service.Notion.ContractorPayouts.QueryPendingPayoutsByContractor(ctx, contractorPageID, "")
+	if err != nil {
+		l.Errorf(err, "failed to query contractor payouts")
+		return "service_and_refund" // Default on error
+	}
+
+	l.Debug(fmt.Sprintf("fetched %d total pending payouts for contractor", len(allPayouts)))
+
+	// Step 3: Filter to only payouts in the payable's Payout Items list
+	payoutItemIDSet := make(map[string]bool)
+	for _, id := range payoutItemIDs {
+		payoutItemIDSet[id] = true
+	}
+
+	var relevantPayouts []notion.PayoutEntry
+	for _, payout := range allPayouts {
+		if payoutItemIDSet[payout.PageID] {
+			relevantPayouts = append(relevantPayouts, payout)
+		}
+	}
+
+	l.Debug(fmt.Sprintf("filtered to %d relevant payouts", len(relevantPayouts)))
+
+	if len(relevantPayouts) == 0 {
+		l.Debug("no relevant payouts found, defaulting to service_and_refund")
+		return "service_and_refund"
+	}
+
+	// Step 4: Count source types to determine invoice type
+	serviceAndRefundCount := 0
+	extraPaymentCount := 0
+
+	for _, payout := range relevantPayouts {
+		l.Debug(fmt.Sprintf("payout: pageID=%s sourceType=%s taskOrderID=%s invoiceSplitID=%s refundRequestID=%s description=%s",
+			payout.PageID, payout.SourceType, payout.TaskOrderID, payout.InvoiceSplitID, payout.RefundRequestID, payout.Description))
+
+		// Determine source type based on relations
+		// Priority: TaskOrderID > InvoiceSplitID > RefundRequestID > None (ExtraPayment)
+		var sourceType notion.PayoutSourceType
+
+		if payout.TaskOrderID != "" {
+			sourceType = notion.PayoutSourceTypeServiceFee
+		} else if payout.InvoiceSplitID != "" {
+			// Check if it's AM/DL fee (goes to extra_payment) or Commission
+			descLower := strings.ToLower(payout.Description)
+			if strings.Contains(descLower, "delivery lead") || strings.Contains(descLower, "account management") {
+				// Fee section (AM/DL) → extra_payment
+				sourceType = notion.PayoutSourceTypeServiceFee // Still ServiceFee type but goes to extra_payment
+				extraPaymentCount++
+				continue // Don't count in service_and_refund
+			} else {
+				// Commission → extra_payment
+				sourceType = notion.PayoutSourceTypeCommission
+			}
+		} else if payout.RefundRequestID != "" {
+			sourceType = notion.PayoutSourceTypeRefund
+		} else {
+			// No relations set → ExtraPayment
+			sourceType = notion.PayoutSourceTypeExtraPayment
+		}
+
+		// Map source type to invoice type
+		switch sourceType {
+		case notion.PayoutSourceTypeServiceFee, notion.PayoutSourceTypeRefund:
+			serviceAndRefundCount++
+		case notion.PayoutSourceTypeCommission, notion.PayoutSourceTypeExtraPayment:
+			extraPaymentCount++
+		}
+	}
+
+	l.Debug(fmt.Sprintf("source type counts: serviceAndRefund=%d extraPayment=%d", serviceAndRefundCount, extraPaymentCount))
+
+	// Step 5: Return invoice type based on majority
+	// If any extra payment types exist, consider it an extra payment invoice
+	if extraPaymentCount > 0 {
+		l.Debug("determined invoice type: extra_payment")
+		return "extra_payment"
+	}
+
+	l.Debug("determined invoice type: service_and_refund")
+	return "service_and_refund"
+}
+
+// extractAllRelationIDs extracts all relation IDs from a database page property
+func extractAllRelationIDs(props nt.DatabasePageProperties, propName string) []string {
+	prop, ok := props[propName]
+	if !ok || len(prop.Relation) == 0 {
+		return nil
+	}
+	ids := make([]string, len(prop.Relation))
+	for i, rel := range prop.Relation {
+		ids[i] = rel.ID
+	}
+	return ids
+}
+
 // generateAndCreatePayable generates a contractor invoice, creates/updates payable in Notion, and shares with contractor
 // existingPayablePageID is empty for new payables, or the page ID to update for regeneration
 func (h *handler) generateAndCreatePayable(
@@ -703,9 +857,19 @@ func (h *handler) generateAndCreatePayable(
 	// Update DM with generating status
 	h.updateDMWithGenerating(l, req.DMChannelID, req.DMMessageID, req.Month)
 
+	// Default invoice type to service_and_refund
+	invoiceType := req.InvoiceType
+	if invoiceType == "" {
+		invoiceType = "service_and_refund"
+	}
+
 	// Step 1: Generate invoice data
-	l.Debug("step 1: generating contractor invoice data")
-	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month, nil)
+	l.Debug(fmt.Sprintf("step 1: generating contractor invoice data with invoiceType=%s", invoiceType))
+	opts := &invoice.ContractorInvoiceOptions{
+		GroupFeeByProject: false,
+		InvoiceType:       invoiceType,
+	}
+	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month, opts)
 	if err != nil {
 		l.Errorf(err, "failed to generate contractor invoice")
 		// Check if it's a "no pending payouts" error
@@ -725,7 +889,12 @@ func (h *handler) generateAndCreatePayable(
 	pdfBytes, err := h.controller.Invoice.GenerateContractorInvoicePDF(l, invoiceData)
 	if err != nil {
 		l.Errorf(err, "failed to generate invoice PDF")
-		h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to generate PDF. Please try again later.")
+		// Check if it's a "no payouts found" error from section filtering
+		if strings.Contains(err.Error(), "payouts found for this month") {
+			h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("No %s payouts found for %s.", invoiceType, req.Month))
+		} else {
+			h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to generate PDF. Please try again later.")
+		}
 		return
 	}
 
