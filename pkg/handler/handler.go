@@ -40,6 +40,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/valuation"
 	"github.com/dwarvesf/fortress-api/pkg/handler/vault"
 	"github.com/dwarvesf/fortress-api/pkg/handler/webhook"
+	"github.com/dwarvesf/fortress-api/pkg/handler/workupdates"
 	yt "github.com/dwarvesf/fortress-api/pkg/handler/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -85,6 +86,7 @@ type Handler struct {
 	DynamicEvents      dynamicevents.IHandler
 	InvoiceEmail       handlerinvoiceemail.IHandler
 	Notify             notify.IHandler
+	WorkUpdates        workupdates.IHandler
 }
 
 func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *controller.Controller, worker *worker.Worker, logger logger.Logger, cfg *config.Config) *Handler {
@@ -130,6 +132,7 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, ctrl *
 			}
 			return handlerinvoiceemail.New(service.InvoiceEmailProcessor, logger, cfg)
 		}(),
-		Notify: notify.New(service, logger, cfg),
+		Notify:      notify.New(service, logger, cfg),
+		WorkUpdates: workupdates.New(store, repo, service, logger, cfg),
 	}
 }
