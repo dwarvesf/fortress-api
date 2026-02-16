@@ -13,12 +13,8 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
 
-// TestExtractSelect tests the extractSelect helper method
+// TestExtractSelect tests the ExtractSelect helper function
 func TestExtractSelect(t *testing.T) {
-	service := &TaskOrderLogService{
-		logger: logger.NewLogrusLogger("debug"),
-	}
-
 	t.Run("valid_select_property", func(t *testing.T) {
 		props := nt.DatabasePageProperties{
 			"Payday": nt.DatabasePageProperty{
@@ -28,7 +24,7 @@ func TestExtractSelect(t *testing.T) {
 			},
 		}
 
-		result := service.extractSelect(props, "Payday")
+		result := ExtractSelect(props, "Payday")
 		require.Equal(t, "01", result)
 	})
 
@@ -41,7 +37,7 @@ func TestExtractSelect(t *testing.T) {
 			},
 		}
 
-		result := service.extractSelect(props, "Payday")
+		result := ExtractSelect(props, "Payday")
 		require.Equal(t, "", result)
 	})
 
@@ -54,7 +50,7 @@ func TestExtractSelect(t *testing.T) {
 			},
 		}
 
-		result := service.extractSelect(props, "Payday")
+		result := ExtractSelect(props, "Payday")
 		require.Equal(t, "", result)
 	})
 
@@ -65,7 +61,7 @@ func TestExtractSelect(t *testing.T) {
 			},
 		}
 
-		result := service.extractSelect(props, "Payday")
+		result := ExtractSelect(props, "Payday")
 		require.Equal(t, "", result)
 	})
 }
@@ -74,14 +70,16 @@ func TestExtractSelect(t *testing.T) {
 func TestGetContractorPayday_Fallbacks(t *testing.T) {
 	t.Run("database_not_configured", func(t *testing.T) {
 		service := &TaskOrderLogService{
-			cfg: &config.Config{
-				Notion: config.Notion{
-					Databases: config.NotionDatabase{
-						ContractorRates: "", // Empty database ID
+			baseService: &baseService{
+				cfg: &config.Config{
+					Notion: config.Notion{
+						Databases: config.NotionDatabase{
+							ContractorRates: "", // Empty database ID
+						},
 					},
 				},
+				logger: logger.NewLogrusLogger("debug"),
 			},
-			logger: logger.NewLogrusLogger("debug"),
 		}
 
 		ctx := context.Background()

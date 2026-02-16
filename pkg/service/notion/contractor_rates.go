@@ -15,9 +15,7 @@ import (
 
 // ContractorRatesService handles contractor rates operations with Notion
 type ContractorRatesService struct {
-	client *nt.Client
-	cfg    *config.Config
-	logger logger.Logger
+	*baseService
 }
 
 // ContractorRateData represents contractor rate data from Notion
@@ -38,19 +36,15 @@ type ContractorRateData struct {
 }
 
 // NewContractorRatesService creates a new Notion contractor rates service
-func NewContractorRatesService(cfg *config.Config, logger logger.Logger) *ContractorRatesService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewContractorRatesService(cfg *config.Config, l logger.Logger) *ContractorRatesService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new ContractorRatesService")
+	l.Debug("creating new ContractorRatesService")
 
-	return &ContractorRatesService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		logger: logger,
-	}
+	return &ContractorRatesService{baseService: base}
 }
 
 // QueryRatesByDiscordAndMonth queries contractor rates by Discord username and month
@@ -132,8 +126,8 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 			}
 
 			// Extract Start Date and End Date for filtering
-			startDate := s.extractDate(props, "Start Date")
-			endDate := s.extractDate(props, "End Date")
+			startDate := ExtractDate(props, "Start Date")
+			endDate := ExtractDate(props, "End Date")
 
 			s.logger.Debug(fmt.Sprintf("checking rate: pageID=%s startDate=%v endDate=%v", page.ID, startDate, endDate))
 
@@ -151,7 +145,7 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 			}
 
 			// Extract contractor page ID
-			contractorPageID := s.extractFirstRelationID(props, "Contractor")
+			contractorPageID := ExtractFirstRelationID(props, "Contractor")
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_rates: contractorPageID=%s", contractorPageID))
 
 			// Fetch contractor name and team email from Contractor page (single API call)
@@ -163,7 +157,7 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
-			payDayStr := s.extractSelect(props, "Payday")
+			payDayStr := ExtractSelect(props, "Payday")
 			payDay := 0
 			if payDayStr != "" {
 				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
@@ -175,13 +169,13 @@ func (s *ContractorRatesService) QueryRatesByDiscordAndMonth(ctx context.Context
 				PageID:           page.ID,
 				ContractorPageID: contractorPageID,
 				ContractorName:   contractorName,
-				Discord:          s.extractRollupRichText(props, "Discord"),
+				Discord:          ExtractRollupRichTextFirst(props, "Discord"),
 				TeamEmail:        teamEmail,
-				BillingType:      s.extractSelect(props, "Billing Type"),
-				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
-				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
-				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
-				Currency:         s.extractSelect(props, "Currency"),
+				BillingType:      ExtractSelect(props, "Billing Type"),
+				MonthlyFixed:     ExtractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       ExtractNumber(props, "Hourly Rate"),
+				GrossFixed:       ExtractFormulaNumber(props, "Gross Fixed"),
+				Currency:         ExtractSelect(props, "Currency"),
 				StartDate:        startDate,
 				EndDate:          endDate,
 				PayDay:           payDay,
@@ -240,63 +234,6 @@ func (s *ContractorRatesService) getContractorDetails(ctx context.Context, pageI
 	return name, email
 }
 
-// Helper functions for extracting properties
-
-func (s *ContractorRatesService) extractRollupRichText(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Rollup == nil {
-		return ""
-	}
-
-	for _, item := range prop.Rollup.Array {
-		if len(item.RichText) > 0 {
-			return item.RichText[0].PlainText
-		}
-	}
-	return ""
-}
-
-func (s *ContractorRatesService) extractFormulaNumber(props nt.DatabasePageProperties, propName string) float64 {
-	prop, ok := props[propName]
-	if !ok || prop.Formula == nil || prop.Formula.Number == nil {
-		return 0
-	}
-	return *prop.Formula.Number
-}
-
-func (s *ContractorRatesService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	prop, ok := props[propName]
-	if !ok || prop.Number == nil {
-		return 0
-	}
-	return *prop.Number
-}
-
-func (s *ContractorRatesService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Select == nil {
-		return ""
-	}
-	return prop.Select.Name
-}
-
-func (s *ContractorRatesService) extractDate(props nt.DatabasePageProperties, propName string) *time.Time {
-	prop, ok := props[propName]
-	if !ok || prop.Date == nil {
-		return nil
-	}
-	t := prop.Date.Start.Time
-	return &t
-}
-
-func (s *ContractorRatesService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Relation) == 0 {
-		return ""
-	}
-	return prop.Relation[0].ID
-}
-
 // FindActiveRateByContractor finds the active contractor rate for a given contractor at a specific date
 // Returns the matching rate or an error if not found
 func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context, contractorPageID string, orderDate time.Time) (*ContractorRateData, error) {
@@ -352,8 +289,8 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 			}
 
 			// Extract Start Date and End Date for filtering
-			startDate := s.extractDate(props, "Start Date")
-			endDate := s.extractDate(props, "End Date")
+			startDate := ExtractDate(props, "Start Date")
+			endDate := ExtractDate(props, "End Date")
 
 			s.logger.Debug(fmt.Sprintf("checking rate: pageID=%s startDate=%v endDate=%v orderDate=%s",
 				page.ID, startDate, endDate, orderDate.Format("2006-01-02")))
@@ -377,7 +314,7 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 			s.logger.Debug(fmt.Sprintf("found valid rate: pageID=%s", page.ID))
 
 			// Extract contractor page ID
-			contractorID := s.extractFirstRelationID(props, "Contractor")
+			contractorID := ExtractFirstRelationID(props, "Contractor")
 
 			// Fetch contractor name from Contractor page
 			contractorName := ""
@@ -386,7 +323,7 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
-			payDayStr := s.extractSelect(props, "Payday")
+			payDayStr := ExtractSelect(props, "Payday")
 			payDay := 0
 			if payDayStr != "" {
 				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
@@ -399,12 +336,12 @@ func (s *ContractorRatesService) FindActiveRateByContractor(ctx context.Context,
 				PageID:           page.ID,
 				ContractorPageID: contractorID,
 				ContractorName:   contractorName,
-				Discord:          s.extractRollupRichText(props, "Discord"),
-				BillingType:      s.extractSelect(props, "Billing Type"),
-				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
-				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
-				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
-				Currency:         s.extractSelect(props, "Currency"),
+				Discord:          ExtractRollupRichTextFirst(props, "Discord"),
+				BillingType:      ExtractSelect(props, "Billing Type"),
+				MonthlyFixed:     ExtractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       ExtractNumber(props, "Hourly Rate"),
+				GrossFixed:       ExtractFormulaNumber(props, "Gross Fixed"),
+				Currency:         ExtractSelect(props, "Currency"),
 				StartDate:        startDate,
 				EndDate:          endDate,
 				PayDay:           payDay,
@@ -448,7 +385,7 @@ func (s *ContractorRatesService) FetchContractorRateByPageID(ctx context.Context
 	}
 
 	// Step 3: Extract contractor page ID from relation
-	contractorPageID := s.extractFirstRelationID(props, "Contractor")
+	contractorPageID := ExtractFirstRelationID(props, "Contractor")
 
 	// Step 4: Fetch contractor name if contractor page ID available
 	contractorName := ""
@@ -461,14 +398,14 @@ func (s *ContractorRatesService) FetchContractorRateByPageID(ctx context.Context
 		PageID:           page.ID,
 		ContractorPageID: contractorPageID,
 		ContractorName:   contractorName,
-		Discord:          s.extractRollupRichText(props, "Discord"),
-		BillingType:      s.extractSelect(props, "Billing Type"),
-		MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
-		HourlyRate:       s.extractNumber(props, "Hourly Rate"),
-		GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
-		Currency:         s.extractSelect(props, "Currency"),
-		StartDate:        s.extractDate(props, "Start Date"),
-		EndDate:          s.extractDate(props, "End Date"),
+		Discord:          ExtractRollupRichTextFirst(props, "Discord"),
+		BillingType:      ExtractSelect(props, "Billing Type"),
+		MonthlyFixed:     ExtractFormulaNumber(props, "Monthly Fixed"),
+		HourlyRate:       ExtractNumber(props, "Hourly Rate"),
+		GrossFixed:       ExtractFormulaNumber(props, "Gross Fixed"),
+		Currency:         ExtractSelect(props, "Currency"),
+		StartDate:        ExtractDate(props, "Start Date"),
+		EndDate:          ExtractDate(props, "End Date"),
 	}
 
 	// Step 6: Log extracted data for debugging
@@ -561,8 +498,8 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 			}
 
 			// Extract Start Date and End Date for filtering
-			startDate := s.extractDate(props, "Start Date")
-			endDate := s.extractDate(props, "End Date")
+			startDate := ExtractDate(props, "Start Date")
+			endDate := ExtractDate(props, "End Date")
 
 			// Check date range: Start Date <= month AND (End Date >= month OR End Date is empty)
 			if startDate != nil && startDate.After(endOfMonth) {
@@ -576,7 +513,7 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 			}
 
 			// Extract Payday (Select type with values like "01", "15")
-			payDayStr := s.extractSelect(props, "Payday")
+			payDayStr := ExtractSelect(props, "Payday")
 			payDay := 0
 			if payDayStr != "" {
 				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
@@ -585,13 +522,13 @@ func (s *ContractorRatesService) ListActiveContractorsByBatch(ctx context.Contex
 			pending = append(pending, pendingContractor{
 				index:            len(pending),
 				pageID:           page.ID,
-				contractorPageID: s.extractFirstRelationID(props, "Contractor"),
-				discord:          s.extractRollupRichText(props, "Discord"),
-				billingType:      s.extractSelect(props, "Billing Type"),
-				monthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
-				hourlyRate:       s.extractNumber(props, "Hourly Rate"),
-				grossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
-				currency:         s.extractSelect(props, "Currency"),
+				contractorPageID: ExtractFirstRelationID(props, "Contractor"),
+				discord:          ExtractRollupRichTextFirst(props, "Discord"),
+				billingType:      ExtractSelect(props, "Billing Type"),
+				monthlyFixed:     ExtractFormulaNumber(props, "Monthly Fixed"),
+				hourlyRate:       ExtractNumber(props, "Hourly Rate"),
+				grossFixed:       ExtractFormulaNumber(props, "Gross Fixed"),
+				currency:         ExtractSelect(props, "Currency"),
 				startDate:        startDate,
 				endDate:          endDate,
 				payDay:           payDay,
@@ -714,7 +651,7 @@ func (s *ContractorRatesService) FindActiveRatesByContractors(ctx context.Contex
 			}
 
 			// Extract contractor page ID from relation
-			contractorPageID := s.extractFirstRelationID(props, "Contractor")
+			contractorPageID := ExtractFirstRelationID(props, "Contractor")
 			if contractorPageID == "" || !contractorSet[contractorPageID] {
 				continue // Not in our target set
 			}
@@ -725,8 +662,8 @@ func (s *ContractorRatesService) FindActiveRatesByContractors(ctx context.Contex
 			}
 
 			// Extract Start Date and End Date for filtering
-			startDate := s.extractDate(props, "Start Date")
-			endDate := s.extractDate(props, "End Date")
+			startDate := ExtractDate(props, "Start Date")
+			endDate := ExtractDate(props, "End Date")
 
 			// Check date range: Start Date <= orderDate AND (orderDate <= End Date OR End Date is nil)
 			if startDate != nil && startDate.After(orderDate) {
@@ -737,7 +674,7 @@ func (s *ContractorRatesService) FindActiveRatesByContractors(ctx context.Contex
 			}
 
 			// Extract Payday
-			payDayStr := s.extractSelect(props, "Payday")
+			payDayStr := ExtractSelect(props, "Payday")
 			payDay := 0
 			if payDayStr != "" {
 				_, _ = fmt.Sscanf(payDayStr, "%d", &payDay)
@@ -747,12 +684,12 @@ func (s *ContractorRatesService) FindActiveRatesByContractors(ctx context.Contex
 			rate := &ContractorRateData{
 				PageID:           page.ID,
 				ContractorPageID: contractorPageID,
-				Discord:          s.extractRollupRichText(props, "Discord"),
-				BillingType:      s.extractSelect(props, "Billing Type"),
-				MonthlyFixed:     s.extractFormulaNumber(props, "Monthly Fixed"),
-				HourlyRate:       s.extractNumber(props, "Hourly Rate"),
-				GrossFixed:       s.extractFormulaNumber(props, "Gross Fixed"),
-				Currency:         s.extractSelect(props, "Currency"),
+				Discord:          ExtractRollupRichTextFirst(props, "Discord"),
+				BillingType:      ExtractSelect(props, "Billing Type"),
+				MonthlyFixed:     ExtractFormulaNumber(props, "Monthly Fixed"),
+				HourlyRate:       ExtractNumber(props, "Hourly Rate"),
+				GrossFixed:       ExtractFormulaNumber(props, "Gross Fixed"),
+				Currency:         ExtractSelect(props, "Currency"),
 				StartDate:        startDate,
 				EndDate:          endDate,
 				PayDay:           payDay,

@@ -17,9 +17,7 @@ import (
 
 // ContractorPayoutsService handles contractor payouts operations with Notion
 type ContractorPayoutsService struct {
-	client *nt.Client
-	cfg    *config.Config
-	logger logger.Logger
+	*baseService
 }
 
 // PayoutEntry represents a single payout entry from the Contractor Payouts database
@@ -46,19 +44,15 @@ type PayoutEntry struct {
 }
 
 // NewContractorPayoutsService creates a new Notion contractor payouts service
-func NewContractorPayoutsService(cfg *config.Config, logger logger.Logger) *ContractorPayoutsService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewContractorPayoutsService(cfg *config.Config, l logger.Logger) *ContractorPayoutsService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new ContractorPayoutsService")
+	l.Debug("creating new ContractorPayoutsService")
 
-	return &ContractorPayoutsService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		logger: logger,
-	}
+	return &ContractorPayoutsService{baseService: base}
 }
 
 // QueryPendingPayoutsByContractor queries all pending payouts for a specific contractor
@@ -161,17 +155,17 @@ func (s *ContractorPayoutsService) QueryPendingPayoutsByContractor(ctx context.C
 			// - "00 Work Details" is a formula that extracts proof of works from task orders
 			entry := PayoutEntry{
 				PageID:          page.ID,
-				Name:            s.extractTitle(props, "Name"),
-				Description:     s.extractRichText(props, "Description"),
-				PersonPageID:    s.extractFirstRelationID(props, "Person"),
-				Amount:          s.extractNumber(props, "Amount"),
-				Currency:        s.extractSelect(props, "Currency"),
-				Status:          s.extractStatus(props, "Status"),
-				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
-				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
-				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
-				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
-				ServiceRateID:   s.extractFirstRelationID(props, "00 Service Rate"),
+				Name:            ExtractTitle(props, "Name"),
+				Description:     ExtractRichText(props, "Description"),
+				PersonPageID:    ExtractFirstRelationID(props, "Person"),
+				Amount:          ExtractNumber(props, "Amount"),
+				Currency:        ExtractSelect(props, "Currency"),
+				Status:          ExtractStatus(props, "Status"),
+				TaskOrderID:     ExtractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  ExtractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: ExtractFirstRelationID(props, "01 Refund"),
+				WorkDetails:     ExtractFormulaString(props, "00 Work Details"),
+				ServiceRateID:   ExtractFirstRelationID(props, "00 Service Rate"),
 			}
 
 			// Determine source type based on which relation is set
@@ -285,7 +279,7 @@ func (s *ContractorPayoutsService) GetLatestPayoutDateByDiscord(ctx context.Cont
 			continue
 		}
 
-		if date := s.extractDate(props, "Date"); date != nil {
+		if date := ExtractDate(props, "Date"); date != nil {
 			if latest == nil || date.After(*latest) {
 				latest = date
 			}
@@ -375,17 +369,17 @@ func (s *ContractorPayoutsService) QueryPendingRefundCommissionBeforeDate(ctx co
 			// Extract payout entry data
 			entry := PayoutEntry{
 				PageID:          page.ID,
-				Name:            s.extractTitle(props, "Name"),
-				Description:     s.extractRichText(props, "Description"),
-				PersonPageID:    s.extractFirstRelationID(props, "Person"),
-				Amount:          s.extractNumber(props, "Amount"),
-				Currency:        s.extractSelect(props, "Currency"),
-				Status:          s.extractStatus(props, "Status"),
-				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
-				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
-				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
-				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
-				ServiceRateID:   s.extractFirstRelationID(props, "00 Service Rate"),
+				Name:            ExtractTitle(props, "Name"),
+				Description:     ExtractRichText(props, "Description"),
+				PersonPageID:    ExtractFirstRelationID(props, "Person"),
+				Amount:          ExtractNumber(props, "Amount"),
+				Currency:        ExtractSelect(props, "Currency"),
+				Status:          ExtractStatus(props, "Status"),
+				TaskOrderID:     ExtractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  ExtractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: ExtractFirstRelationID(props, "01 Refund"),
+				WorkDetails:     ExtractFormulaString(props, "00 Work Details"),
+				ServiceRateID:   ExtractFirstRelationID(props, "00 Service Rate"),
 			}
 
 			// Determine source type based on which relation is set
@@ -486,87 +480,6 @@ func (s *ContractorPayoutsService) determineSourceType(entry PayoutEntry) Payout
 	}
 	s.logger.Debug("[DEBUG] contractor_payouts: sourceType=Extra Payment (no relation set)")
 	return PayoutSourceTypeExtraPayment
-}
-
-func (s *ContractorPayoutsService) extractDate(props nt.DatabasePageProperties, propName string) *time.Time {
-	if prop, ok := props[propName]; ok && prop.Date != nil {
-		return &prop.Date.Start.Time
-	}
-
-	return nil
-}
-
-// Helper functions for extracting properties
-
-func (s *ContractorPayoutsService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Relation) == 0 {
-		return ""
-	}
-	return prop.Relation[0].ID
-}
-
-func (s *ContractorPayoutsService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	prop, ok := props[propName]
-	if !ok || prop.Number == nil {
-		return 0
-	}
-	return *prop.Number
-}
-
-func (s *ContractorPayoutsService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Select == nil {
-		return ""
-	}
-	return prop.Select.Name
-}
-
-func (s *ContractorPayoutsService) extractStatus(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Status == nil {
-		return ""
-	}
-	return prop.Status.Name
-}
-
-func (s *ContractorPayoutsService) extractTitle(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Title) == 0 {
-		return ""
-	}
-	var result string
-	for _, rt := range prop.Title {
-		result += rt.PlainText
-	}
-	return result
-}
-
-func (s *ContractorPayoutsService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.RichText) == 0 {
-		return ""
-	}
-	var result string
-	for _, rt := range prop.RichText {
-		result += rt.PlainText
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: extracted rich text %s length=%d", propName, len(result)))
-	return result
-}
-
-func (s *ContractorPayoutsService) extractFormulaString(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Formula == nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: formula property %s not found or nil", propName))
-		return ""
-	}
-	if prop.Formula.String != nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: extracted formula %s value length=%d", propName, len(*prop.Formula.String)))
-		return *prop.Formula.String
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: formula property %s has no string value", propName))
-	return ""
 }
 
 // CheckPayoutExistsByContractorFee checks if a payout already exists for a given task order (was contractor fee)
@@ -675,7 +588,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByContractorFees(ctx context
 			}
 
 			// Extract task order ID from relation
-			taskOrderID := s.extractFirstRelationID(props, "00 Task Order")
+			taskOrderID := ExtractFirstRelationID(props, "00 Task Order")
 			if taskOrderID == "" || !taskOrderSet[taskOrderID] {
 				continue // Not in our target set
 			}
@@ -940,7 +853,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByRefundRequests(ctx context
 			}
 
 			// Extract refund request ID from relation
-			refundRequestID := s.extractFirstRelationID(props, "01 Refund")
+			refundRequestID := ExtractFirstRelationID(props, "01 Refund")
 			if refundRequestID == "" || !refundSet[refundRequestID] {
 				continue // Not in our target set
 			}
@@ -1172,7 +1085,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByInvoiceSplits(ctx context.
 			}
 
 			// Extract invoice split ID from relation
-			invoiceSplitID := s.extractFirstRelationID(props, "02 Invoice Split")
+			invoiceSplitID := ExtractFirstRelationID(props, "02 Invoice Split")
 			if invoiceSplitID == "" || !splitSet[invoiceSplitID] {
 				continue // Not in our target set
 			}
@@ -1369,8 +1282,8 @@ func (s *ContractorPayoutsService) FetchInvoiceSplitInfo(ctx context.Context, in
 
 	// Extract Role from select and Code from formula (project code)
 	info := &InvoiceSplitInfo{
-		Role:    shortenRole(s.extractSelect(props, "Role")),
-		Project: s.extractFormulaString(props, "Code"), // Use Code formula for project grouping
+		Role:    shortenRole(ExtractSelect(props, "Role")),
+		Project: ExtractFormulaString(props, "Code"), // Use Code formula for project grouping
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: invoice split info - Role=%s Project=%s (from Code formula)", info.Role, info.Project))
@@ -1401,9 +1314,9 @@ func (s *ContractorPayoutsService) GetPayoutWithRelations(ctx context.Context, p
 
 	result := &PayoutWithRelations{
 		PageID:          payoutPageID,
-		Status:          s.extractStatus(props, "Status"),
-		InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
-		RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+		Status:          ExtractStatus(props, "Status"),
+		InvoiceSplitID:  ExtractFirstRelationID(props, "02 Invoice Split"),
+		RefundRequestID: ExtractFirstRelationID(props, "01 Refund"),
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payouts: payout pageID=%s status=%s invoiceSplit=%s refund=%s",
@@ -1549,17 +1462,17 @@ func (s *ContractorPayoutsService) QueryPayoutsWithInvoiceSplit(ctx context.Cont
 			// Extract payout entry data
 			entry := PayoutEntry{
 				PageID:          page.ID,
-				Name:            s.extractTitle(props, "Name"),
-				Description:     s.extractRichText(props, "Description"),
-				PersonPageID:    s.extractFirstRelationID(props, "Person"),
-				Amount:          s.extractNumber(props, "Amount"),
-				Currency:        s.extractSelect(props, "Currency"),
-				Status:          s.extractStatus(props, "Status"),
-				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
-				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
-				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
-				WorkDetails:     s.extractFormulaString(props, "00 Work Details"),
-				ServiceRateID:   s.extractFirstRelationID(props, "00 Service Rate"),
+				Name:            ExtractTitle(props, "Name"),
+				Description:     ExtractRichText(props, "Description"),
+				PersonPageID:    ExtractFirstRelationID(props, "Person"),
+				Amount:          ExtractNumber(props, "Amount"),
+				Currency:        ExtractSelect(props, "Currency"),
+				Status:          ExtractStatus(props, "Status"),
+				TaskOrderID:     ExtractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  ExtractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: ExtractFirstRelationID(props, "01 Refund"),
+				WorkDetails:     ExtractFormulaString(props, "00 Work Details"),
+				ServiceRateID:   ExtractFirstRelationID(props, "00 Service Rate"),
 			}
 
 			// Determine source type based on which relation is set
@@ -2111,7 +2024,7 @@ func (s *ContractorPayoutsService) QueryPendingExtraPayments(ctx context.Context
 			// Filter by month in memory (formula filters can be slow)
 			// Include entries on or before the given month (YYYY-MM format allows lexicographic comparison)
 			if month != "" {
-				entryMonth := s.extractFormulaString(props, "Month")
+				entryMonth := ExtractFormulaString(props, "Month")
 				if entryMonth == "" || entryMonth > month {
 					s.logger.Debug(fmt.Sprintf("[EXTRA_PAYMENT] skipping pageID=%s month=%s (cutoff %s)", page.ID, entryMonth, month))
 					continue
@@ -2119,8 +2032,8 @@ func (s *ContractorPayoutsService) QueryPendingExtraPayments(ctx context.Context
 			}
 
 			// Extract basic payout entry data
-			amount := s.extractNumber(props, "Amount")
-			currency := s.extractSelect(props, "Currency")
+			amount := ExtractNumber(props, "Amount")
+			currency := ExtractSelect(props, "Currency")
 
 			// Convert to USD if currency is VND
 			amountUSD := amount
@@ -2130,19 +2043,19 @@ func (s *ContractorPayoutsService) QueryPendingExtraPayments(ctx context.Context
 
 			entry := ExtraPaymentEntry{
 				PageID:           page.ID,
-				Name:             s.extractTitle(props, "Name"),
-				Description:      s.extractRichText(props, "Description"),
+				Name:             ExtractTitle(props, "Name"),
+				Description:      ExtractRichText(props, "Description"),
 				Amount:           amount,
 				AmountUSD:        amountUSD,
 				Currency:         currency,
-				ContractorPageID: s.extractFirstRelationID(props, "Person"),
+				ContractorPageID: ExtractFirstRelationID(props, "Person"),
 			}
 
 			// Determine source type using existing logic
 			payoutEntry := PayoutEntry{
-				TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
-				InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
-				RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+				TaskOrderID:     ExtractFirstRelationID(props, "00 Task Order"),
+				InvoiceSplitID:  ExtractFirstRelationID(props, "02 Invoice Split"),
+				RefundRequestID: ExtractFirstRelationID(props, "01 Refund"),
 				Description:     entry.Description,
 			}
 			entry.SourceType = s.determineSourceType(payoutEntry)
@@ -2212,8 +2125,8 @@ func (s *ContractorPayoutsService) GetExtraPaymentEntryByPageID(ctx context.Cont
 	}
 
 	// Extract basic payout entry data
-	amount := s.extractNumber(props, "Amount")
-	currency := s.extractSelect(props, "Currency")
+	amount := ExtractNumber(props, "Amount")
+	currency := ExtractSelect(props, "Currency")
 
 	// Convert to USD if currency is VND
 	amountUSD := amount
@@ -2223,19 +2136,19 @@ func (s *ContractorPayoutsService) GetExtraPaymentEntryByPageID(ctx context.Cont
 
 	entry := &ExtraPaymentEntry{
 		PageID:           page.ID,
-		Name:             s.extractTitle(props, "Name"),
-		Description:      s.extractRichText(props, "Description"),
+		Name:             ExtractTitle(props, "Name"),
+		Description:      ExtractRichText(props, "Description"),
 		Amount:           amount,
 		AmountUSD:        amountUSD,
 		Currency:         currency,
-		ContractorPageID: s.extractFirstRelationID(props, "Person"),
+		ContractorPageID: ExtractFirstRelationID(props, "Person"),
 	}
 
 	// Determine source type using existing logic
 	payoutEntry := PayoutEntry{
-		TaskOrderID:     s.extractFirstRelationID(props, "00 Task Order"),
-		InvoiceSplitID:  s.extractFirstRelationID(props, "02 Invoice Split"),
-		RefundRequestID: s.extractFirstRelationID(props, "01 Refund"),
+		TaskOrderID:     ExtractFirstRelationID(props, "00 Task Order"),
+		InvoiceSplitID:  ExtractFirstRelationID(props, "02 Invoice Split"),
+		RefundRequestID: ExtractFirstRelationID(props, "01 Refund"),
 		Description:     entry.Description,
 	}
 	entry.SourceType = s.determineSourceType(payoutEntry)

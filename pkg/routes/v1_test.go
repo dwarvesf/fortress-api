@@ -1255,12 +1255,6 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.InitTaskOrderLogs-fm",
 			},
 		},
-		"/cronjobs/create-contractor-fees": {
-			"POST": {
-				Method:  "POST",
-				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notion.IHandler.CreateContractorFees-fm",
-			},
-		},
 		"/cronjobs/create-contractor-payouts": {
 			"POST": {
 				Method:  "POST",

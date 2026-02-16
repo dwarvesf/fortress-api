@@ -15,9 +15,7 @@ import (
 
 // ContractorPayablesService handles contractor payables operations with Notion
 type ContractorPayablesService struct {
-	client    *nt.Client
-	cfg       *config.Config
-	logger    logger.Logger
+	*baseService
 	notionSvc IService // For file upload operations
 }
 
@@ -37,19 +35,17 @@ type CreatePayableInput struct {
 }
 
 // NewContractorPayablesService creates a new Notion contractor payables service
-func NewContractorPayablesService(cfg *config.Config, logger logger.Logger, notionSvc IService) *ContractorPayablesService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewContractorPayablesService(cfg *config.Config, l logger.Logger, notionSvc IService) *ContractorPayablesService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("[DEBUG] contractor_payables: creating new ContractorPayablesService")
+	l.Debug("[DEBUG] contractor_payables: creating new ContractorPayablesService")
 
 	return &ContractorPayablesService{
-		client:    nt.NewClient(cfg.Notion.Secret),
-		cfg:       cfg,
-		logger:    logger,
-		notionSvc: notionSvc,
+		baseService: base,
+		notionSvc:   notionSvc,
 	}
 }
 
@@ -139,7 +135,7 @@ func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, con
 			continue
 		}
 
-		existingPayoutIDs := s.extractAllRelationIDs(props, "Payout Items")
+		existingPayoutIDs := ExtractAllRelationIDs(props, "Payout Items")
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: checking payable pageID=%s existingPayoutItemCount=%d", page.ID, len(existingPayoutIDs)))
 
 		// Check for overlap between input payout items and existing payable's payout items
@@ -235,10 +231,10 @@ func (s *ContractorPayablesService) FindPayableByContractorAndPeriodAllStatus(ct
 
 		payableInfo := &PayableInfo{
 			PageID:    page.ID,
-			Status:    s.extractStatus(props, "Payment Status"),
-			Total:     s.extractNumber(props, "Total"),
-			Currency:  s.extractSelect(props, "Currency"),
-			InvoiceID: s.extractRichText(props, "Invoice ID"),
+			Status:    ExtractStatus(props, "Payment Status"),
+			Total:     ExtractNumber(props, "Total"),
+			Currency:  ExtractSelect(props, "Currency"),
+			InvoiceID: ExtractRichTextFirst(props, "Invoice ID"),
 		}
 
 		// Extract payment date if paid
@@ -334,10 +330,10 @@ func (s *ContractorPayablesService) FindPayableByContractorAndPeriod(ctx context
 
 		payableInfo := &PayableInfo{
 			PageID:    page.ID,
-			Status:    s.extractSelect(props, "Payment Status"),
-			Total:     s.extractNumber(props, "Total"),
-			Currency:  s.extractSelect(props, "Currency"),
-			InvoiceID: s.extractRichText(props, "Invoice ID"),
+			Status:    ExtractSelect(props, "Payment Status"),
+			Total:     ExtractNumber(props, "Total"),
+			Currency:  ExtractSelect(props, "Currency"),
+			InvoiceID: ExtractRichTextFirst(props, "Invoice ID"),
 		}
 
 		// Extract payment date if paid
@@ -757,15 +753,15 @@ func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Con
 			// Extract payable data
 			payable := PendingPayable{
 				PageID:            page.ID,
-				ContractorPageID:  s.extractFirstRelationID(props, "Contractor"),
-				Total:             s.extractNumber(props, "Total"),
-				Currency:          s.extractSelect(props, "Currency"),
+				ContractorPageID:  ExtractFirstRelationID(props, "Contractor"),
+				Total:             ExtractNumber(props, "Total"),
+				Currency:          ExtractSelect(props, "Currency"),
 				Period:            periodStr,
-				PayoutItemPageIDs: s.extractAllRelationIDs(props, "Payout Items"),
+				PayoutItemPageIDs: ExtractAllRelationIDs(props, "Payout Items"),
 			}
 
 			// Extract contractor name from rollup if available
-			payable.ContractorName = s.extractRollupTitle(props, "Contractor Name")
+			payable.ContractorName = ExtractRollupTitle(props, "Contractor Name")
 
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: parsed payable pageID=%s contractor=%s contractorName=%s total=%.2f currency=%s payoutItems=%d",
 				payable.PageID, payable.ContractorPageID, payable.ContractorName, payable.Total, payable.Currency, len(payable.PayoutItemPageIDs)))
@@ -920,7 +916,7 @@ func (s *ContractorPayablesService) GetContractorPayDay(ctx context.Context, con
 	}
 
 	// Extract PayDay from Select property (property name is "Payday" with lowercase 'd')
-	payDayStr := s.extractSelect(props, "Payday")
+	payDayStr := ExtractSelect(props, "Payday")
 	if payDayStr == "" {
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: PayDay property not found or empty for contractor=%s", contractorPageID))
 		return 0, fmt.Errorf("PayDay property not found for contractor %s", contractorPageID)
@@ -1141,7 +1137,7 @@ func (s *ContractorPayablesService) QueryNewPayables(ctx context.Context) ([]New
 				continue
 			}
 
-			invoiceID := s.extractRichText(props, "Invoice ID")
+			invoiceID := ExtractRichTextFirst(props, "Invoice ID")
 			if invoiceID == "" {
 				continue
 			}
@@ -1149,7 +1145,7 @@ func (s *ContractorPayablesService) QueryNewPayables(ctx context.Context) ([]New
 			payable := NewPayable{
 				PageID:           page.ID,
 				InvoiceID:        invoiceID,
-				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
+				ContractorPageID: ExtractFirstRelationID(props, "Contractor"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found new payable pageID=%s invoiceID=%s contractor=%s",
@@ -1167,81 +1163,6 @@ func (s *ContractorPayablesService) QueryNewPayables(ctx context.Context) ([]New
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: total new payables found=%d", len(payables)))
 	return payables, nil
-}
-
-// Helper functions for property extraction
-
-func (s *ContractorPayablesService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Relation) == 0 {
-		return ""
-	}
-	return prop.Relation[0].ID
-}
-
-func (s *ContractorPayablesService) extractAllRelationIDs(props nt.DatabasePageProperties, propName string) []string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Relation) == 0 {
-		return nil
-	}
-	ids := make([]string, len(prop.Relation))
-	for i, rel := range prop.Relation {
-		ids[i] = rel.ID
-	}
-	return ids
-}
-
-func (s *ContractorPayablesService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	prop, ok := props[propName]
-	if !ok || prop.Number == nil {
-		return 0
-	}
-	return *prop.Number
-}
-
-func (s *ContractorPayablesService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Select == nil {
-		return ""
-	}
-	return prop.Select.Name
-}
-
-func (s *ContractorPayablesService) extractStatus(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Status == nil {
-		return ""
-	}
-	return prop.Status.Name
-}
-
-func (s *ContractorPayablesService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.RichText) == 0 {
-		return ""
-	}
-	return prop.RichText[0].PlainText
-}
-
-func (s *ContractorPayablesService) extractRollupTitle(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Rollup == nil {
-		return ""
-	}
-
-	// Handle array type rollup (most common for relation rollups)
-	if prop.Rollup.Type == "array" && len(prop.Rollup.Array) > 0 {
-		firstItem := prop.Rollup.Array[0]
-		if len(firstItem.Title) > 0 {
-			var result string
-			for _, rt := range firstItem.Title {
-				result += rt.PlainText
-			}
-			return result
-		}
-	}
-
-	return ""
 }
 
 // contractorInfo holds contractor details fetched from Contractor page

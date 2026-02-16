@@ -23,11 +23,9 @@ import (
 // ExpenseService fetches approved expenses from Notion API and transforms them to Basecamp Todo format
 // for payroll calculation. This service implements the basecamp.ExpenseProvider interface.
 type ExpenseService struct {
-	client *nt.Client
-	cfg    *config.Config
-	store  *store.Store
-	repo   store.DBRepo
-	logger logger.Logger
+	*baseService
+	store *store.Store
+	repo  store.DBRepo
 
 	// idMapping stores the mapping from hashed integer ID to original Notion page UUID.
 	// This is populated during GetAllInList and used during MarkExpenseAsCompleted.
@@ -35,19 +33,17 @@ type ExpenseService struct {
 }
 
 // NewExpenseService creates a new Notion expense service for payroll expense fetching.
-func NewExpenseService(cfg *config.Config, store *store.Store, repo store.DBRepo, logger logger.Logger) *ExpenseService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewExpenseService(cfg *config.Config, store *store.Store, repo store.DBRepo, l logger.Logger) *ExpenseService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
 	return &ExpenseService{
-		client:    nt.NewClient(cfg.Notion.Secret),
-		cfg:       cfg,
-		store:     store,
-		repo:      repo,
-		logger:    logger,
-		idMapping: make(map[int]string),
+		baseService: base,
+		store:       store,
+		repo:        repo,
+		idMapping:   make(map[int]string),
 	}
 }
 
@@ -368,12 +364,12 @@ func (e *ExpenseService) transformPageToTodo(page nt.Page) (*bcModel.Todo, error
 	// Extract expense fields
 	// Build title from Notes (rich_text) or Description (rich_text) or Refund ID (title)
 	title := e.extractTitle(props)
-	amount := e.extractNumber(props, "Amount")
-	currency := e.extractSelect(props, "Currency")
+	amount := ExtractNumber(props,"Amount")
+	currency := ExtractSelect(props,"Currency")
 	// Try "Reason" first (Refund Requests DB), fallback to "Expense Category" (legacy)
-	category := e.extractSelect(props, "Reason")
+	category := ExtractSelect(props,"Reason")
 	if category == "" {
-		category = e.extractSelect(props, "Expense Category")
+		category = ExtractSelect(props,"Expense Category")
 		e.logger.Debug(fmt.Sprintf("Using legacy 'Expense Category' property: %s", category))
 	} else {
 		e.logger.Debug(fmt.Sprintf("Using 'Reason' property for category: %s", category))
@@ -505,21 +501,6 @@ func (e *ExpenseService) extractTitle(props nt.DatabasePageProperties) string {
 	return ""
 }
 
-// extractNumber extracts a number property value
-func (e *ExpenseService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	if prop, ok := props[propName]; ok && prop.Number != nil {
-		return *prop.Number
-	}
-	return 0
-}
-
-// extractSelect extracts a select property value
-func (e *ExpenseService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Select != nil {
-		return prop.Select.Name
-	}
-	return ""
-}
 
 // extractRequestorEmail extracts the requestor's email from the Notion page.
 // Uses the Team Email property (email type).

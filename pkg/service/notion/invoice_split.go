@@ -17,9 +17,7 @@ const InvoiceSplitsDBID = "2c364b29b84c80498a8df7befd22f7fc"
 
 // InvoiceSplitService handles invoice split operations with Notion
 type InvoiceSplitService struct {
-	client *nt.Client
-	cfg    *config.Config
-	logger logger.Logger
+	*baseService
 }
 
 // InvoiceSplitData represents invoice split data from Notion
@@ -62,19 +60,15 @@ type CreateCommissionSplitInput struct {
 }
 
 // NewInvoiceSplitService creates a new Notion invoice split service
-func NewInvoiceSplitService(cfg *config.Config, logger logger.Logger) *InvoiceSplitService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewInvoiceSplitService(cfg *config.Config, l logger.Logger) *InvoiceSplitService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new InvoiceSplitService")
+	l.Debug("creating new InvoiceSplitService")
 
-	return &InvoiceSplitService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		logger: logger,
-	}
+	return &InvoiceSplitService{baseService: base}
 }
 
 // GetInvoiceSplitByID fetches invoice split data by page ID
@@ -102,37 +96,15 @@ func (s *InvoiceSplitService) GetInvoiceSplitByID(ctx context.Context, splitPage
 	// Extract invoice split data
 	data := &InvoiceSplitData{
 		PageID:   splitPageID,
-		Amount:   s.extractNumber(props, "Amount"),
-		Role:     s.extractSelect(props, "Role"),
-		Currency: s.extractSelect(props, "Currency"),
+		Amount:   ExtractNumber(props, "Amount"),
+		Role:     ExtractSelect(props, "Role"),
+		Currency: ExtractSelect(props, "Currency"),
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: parsed data pageID=%s role=%s amount=%.2f currency=%s",
 		data.PageID, data.Role, data.Amount, data.Currency))
 
 	return data, nil
-}
-
-// Helper functions for extracting properties
-
-func (s *InvoiceSplitService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	prop, ok := props[propName]
-	if !ok || prop.Number == nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: number property %s not found or nil", propName))
-		return 0
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: number %s value=%.2f", propName, *prop.Number))
-	return *prop.Number
-}
-
-func (s *InvoiceSplitService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Select == nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: select property %s not found or nil", propName))
-		return ""
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: select %s value=%s", propName, prop.Select.Name))
-	return prop.Select.Name
 }
 
 // CreateCommissionSplit creates a new invoice split record in Notion
@@ -233,7 +205,7 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 	// Fetch the created page to get the Description formula value
 	var description string
 	if props, ok := page.Properties.(nt.DatabasePageProperties); ok {
-		description = s.extractFormula(props, "Description")
+		description = ExtractFormulaString(props, "Description")
 		l.Debug(fmt.Sprintf("extracted Description formula: %s", description))
 	}
 
@@ -244,60 +216,6 @@ func (s *InvoiceSplitService) CreateCommissionSplit(ctx context.Context, input C
 		Currency:    input.Currency,
 		Description: description,
 	}, nil
-}
-
-// extractTitle extracts title property value
-func (s *InvoiceSplitService) extractTitle(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Title) == 0 {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: title property %s not found or empty", propName))
-		return ""
-	}
-	var result string
-	for _, rt := range prop.Title {
-		result += rt.PlainText
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: title %s value=%s", propName, result))
-	return result
-}
-
-// extractFirstRelationID extracts the first relation ID from a relation property
-func (s *InvoiceSplitService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || len(prop.Relation) == 0 {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: relation property %s not found or empty", propName))
-		return ""
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: relation %s first ID=%s", propName, prop.Relation[0].ID))
-	return prop.Relation[0].ID
-}
-
-// extractDate extracts date property value as YYYY-MM-DD string
-func (s *InvoiceSplitService) extractDate(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Date == nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: date property %s not found or nil", propName))
-		return ""
-	}
-	dateStr := prop.Date.Start.Format("2006-01-02")
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: date %s value=%s", propName, dateStr))
-	return dateStr
-}
-
-// extractFormula extracts formula property value (string result)
-func (s *InvoiceSplitService) extractFormula(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Formula == nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: formula property %s not found or nil", propName))
-		return ""
-	}
-	// Formula can return string, number, boolean, or date
-	if prop.Formula.String != nil {
-		s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: formula %s string value=%s", propName, *prop.Formula.String))
-		return *prop.Formula.String
-	}
-	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: formula %s has no string value", propName))
-	return ""
 }
 
 // QueryPendingInvoiceSplits queries invoice splits with Status=Pending and Type in (Commission, Bonus, Fee, Service Fee)
@@ -380,15 +298,15 @@ func (s *InvoiceSplitService) QueryPendingInvoiceSplits(ctx context.Context) ([]
 
 			split := PendingCommissionSplit{
 				PageID:       page.ID,
-				Name:         s.extractTitle(props, "Name"),
-				AutoName:     s.extractFormula(props, "Auto Name"),
-				Amount:       s.extractNumber(props, "Amount"),
-				Currency:     s.extractSelect(props, "Currency"),
-				Role:         s.extractSelect(props, "Role"),
-				Type:         s.extractSelect(props, "Type"),
-				PersonPageID: s.extractFirstRelationID(props, "Person"),
-				Month:        s.extractDate(props, "Month"),
-				Description:  s.extractFormula(props, "Description"),
+				Name:         ExtractTitle(props, "Name"),
+				AutoName:     ExtractFormulaString(props, "Auto Name"),
+				Amount:       ExtractNumber(props, "Amount"),
+				Currency:     ExtractSelect(props, "Currency"),
+				Role:         ExtractSelect(props, "Role"),
+				Type:         ExtractSelect(props, "Type"),
+				PersonPageID: ExtractFirstRelationID(props, "Person"),
+				Month:        ExtractDateString(props, "Month"),
+				Description:  ExtractFormulaString(props, "Description"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: parsed invoice split pageID=%s name=%s type=%s amount=%.2f currency=%s role=%s personID=%s month=%s notes=%s",
@@ -473,8 +391,8 @@ func (s *InvoiceSplitService) GetInvoiceSplitSyncData(ctx context.Context, pageI
 
 	data := &InvoiceSplitSyncData{
 		PageID:      pageID,
-		Description: s.extractFormula(props, "Description"),
-		Amount:      s.extractNumber(props, "Amount"),
+		Description: ExtractFormulaString(props, "Description"),
+		Amount:      ExtractNumber(props, "Amount"),
 	}
 
 	s.logger.Debug(fmt.Sprintf("[DEBUG] invoice_split: sync data pageID=%s description=%s amount=%.2f",

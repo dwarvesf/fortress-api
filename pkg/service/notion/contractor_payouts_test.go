@@ -110,7 +110,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 		}, nil
 	})
 
-	service := &ContractorPayoutsService{
+	service := &ContractorPayoutsService{baseService: &baseService{
 		client: client,
 		cfg: &config.Config{
 			Notion: config.Notion{
@@ -120,7 +120,7 @@ func TestGetLatestPayoutDateByDiscord_QueryAndParse(t *testing.T) {
 			},
 		},
 		logger: logger.NewLogrusLogger("debug"),
-	}
+	}}
 
 	got, err := service.GetLatestPayoutDateByDiscord(context.Background(), discord)
 	require.NoError(t, err)
@@ -145,7 +145,7 @@ func TestGetLatestPayoutDateByDiscord_NoResults(t *testing.T) {
 		}, nil
 	})
 
-	service := &ContractorPayoutsService{
+	service := &ContractorPayoutsService{baseService: &baseService{
 		client: client,
 		cfg: &config.Config{
 			Notion: config.Notion{
@@ -155,7 +155,7 @@ func TestGetLatestPayoutDateByDiscord_NoResults(t *testing.T) {
 			},
 		},
 		logger: logger.NewLogrusLogger("debug"),
-	}
+	}}
 
 	got, err := service.GetLatestPayoutDateByDiscord(context.Background(), "adeki_")
 	require.NoError(t, err)
@@ -191,7 +191,7 @@ func TestGetLatestPayoutDateByDiscord_EmptyDate(t *testing.T) {
 		}, nil
 	})
 
-	service := &ContractorPayoutsService{
+	service := &ContractorPayoutsService{baseService: &baseService{
 		client: client,
 		cfg: &config.Config{
 			Notion: config.Notion{
@@ -201,7 +201,7 @@ func TestGetLatestPayoutDateByDiscord_EmptyDate(t *testing.T) {
 			},
 		},
 		logger: logger.NewLogrusLogger("debug"),
-	}
+	}}
 
 	got, err := service.GetLatestPayoutDateByDiscord(context.Background(), "adeki_")
 	require.NoError(t, err)
@@ -210,7 +210,7 @@ func TestGetLatestPayoutDateByDiscord_EmptyDate(t *testing.T) {
 
 func TestDetermineSourceType(t *testing.T) {
 	l := logger.NewLogrusLogger("debug")
-	service := &ContractorPayoutsService{logger: l}
+	service := &ContractorPayoutsService{baseService: &baseService{logger: l}}
 
 	tests := []struct {
 		name     string

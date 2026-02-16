@@ -19,8 +19,6 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/communitynft"
 	"github.com/dwarvesf/fortress-api/pkg/service/currency"
 	"github.com/dwarvesf/fortress-api/pkg/service/discord"
-	"github.com/dwarvesf/fortress-api/pkg/service/invoiceemail"
-	"github.com/dwarvesf/fortress-api/pkg/service/pdfparser"
 	"github.com/dwarvesf/fortress-api/pkg/service/duckdb"
 	"github.com/dwarvesf/fortress-api/pkg/service/evm"
 	"github.com/dwarvesf/fortress-api/pkg/service/github"
@@ -32,6 +30,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/googlestorage"
 	"github.com/dwarvesf/fortress-api/pkg/service/icyswap"
 	"github.com/dwarvesf/fortress-api/pkg/service/improvmx"
+	"github.com/dwarvesf/fortress-api/pkg/service/invoiceemail"
 	"github.com/dwarvesf/fortress-api/pkg/service/landingzone"
 	"github.com/dwarvesf/fortress-api/pkg/service/lobsters"
 	"github.com/dwarvesf/fortress-api/pkg/service/mochi"
@@ -42,6 +41,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/ogifmemosummarizer"
 	"github.com/dwarvesf/fortress-api/pkg/service/openrouter"
 	"github.com/dwarvesf/fortress-api/pkg/service/parquet"
+	"github.com/dwarvesf/fortress-api/pkg/service/pdfparser"
 	"github.com/dwarvesf/fortress-api/pkg/service/reddit"
 	"github.com/dwarvesf/fortress-api/pkg/service/sendgrid"
 	"github.com/dwarvesf/fortress-api/pkg/service/taskprovider"
@@ -54,43 +54,43 @@ import (
 )
 
 type Service struct {
-	Basecamp                     *basecamp.Service
-	TaskProvider                 taskprovider.InvoiceProvider
-	AccountingProvider           taskprovider.AccountingProvider
-	ExpenseProvider              taskprovider.ExpenseProvider // Webhook expense provider
-	PayrollExpenseProvider       basecamp.ExpenseProvider     // Payroll expense fetcher (Basecamp or NocoDB expense_submissions)
+	Basecamp                      *basecamp.Service
+	TaskProvider                  taskprovider.InvoiceProvider
+	AccountingProvider            taskprovider.AccountingProvider
+	ExpenseProvider               taskprovider.ExpenseProvider // Webhook expense provider
+	PayrollExpenseProvider        basecamp.ExpenseProvider     // Payroll expense fetcher (Basecamp or NocoDB expense_submissions)
 	PayrollAccountingTodoProvider basecamp.ExpenseProvider     // Payroll accounting todo fetcher (NocoDB accounting_todos)
-	NocoDB                       *nocodb.Service
-	Cache                   *cache.Cache
-	Currency                currency.IService
-	Discord                 discord.IService
-	DuckDB                  duckdb.IService
-	Github                  github.IService
-	Google                  googleauth.IService
-	GoogleStorage           googlestorage.IService
-	GoogleAdmin             googleadmin.IService
-	GoogleDrive             googledrive.IService
-	GoogleMail              googlemail.IService
-	GoogleSheet             googlesheet.IService
-	ImprovMX                improvmx.IService
-	Mochi                   mochi.IService
-	MochiPay                mochipay.IService
-	MochiProfile            mochiprofile.IService
-	Notion                  *notion.Services
-	OpenRouter              *openrouter.OpenRouterService
-	ParquetSync             parquet.ISyncService
-	Sendgrid                sendgrid.IService
-	Wise                    wise.IService
-	BaseClient              evm.IService
-	IcySwap                 icyswap.IService
-	CommunityNft            communitynft.IService
-	Tono                    tono.IService
-	Reddit                  reddit.IService
-	Lobsters                lobsters.IService
-	Youtube                 yt.IService
-	Dify                    ogifmemosummarizer.IService
-	LandingZone             landingzone.IService
-	InvoiceEmailProcessor   invoiceemail.IProcessor
+	NocoDB                        *nocodb.Service
+	Cache                         *cache.Cache
+	Currency                      currency.IService
+	Discord                       discord.IService
+	DuckDB                        duckdb.IService
+	Github                        github.IService
+	Google                        googleauth.IService
+	GoogleStorage                 googlestorage.IService
+	GoogleAdmin                   googleadmin.IService
+	GoogleDrive                   googledrive.IService
+	GoogleMail                    googlemail.IService
+	GoogleSheet                   googlesheet.IService
+	ImprovMX                      improvmx.IService
+	Mochi                         mochi.IService
+	MochiPay                      mochipay.IService
+	MochiProfile                  mochiprofile.IService
+	Notion                        *notion.Services
+	OpenRouter                    *openrouter.OpenRouterService
+	ParquetSync                   parquet.ISyncService
+	Sendgrid                      sendgrid.IService
+	Wise                          wise.IService
+	BaseClient                    evm.IService
+	IcySwap                       icyswap.IService
+	CommunityNft                  communitynft.IService
+	Tono                          tono.IService
+	Reddit                        reddit.IService
+	Lobsters                      lobsters.IService
+	Youtube                       yt.IService
+	Dify                          ogifmemosummarizer.IService
+	LandingZone                   landingzone.IService
+	InvoiceEmailProcessor         invoiceemail.IProcessor
 }
 
 func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, error) {
@@ -280,28 +280,28 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 	// For Notion provider, payrollAccountingTodoProvider remains nil (all expenses fetched via PayrollExpenseProvider)
 
 	return &Service{
-		Basecamp:                     basecampSvc,
-		TaskProvider:                 invoiceProvider,
-		AccountingProvider:           accountingProvider,
-		ExpenseProvider:              expenseProvider,
-		PayrollExpenseProvider:       payrollExpenseProvider,
+		Basecamp:                      basecampSvc,
+		TaskProvider:                  invoiceProvider,
+		AccountingProvider:            accountingProvider,
+		ExpenseProvider:               expenseProvider,
+		PayrollExpenseProvider:        payrollExpenseProvider,
 		PayrollAccountingTodoProvider: payrollAccountingTodoProvider,
-		NocoDB:                       nocoSvc,
-		Cache:              cch,
-		Currency:           Currency,
-		Discord:            discord.New(cfg),
-		DuckDB:             duckDBSvc,
-		Github:             github.New(cfg, logger.L),
-		Google:             googleAuthSvc,
-		GoogleStorage:      gcsSvc,
-		GoogleAdmin:        googleAdminSvc,
-		GoogleDrive:        googleDriveSvc,
-		GoogleMail:         googleMailSvc,
-		GoogleSheet:        gSheetSvc,
-		ImprovMX:           improvmx.New(cfg.ImprovMX.Token),
-		Mochi:              mochi.New(cfg, logger.L),
-		MochiPay:           mochipay.New(cfg, logger.L),
-		MochiProfile:       mochiprofile.New(cfg, logger.L),
+		NocoDB:                        nocoSvc,
+		Cache:                         cch,
+		Currency:                      Currency,
+		Discord:                       discord.New(cfg),
+		DuckDB:                        duckDBSvc,
+		Github:                        github.New(cfg, logger.L),
+		Google:                        googleAuthSvc,
+		GoogleStorage:                 gcsSvc,
+		GoogleAdmin:                   googleAdminSvc,
+		GoogleDrive:                   googleDriveSvc,
+		GoogleMail:                    googleMailSvc,
+		GoogleSheet:                   gSheetSvc,
+		ImprovMX:                      improvmx.New(cfg.ImprovMX.Token),
+		Mochi:                         mochi.New(cfg, logger.L),
+		MochiPay:                      mochipay.New(cfg, logger.L),
+		MochiProfile:                  mochiprofile.New(cfg, logger.L),
 		Notion: func() *notion.Services {
 			notionSvc := notion.New(cfg.Notion.Secret, cfg.Notion.Databases.Project, logger.L, repo.DB())
 			return &notion.Services{
@@ -309,26 +309,25 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 				Timesheet:          notion.NewTimesheetService(cfg, logger.L),
 				TaskOrderLog:       notion.NewTaskOrderLogService(cfg, logger.L),
 				ContractorRates:    notion.NewContractorRatesService(cfg, logger.L),
-				ContractorFees:     notion.NewContractorFeesService(cfg, logger.L),
 				ContractorPayouts:  notion.NewContractorPayoutsService(cfg, logger.L),
 				ContractorPayables: notion.NewContractorPayablesService(cfg, logger.L, notionSvc),
 				RefundRequests:     notion.NewRefundRequestsService(cfg, logger.L),
 				InvoiceSplit:       notion.NewInvoiceSplitService(cfg, logger.L),
 			}
 		}(),
-		OpenRouter:     openrouter.NewOpenRouterService(cfg, logger.L),
-		ParquetSync:    parquetSvc,
-		Sendgrid:           sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
-		Wise:               wiseSvc,
-		BaseClient:         baseClient,
-		IcySwap:            icySwap,
-		CommunityNft:       communityNft,
-		Tono:               tono.New(cfg, logger.L),
-		Reddit:             reddit,
-		Lobsters:           lobsters.New(),
-		Youtube:            youtubeSvc,
-		Dify:               difySvc,
-		LandingZone:        landingZoneSvc,
+		OpenRouter:   openrouter.NewOpenRouterService(cfg, logger.L),
+		ParquetSync:  parquetSvc,
+		Sendgrid:     sendgrid.New(cfg.Sendgrid.APIKey, cfg, logger.L),
+		Wise:         wiseSvc,
+		BaseClient:   baseClient,
+		IcySwap:      icySwap,
+		CommunityNft: communityNft,
+		Tono:         tono.New(cfg, logger.L),
+		Reddit:       reddit,
+		Lobsters:     lobsters.New(),
+		Youtube:      youtubeSvc,
+		Dify:         difySvc,
+		LandingZone:  landingZoneSvc,
 		InvoiceEmailProcessor: func() invoiceemail.IProcessor {
 			if !cfg.InvoiceListener.Enabled {
 				return nil

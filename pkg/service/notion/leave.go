@@ -37,28 +37,24 @@ type LeaveRequest struct {
 
 // LeaveService handles leave request operations with Notion
 type LeaveService struct {
-	client *nt.Client
-	cfg    *config.Config
-	store  *store.Store
-	repo   store.DBRepo
-	logger logger.Logger
+	*baseService
+	store *store.Store
+	repo  store.DBRepo
 }
 
 // NewLeaveService creates a new Notion leave service
-func NewLeaveService(cfg *config.Config, store *store.Store, repo store.DBRepo, logger logger.Logger) *LeaveService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewLeaveService(cfg *config.Config, store *store.Store, repo store.DBRepo, l logger.Logger) *LeaveService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new LeaveService")
+	l.Debug("creating new LeaveService")
 
 	return &LeaveService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		store:  store,
-		repo:   repo,
-		logger: logger,
+		baseService: base,
+		store:       store,
+		repo:        repo,
 	}
 }
 
@@ -84,25 +80,25 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 	// Extract all properties from Unavailability Notices schema
 	leave := &LeaveRequest{
 		PageID:             pageID,
-		LeaveRequestTitle:  s.extractTitle(props, "Leave Request"),
-		UnavailabilityType: s.extractSelect(props, "Unavailability Type"),
-		AdditionalContext:  s.extractRichText(props, "Additional Context"),
-		Status:             s.extractSelect(props, "Status"),
+		LeaveRequestTitle:  ExtractTitle(props, "Leave Request"),
+		UnavailabilityType: ExtractSelect(props, "Unavailability Type"),
+		AdditionalContext:  ExtractRichText(props, "Additional Context"),
+		Status:             ExtractSelect(props, "Status"),
 	}
 
 	// Extract dates
-	leave.StartDate = s.extractDate(props, "Start Date")
-	leave.EndDate = s.extractDate(props, "End Date")
-	leave.DateApproved = s.extractDate(props, "Date Approved")
-	leave.DateRequested = s.extractDate(props, "Date Requested")
+	leave.StartDate = ExtractDate(props, "Start Date")
+	leave.EndDate = ExtractDate(props, "End Date")
+	leave.DateApproved = ExtractDate(props, "Date Approved")
+	leave.DateRequested = ExtractDate(props, "Date Requested")
 
 	// Extract email from Team Email property (rollup type)
-	leave.Email = s.extractEmailFromRollup(props, "Team Email")
+	leave.Email = ExtractEmailFromRollup(props, "Team Email")
 	s.logger.Debug(fmt.Sprintf("extracted email from Team Email: %s", leave.Email))
 
 	// Extract relation IDs - using Contractor instead of Employee
-	leave.EmployeeID = s.extractFirstRelationID(props, "Contractor")
-	leave.ReviewedByID = s.extractFirstRelationID(props, "Reviewed By")
+	leave.EmployeeID = ExtractFirstRelationID(props, "Contractor")
+	leave.ReviewedByID = ExtractFirstRelationID(props, "Reviewed By")
 
 	// Extract assignees from multi_select property (format: "Name (email@domain)")
 	leave.Assignees = s.extractEmailsFromMultiSelect(props, "Assignees")
@@ -239,13 +235,13 @@ func (s *LeaveService) QueryPendingLeaveRequests(ctx context.Context) ([]LeaveRe
 
 		leave := LeaveRequest{
 			PageID:             page.ID,
-			LeaveRequestTitle:  s.extractTitle(props, "Leave Request"),
-			UnavailabilityType: s.extractSelect(props, "Unavailability Type"),
-			AdditionalContext:  s.extractRichText(props, "Additional Context"),
-			Status:             s.extractSelect(props, "Status"),
-			StartDate:          s.extractDate(props, "Start Date"),
-			EndDate:            s.extractDate(props, "End Date"),
-			Email:              s.extractEmail(props, "Team Email"),
+			LeaveRequestTitle:  ExtractTitle(props, "Leave Request"),
+			UnavailabilityType: ExtractSelect(props, "Unavailability Type"),
+			AdditionalContext:  ExtractRichText(props, "Additional Context"),
+			Status:             ExtractSelect(props, "Status"),
+			StartDate:          ExtractDate(props, "Start Date"),
+			EndDate:            ExtractDate(props, "End Date"),
+			Email:              ExtractEmail(props, "Team Email"),
 		}
 		requests = append(requests, leave)
 	}
@@ -348,87 +344,6 @@ func (s *LeaveService) executeDataSourceQuery(ctx context.Context, dataSourceID 
 	return &result, nil
 }
 
-// Property extraction helpers
-
-// extractTitle extracts a title property value
-func (s *LeaveService) extractTitle(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Title) > 0 {
-		var parts []string
-		for _, rt := range prop.Title {
-			parts = append(parts, rt.PlainText)
-		}
-		return strings.Join(parts, "")
-	}
-	return ""
-}
-
-// extractSelect extracts a select property value
-func (s *LeaveService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Select != nil {
-		return prop.Select.Name
-	}
-	return ""
-}
-
-// extractDate extracts a date property value
-func (s *LeaveService) extractDate(props nt.DatabasePageProperties, propName string) *time.Time {
-	if prop, ok := props[propName]; ok && prop.Date != nil {
-		t := prop.Date.Start.Time
-		if !t.IsZero() {
-			return &t
-		}
-	}
-	return nil
-}
-
-// extractFirstRelationID extracts the first relation page ID
-func (s *LeaveService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Relation) > 0 {
-		return prop.Relation[0].ID
-	}
-	return ""
-}
-
-// extractEmail extracts email from an email property
-func (s *LeaveService) extractEmail(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Email != nil {
-		s.logger.Debug(fmt.Sprintf("extractEmail: property %s has email value: %s", propName, *prop.Email))
-		return *prop.Email
-	}
-	s.logger.Debug(fmt.Sprintf("extractEmail: property %s not found or empty", propName))
-	return ""
-}
-
-// extractEmailFromRollup extracts email from a rollup property that contains an array of email values
-func (s *LeaveService) extractEmailFromRollup(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok {
-		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s not found", propName))
-		return ""
-	}
-
-	if prop.Rollup == nil {
-		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s is not a rollup", propName))
-		return ""
-	}
-
-	if len(prop.Rollup.Array) == 0 {
-		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s rollup array is empty", propName))
-		return ""
-	}
-
-	// Get the first item from the rollup array
-	firstItem := prop.Rollup.Array[0]
-	if firstItem.Email != nil {
-		email := *firstItem.Email
-		s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s has email value: %s", propName, email))
-		return email
-	}
-
-	s.logger.Debug(fmt.Sprintf("extractEmailFromRollup: property %s first array item has no email", propName))
-	return ""
-}
-
 // extractEmailsFromMultiSelect extracts emails from multi_select option names (format: "Name (email@domain)")
 func (s *LeaveService) extractEmailsFromMultiSelect(props nt.DatabasePageProperties, propName string) []string {
 	var emails []string
@@ -456,22 +371,6 @@ func (s *LeaveService) parseEmailFromOptionName(optionName string) string {
 			return email
 		}
 	}
-	return ""
-}
-
-// extractRichText concatenates rich text parts into a single string
-// Returns empty string if rich text property is not found or empty
-func (s *LeaveService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
-		var parts []string
-		for _, rt := range prop.RichText {
-			parts = append(parts, rt.PlainText)
-		}
-		result := strings.TrimSpace(strings.Join(parts, ""))
-		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
-		return result
-	}
-	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
 	return ""
 }
 
@@ -628,7 +527,7 @@ func (s *LeaveService) GetDiscordUsernameFromContractor(
 		return "", nil
 	}
 
-	username := s.extractRichText(props, "Discord")
+	username := ExtractRichText(props, "Discord")
 	if username == "" {
 		s.logger.Debug(fmt.Sprintf("Discord field is empty for contractor: page_id=%s", contractorPageID))
 	} else {
@@ -671,10 +570,10 @@ func (s *LeaveService) GetContractorDetails(ctx context.Context, contractorPageI
 
 	details := &ContractorDetails{
 		PageID:          contractorPageID,
-		FullName:        s.extractTitle(props, "Full Name"),
-		DiscordUsername: s.extractRichText(props, "Discord"),
-		TeamEmail:       s.extractEmail(props, "Team Email"),
-		Status:          s.extractSelect(props, "Status"),
+		FullName:        ExtractTitle(props, "Full Name"),
+		DiscordUsername: ExtractRichText(props, "Discord"),
+		TeamEmail:       ExtractEmail(props, "Team Email"),
+		Status:          ExtractSelect(props, "Status"),
 	}
 
 	s.logger.Debug(fmt.Sprintf("fetched contractor details: page_id=%s name=%s discord=%s status=%s",
@@ -731,5 +630,4 @@ func (s *LeaveService) LookupContractorByEmail(
 
 	return contractorPageID, nil
 }
-
 

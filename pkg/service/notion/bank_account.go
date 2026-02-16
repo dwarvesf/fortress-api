@@ -13,9 +13,7 @@ import (
 
 // BankAccountService handles bank account operations with Notion
 type BankAccountService struct {
-	client *nt.Client
-	cfg    *config.Config
-	logger logger.Logger
+	*baseService
 }
 
 // BankAccountData represents bank account data from Notion
@@ -38,19 +36,15 @@ type BankAccountData struct {
 }
 
 // NewBankAccountService creates a new Notion bank account service
-func NewBankAccountService(cfg *config.Config, logger logger.Logger) *BankAccountService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewBankAccountService(cfg *config.Config, l logger.Logger) *BankAccountService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new BankAccountService")
+	l.Debug("creating new BankAccountService")
 
-	return &BankAccountService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		logger: logger,
-	}
+	return &BankAccountService{baseService: base}
 }
 
 // QueryBankAccountByDiscord queries bank account by Discord username
@@ -135,20 +129,20 @@ func (s *BankAccountService) QueryBankAccountByDiscord(ctx context.Context, disc
 
 	bankAccount := &BankAccountData{
 		PageID:              selectedPage.ID,
-		AccountHolderName:   s.extractRichText(props, "Account Holder Name"),
-		BankName:            s.extractRichText(props, "Bank Name"),
-		AccountNumber:       s.extractRichText(props, "Account Number"),
-		Currency:            s.extractSelect(props, "Currency"),
-		Country:             s.extractSelect(props, "Country"),
-		AccountType:         s.extractSelect(props, "Account Type"),
-		SwiftBIC:            s.extractRichText(props, "SWIFT / BIC"),
-		IBAN:                s.extractRichText(props, "IBAN"),
-		RoutingNumber:       s.extractRichText(props, "Routing Number"),
-		SortCode:            s.extractRichText(props, "Sort Code"),
-		BankCode:            s.extractRichText(props, "Bank Code"),
-		BranchAddress:       s.extractRichText(props, "Branch / Address"),
-		PreferredForPayouts: s.extractCheckbox(props, "Preferred for Payouts"),
-		Status:              s.extractStatus(props, "Status"),
+		AccountHolderName:   ExtractRichTextFirst(props, "Account Holder Name"),
+		BankName:            ExtractRichTextFirst(props, "Bank Name"),
+		AccountNumber:       ExtractRichTextFirst(props, "Account Number"),
+		Currency:            ExtractSelect(props, "Currency"),
+		Country:             ExtractSelect(props, "Country"),
+		AccountType:         ExtractSelect(props, "Account Type"),
+		SwiftBIC:            ExtractRichTextFirst(props, "SWIFT / BIC"),
+		IBAN:                ExtractRichTextFirst(props, "IBAN"),
+		RoutingNumber:       ExtractRichTextFirst(props, "Routing Number"),
+		SortCode:            ExtractRichTextFirst(props, "Sort Code"),
+		BankCode:            ExtractRichTextFirst(props, "Bank Code"),
+		BranchAddress:       ExtractRichTextFirst(props, "Branch / Address"),
+		PreferredForPayouts: ExtractCheckbox(props, "Preferred for Payouts"),
+		Status:              ExtractStatus(props, "Status"),
 	}
 
 	s.logger.Debug(fmt.Sprintf("successfully extracted bank account data: pageID=%s accountHolder=%s bank=%s currency=%s",
@@ -157,36 +151,3 @@ func (s *BankAccountService) QueryBankAccountByDiscord(ctx context.Context, disc
 	return bankAccount, nil
 }
 
-// Helper functions for extracting properties
-
-func (s *BankAccountService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.RichText == nil || len(prop.RichText) == 0 {
-		return ""
-	}
-	return prop.RichText[0].PlainText
-}
-
-func (s *BankAccountService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Select == nil {
-		return ""
-	}
-	return prop.Select.Name
-}
-
-func (s *BankAccountService) extractCheckbox(props nt.DatabasePageProperties, propName string) bool {
-	prop, ok := props[propName]
-	if !ok || prop.Checkbox == nil {
-		return false
-	}
-	return *prop.Checkbox
-}
-
-func (s *BankAccountService) extractStatus(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Status == nil {
-		return ""
-	}
-	return prop.Status.Name
-}

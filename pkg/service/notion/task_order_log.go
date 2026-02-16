@@ -23,25 +23,19 @@ import (
 
 // TaskOrderLogService handles task order log operations with Notion
 type TaskOrderLogService struct {
-	client *nt.Client
-	cfg    *config.Config
-	logger logger.Logger
+	*baseService
 }
 
 // NewTaskOrderLogService creates a new Notion task order log service
-func NewTaskOrderLogService(cfg *config.Config, logger logger.Logger) *TaskOrderLogService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewTaskOrderLogService(cfg *config.Config, l logger.Logger) *TaskOrderLogService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new TaskOrderLogService")
+	l.Debug("creating new TaskOrderLogService")
 
-	return &TaskOrderLogService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		logger: logger,
-	}
+	return &TaskOrderLogService{baseService: base}
 }
 
 // QueryApprovedTimesheetsByMonth queries timesheets for a given month
@@ -157,12 +151,12 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 
 			entry := &TimesheetEntry{
 				PageID:           page.ID,
-				Title:            s.extractTitle(props, "(auto) Entry"),
-				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
-				ProjectPageID:    s.extractFirstRelationID(props, "Project"),
-				Date:             s.extractDateString(props, "Date"),
-				ApproxEffort:     s.extractNumber(props, "Appx. effort"),
-				Status:           s.extractStatus(props, "Status"),
+				Title:            ExtractTitle(props, "(auto) Entry"),
+				ContractorPageID: ExtractFirstRelationID(props, "Contractor"),
+				ProjectPageID:    ExtractFirstRelationID(props, "Project"),
+				Date:             ExtractDateFullString(props, "Date"),
+				ApproxEffort:     ExtractNumber(props, "Appx. effort"),
+				Status:           ExtractStatus(props, "Status"),
 			}
 
 			// Extract proof of works
@@ -901,79 +895,6 @@ func (s *TaskOrderLogService) addSubItemToOrder(ctx context.Context, orderID, li
 	return nil
 }
 
-// Helper methods reused from TimesheetService
-
-func (s *TaskOrderLogService) extractTitle(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Title) > 0 {
-		var parts []string
-		for _, rt := range prop.Title {
-			parts = append(parts, rt.PlainText)
-		}
-		return strings.Join(parts, "")
-	}
-	return ""
-}
-
-func (s *TaskOrderLogService) extractStatus(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Status != nil {
-		return prop.Status.Name
-	}
-	return ""
-}
-
-func (s *TaskOrderLogService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Relation) > 0 {
-		return prop.Relation[0].ID
-	}
-	return ""
-}
-
-func (s *TaskOrderLogService) extractMultiSelectNames(props nt.DatabasePageProperties, propName string) []string {
-	var names []string
-	if prop, ok := props[propName]; ok && len(prop.MultiSelect) > 0 {
-		for _, opt := range prop.MultiSelect {
-			names = append(names, opt.Name)
-		}
-		s.logger.Debug(fmt.Sprintf("extracted multi-select %s: %v", propName, names))
-	}
-	return names
-}
-
-func (s *TaskOrderLogService) extractDateString(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Date != nil {
-		return prop.Date.Start.String()
-	}
-	return ""
-}
-
-func (s *TaskOrderLogService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	if prop, ok := props[propName]; ok && prop.Number != nil {
-		return *prop.Number
-	}
-	return 0
-}
-
-func (s *TaskOrderLogService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
-		var parts []string
-		for _, rt := range prop.RichText {
-			parts = append(parts, rt.PlainText)
-		}
-		return strings.Join(parts, "")
-	}
-	return ""
-}
-
-// extractSelect extracts the value from a Select property
-// Returns empty string if property not found or not a Select type
-func (s *TaskOrderLogService) extractSelect(props nt.DatabasePageProperties, propName string) string {
-	prop, ok := props[propName]
-	if !ok || prop.Select == nil {
-		return ""
-	}
-	return prop.Select.Name
-}
-
 // LineItemDetails holds line item data for comparison during upsert
 type LineItemDetails struct {
 	PageID       string
@@ -1078,7 +999,7 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 			// Extract project name: Subitem -> Project Deployment -> Project
 			projectName := ""
 			projectID := ""
-			deploymentID := s.extractFirstRelationID(props, "Project Deployment")
+			deploymentID := ExtractFirstRelationID(props, "Project Deployment")
 			s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted deploymentID=%s", deploymentID))
 			if deploymentID != "" {
 				// Fetch Deployment page to get Project relation
@@ -1089,7 +1010,7 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 					deploymentProps, ok := deploymentPage.Properties.(nt.DatabasePageProperties)
 					if ok {
 						// Get Project relation from Deployment page
-						projectID = s.extractFirstRelationID(deploymentProps, "Project")
+						projectID = ExtractFirstRelationID(deploymentProps, "Project")
 						s.logger.Debug(fmt.Sprintf("[DEBUG] task_order_log: extracted projectID from Deployment.Project=%s", projectID))
 						if projectID != "" {
 							// Fetch Project page to get name
@@ -1119,8 +1040,8 @@ func (s *TaskOrderLogService) QueryOrderSubitems(ctx context.Context, orderPageI
 				PageID:      page.ID,
 				ProjectName: projectName,
 				ProjectID:   projectID,
-				Hours:       s.extractNumber(props, "Line Item Hours"),
-				ProofOfWork: s.extractRichText(props, "Proof of Works"),
+				Hours:       ExtractNumber(props, "Line Item Hours"),
+				ProofOfWork: ExtractRichText(props, "Proof of Works"),
 			}
 
 			s.logger.Debug(fmt.Sprintf("found subitem: pageID=%s project=%s projectID=%s hours=%.2f", subitem.PageID, subitem.ProjectName, subitem.ProjectID, subitem.Hours))
@@ -1351,7 +1272,7 @@ func (s *TaskOrderLogService) QueryApprovedOrders(ctx context.Context, month str
 			}
 
 			// Extract Key deliverables (rich text)
-			proofOfWorks := s.extractRichText(props, "Key deliverables")
+			proofOfWorks := ExtractRichText(props, "Key deliverables")
 
 			// Store basic info (without contractor name yet)
 			orderInfos = append(orderInfos, orderBasicInfo{
@@ -1713,10 +1634,10 @@ func (s *TaskOrderLogService) QueryActiveDeploymentsByMonth(ctx context.Context,
 
 			deployment := &DeploymentData{
 				PageID:           page.ID,
-				ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
-				ProjectPageID:    s.extractFirstRelationID(props, "Project"),
-				Status:           s.extractStatus(props, "Deployment Status"),
-				Type:             s.extractMultiSelectNames(props, "Type"),
+				ContractorPageID: ExtractFirstRelationID(props, "Contractor"),
+				ProjectPageID:    ExtractFirstRelationID(props, "Project"),
+				Status:           ExtractStatus(props, "Deployment Status"),
+				Type:             ExtractMultiSelectNames(props, "Type"),
 			}
 
 			deployments = append(deployments, deployment)
@@ -1756,10 +1677,10 @@ func (s *TaskOrderLogService) GetClientInfo(ctx context.Context, projectPageID s
 	}
 
 	// Extract client relation
-	clientPageID := s.extractFirstRelationID(props, "Client")
+	clientPageID := ExtractFirstRelationID(props, "Client")
 	if clientPageID == "" {
 		// Fallback to "Clients"
-		clientPageID = s.extractFirstRelationID(props, "Clients")
+		clientPageID = ExtractFirstRelationID(props, "Clients")
 	}
 
 	if clientPageID == "" {
@@ -1780,8 +1701,8 @@ func (s *TaskOrderLogService) GetClientInfo(ctx context.Context, projectPageID s
 	}
 
 	// Extract client name and country
-	name := s.extractTitle(clientProps, "Client Name")
-	country := s.extractRichText(clientProps, "Country")
+	name := ExtractTitle(clientProps, "Client Name")
+	country := ExtractRichText(clientProps, "Country")
 
 	if name == "" {
 		s.logger.Debug(fmt.Sprintf("client name not found for client page: %s", clientPageID))
@@ -1911,7 +1832,7 @@ func (s *TaskOrderLogService) GetContractorPayday(ctx context.Context, contracto
 	}
 
 	// Extract Payday field
-	paydayStr := s.extractSelect(props, "Payday")
+	paydayStr := ExtractSelect(props, "Payday")
 	if paydayStr == "" {
 		s.logger.Debug(fmt.Sprintf("payday field is empty for contractor: %s", contractorPageID))
 		return 0, nil
@@ -2289,7 +2210,7 @@ func (s *TaskOrderLogService) GetContractorFromOrder(ctx context.Context, orderI
 		return "", "", "", fmt.Errorf("failed to cast subitem page properties")
 	}
 
-	deploymentID := s.extractFirstRelationID(subitemProps, "Project Deployment")
+	deploymentID := ExtractFirstRelationID(subitemProps, "Project Deployment")
 	if deploymentID == "" {
 		s.logger.Debug(fmt.Sprintf("no deployment found for subitem: %s", firstSubitem.PageID))
 		return "", "", "", fmt.Errorf("no deployment found for subitem: %s", firstSubitem.PageID)
@@ -2310,7 +2231,7 @@ func (s *TaskOrderLogService) GetContractorFromOrder(ctx context.Context, orderI
 		return "", "", "", fmt.Errorf("failed to cast deployment page properties")
 	}
 
-	contractorID = s.extractFirstRelationID(deploymentProps, "Contractor")
+	contractorID = ExtractFirstRelationID(deploymentProps, "Contractor")
 	if contractorID == "" {
 		s.logger.Debug(fmt.Sprintf("no contractor found for deployment: %s", deploymentID))
 		return "", "", "", fmt.Errorf("no contractor found for deployment: %s", deploymentID)

@@ -34,25 +34,19 @@ type TimesheetEntry struct {
 
 // TimesheetService handles timesheet operations with Notion
 type TimesheetService struct {
-	client *nt.Client
-	cfg    *config.Config
-	logger logger.Logger
+	*baseService
 }
 
 // NewTimesheetService creates a new Notion timesheet service
-func NewTimesheetService(cfg *config.Config, logger logger.Logger) *TimesheetService {
-	if cfg.Notion.Secret == "" {
-		logger.Error(errors.New("notion secret not configured"), "notion secret is empty")
+func NewTimesheetService(cfg *config.Config, l logger.Logger) *TimesheetService {
+	base := newBaseService(cfg, l)
+	if base == nil {
 		return nil
 	}
 
-	logger.Debug("creating new TimesheetService")
+	l.Debug("creating new TimesheetService")
 
-	return &TimesheetService{
-		client: nt.NewClient(cfg.Notion.Secret),
-		cfg:    cfg,
-		logger: logger,
-	}
+	return &TimesheetService{baseService: base}
 }
 
 // GetTimesheetEntry fetches a timesheet entry by page ID from Notion
@@ -77,12 +71,12 @@ func (s *TimesheetService) GetTimesheetEntry(ctx context.Context, pageID string)
 	// Extract all properties
 	entry := &TimesheetEntry{
 		PageID:           pageID,
-		Title:            s.extractTitle(props, "(auto) Entry"),
-		ContractorPageID: s.extractFirstRelationID(props, "Contractor"),
-		ProjectPageID:    s.extractFirstRelationID(props, "Project"),
-		Date:             s.extractDateString(props, "Date"),
-		ApproxEffort:     s.extractNumber(props, "Appx. effort"),
-		Status:           s.extractStatus(props, "Status"),
+		Title:            ExtractTitle(props, "(auto) Entry"),
+		ContractorPageID: ExtractFirstRelationID(props, "Contractor"),
+		ProjectPageID:    ExtractFirstRelationID(props, "Project"),
+		Date:             ExtractDateFullString(props, "Date"),
+		ApproxEffort:     ExtractNumber(props, "Appx. effort"),
+		Status:           ExtractStatus(props, "Status"),
 	}
 
 	// Extract created by user info
@@ -229,7 +223,7 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 			for _, person := range personProp.People {
 				if person.ID == personID {
 					// Found a match! Extract Discord username
-					discordUsername := s.extractRichText(props, "Discord")
+					discordUsername := ExtractRichText(props, "Discord")
 					s.logger.Debug(fmt.Sprintf("found contractor: person_id=%s contractor_id=%s discord=%s",
 						personID, page.ID, discordUsername))
 					return page.ID, discordUsername, nil
@@ -259,7 +253,7 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 				if personProp, ok := props["Person"]; ok && len(personProp.People) > 0 {
 					for _, person := range personProp.People {
 						if person.ID == personID {
-							discordUsername := s.extractRichText(props, "Discord")
+							discordUsername := ExtractRichText(props, "Discord")
 							s.logger.Debug(fmt.Sprintf("found contractor: person_id=%s contractor_id=%s discord=%s",
 								personID, page.ID, discordUsername))
 							return page.ID, discordUsername, nil
@@ -279,63 +273,3 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 	return "", "", fmt.Errorf("contractor not found for person ID: %s", personID)
 }
 
-// Property extraction helpers
-
-// extractTitle extracts a title property value
-func (s *TimesheetService) extractTitle(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Title) > 0 {
-		var parts []string
-		for _, rt := range prop.Title {
-			parts = append(parts, rt.PlainText)
-		}
-		return strings.Join(parts, "")
-	}
-	return ""
-}
-
-// extractStatus extracts a status property value
-func (s *TimesheetService) extractStatus(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Status != nil {
-		return prop.Status.Name
-	}
-	return ""
-}
-
-// extractFirstRelationID extracts the first relation page ID
-func (s *TimesheetService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Relation) > 0 {
-		return prop.Relation[0].ID
-	}
-	return ""
-}
-
-// extractRichText concatenates rich text parts into a single string
-func (s *TimesheetService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
-		var parts []string
-		for _, rt := range prop.RichText {
-			parts = append(parts, rt.PlainText)
-		}
-		result := strings.TrimSpace(strings.Join(parts, ""))
-		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
-		return result
-	}
-	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
-	return ""
-}
-
-// extractDateString extracts a date property value as string
-func (s *TimesheetService) extractDateString(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Date != nil {
-		return prop.Date.Start.String()
-	}
-	return ""
-}
-
-// extractNumber extracts a number property value
-func (s *TimesheetService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	if prop, ok := props[propName]; ok && prop.Number != nil {
-		return *prop.Number
-	}
-	return 0
-}
