@@ -84,7 +84,7 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 
 	// Only filter by status if skipStatusCheck is false
 	if !skipStatusCheck {
-		s.logger.Debug(fmt.Sprintf("filtering by status: Status=Reviewed"))
+		s.logger.Debug("filtering by status: Status=Reviewed")
 		filters = append(filters, nt.DatabaseQueryFilter{
 			Property: "Status",
 			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
@@ -94,7 +94,7 @@ func (s *TaskOrderLogService) QueryApprovedTimesheetsByMonth(ctx context.Context
 			},
 		})
 	} else {
-		s.logger.Debug(fmt.Sprintf("skipping status filter (force=true)"))
+		s.logger.Debug("skipping status filter (force=true)")
 	}
 
 	// Add contractor filter if specified
