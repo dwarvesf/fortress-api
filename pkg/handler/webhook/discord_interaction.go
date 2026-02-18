@@ -23,6 +23,7 @@ import (
 	invoiceCtrl "github.com/dwarvesf/fortress-api/pkg/controller/invoice"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	discordsvc "github.com/dwarvesf/fortress-api/pkg/service/discord"
 	googleSvc "github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/nocodb"
 	notionSvc "github.com/dwarvesf/fortress-api/pkg/service/notion"
@@ -1403,14 +1404,14 @@ func (h *handler) processPayoutCommit(l logger.Logger, appID, interactionToken, 
 func (h *handler) updatePayoutInteractionResponse(l logger.Logger, appID, interactionToken, month string, batch int, result interface{}, errorMsg string) {
 	l.Debugf("updating payout interaction response: appID=%s month=%s batch=%d", appID, month, batch)
 
-	var embed map[string]interface{}
+	var embed *discordgo.MessageEmbed
 
 	if errorMsg != "" {
-		embed = map[string]interface{}{
-			"title":       "❌ Payout Commit Failed",
-			"description": fmt.Sprintf("**Month:** %s\n**Batch:** %d\n**Error:** %s", month, batch, errorMsg),
-			"color":       15158332, // Red
-			"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		embed = &discordgo.MessageEmbed{
+			Title:       "❌ Payout Commit Failed",
+			Description: fmt.Sprintf("**Month:** %s\n**Batch:** %d\n**Error:** %s", month, batch, errorMsg),
+			Color:       15158332, // Red
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 		}
 	} else if commitResult, ok := result.(*ctrlcontractorpayables.CommitResponse); ok {
 		var title string
@@ -1445,11 +1446,11 @@ func (h *handler) updatePayoutInteractionResponse(l logger.Logger, appID, intera
 			color = 16776960 // Orange
 		}
 
-		embed = map[string]interface{}{
-			"title":       title,
-			"description": description,
-			"color":       color,
-			"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		embed = &discordgo.MessageEmbed{
+			Title:       title,
+			Description: description,
+			Color:       color,
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 		}
 	}
 
@@ -1458,40 +1459,9 @@ func (h *handler) updatePayoutInteractionResponse(l logger.Logger, appID, intera
 		return
 	}
 
-	// Build the edit payload
-	payload := map[string]interface{}{
-		"embeds":     []map[string]interface{}{embed},
-		"components": []interface{}{}, // Remove any remaining components
-	}
-
-	// Edit the original interaction response using Discord webhook endpoint
-	// PATCH https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}/messages/@original
-	url := fmt.Sprintf("https://discord.com/api/v10/webhooks/%s/%s/messages/@original", appID, interactionToken)
-
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		l.Errorf(err, "failed to marshal payout result payload")
-		return
-	}
-
-	req, err := http.NewRequest("PATCH", url, strings.NewReader(string(payloadBytes)))
-	if err != nil {
-		l.Errorf(err, "failed to create request for editing interaction response")
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		l.Errorf(err, "failed to edit interaction response")
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		l.Errorf(nil, "discord returned non-200 status when editing interaction: status=%d body=%s", resp.StatusCode, string(bodyBytes))
+	// Edit with empty components to remove any remaining buttons
+	if err := h.service.Discord.EditInteractionResponseFull(appID, interactionToken, []*discordgo.MessageEmbed{embed}, []discordgo.MessageComponent{}); err != nil {
+		l.Errorf(err, "failed to update payout interaction response")
 		return
 	}
 
@@ -1550,8 +1520,8 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 	notionService := h.service.Notion.ContractorPayouts
 	if notionService == nil {
 		l.Error(errors.New("contractor payouts service not initialized"), "")
-		h.editInteractionResponse(l, appID, interactionToken, map[string]interface{}{
-			"content": "Service not configured",
+		_ = h.service.Discord.EditInteractionResponse(appID, interactionToken, []*discordgo.MessageEmbed{
+			{Title: "Error", Description: "Service not configured", Color: 15158332},
 		})
 		return
 	}
@@ -1559,15 +1529,15 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 	entries, err := notionService.QueryPendingExtraPayments(ctx, month, discordUsername)
 	if err != nil {
 		l.Errorf(err, "failed to query pending extra payments")
-		h.editInteractionResponse(l, appID, interactionToken, map[string]interface{}{
-			"content": fmt.Sprintf("Failed to get preview: %v", err),
+		_ = h.service.Discord.EditInteractionResponse(appID, interactionToken, []*discordgo.MessageEmbed{
+			{Title: "Error", Description: fmt.Sprintf("Failed to get preview: %v", err), Color: 15158332},
 		})
 		return
 	}
 
 	if len(entries) == 0 {
-		h.editInteractionResponse(l, appID, interactionToken, map[string]interface{}{
-			"content": fmt.Sprintf("No pending extra payments found on or before %s.", month),
+		_ = h.service.Discord.EditInteractionResponse(appID, interactionToken, []*discordgo.MessageEmbed{
+			{Title: "No Results", Description: fmt.Sprintf("No pending extra payments found on or before %s.", month), Color: 16776960},
 		})
 		return
 	}
@@ -1659,40 +1629,32 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 	cancelID := fmt.Sprintf("ep_x:%s", month)
 
 	// Edit the deferred response with actual content
-	payload := map[string]interface{}{
-		"embeds": []map[string]interface{}{
-			{
-				"title":       "Confirm Extra Payment Notification",
-				"description": description,
-				"color":       16776960, // Orange
-				"footer": map[string]interface{}{
-					"text": "Click Confirm to send or Cancel to abort",
+	previewEmbed := &discordgo.MessageEmbed{
+		Title:       "Confirm Extra Payment Notification",
+		Description: description,
+		Color:       16776960, // Orange
+		Footer:      &discordgo.MessageEmbedFooter{Text: "Click Confirm to send or Cancel to abort"},
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+	}
+	previewComponents := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Confirm",
+					Style:    discordgo.SuccessButton,
+					CustomID: confirmID,
 				},
-				"timestamp": time.Now().Format("2006-01-02T15:04:05.000-07:00"),
-			},
-		},
-		"components": []map[string]interface{}{
-			{
-				"type": 1, // ActionsRow
-				"components": []map[string]interface{}{
-					{
-						"type":      2, // Button
-						"label":     "Confirm",
-						"style":     3, // Success (green)
-						"custom_id": confirmID,
-					},
-					{
-						"type":      2, // Button
-						"label":     "Cancel",
-						"style":     4, // Danger (red)
-						"custom_id": cancelID,
-					},
+				discordgo.Button{
+					Label:    "Cancel",
+					Style:    discordgo.DangerButton,
+					CustomID: cancelID,
 				},
 			},
 		},
 	}
-
-	h.editInteractionResponse(l, appID, interactionToken, payload)
+	if err := h.service.Discord.EditInteractionResponseFull(appID, interactionToken, []*discordgo.MessageEmbed{previewEmbed}, previewComponents); err != nil {
+		l.Errorf(err, "failed to edit interaction response with preview")
+	}
 }
 
 // handleExtraPaymentConfirmButton sends extra payment notifications with progress updates
@@ -1731,23 +1693,28 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 
 	l.Debugf("background processing extra payment send: month=%s discordUsername=%s", month, discordUsername)
 
+	// Build ProgressBar backed by InteractionReporter for ephemeral message updates.
+	// Constructed early so early-error paths can report via typed embeds.
+	reporter := discordsvc.NewInteractionReporter(h.service.Discord, appID, interactionToken)
+	pb := discordsvc.NewProgressBar(reporter, l)
+
 	// Get entries
 	notionService := h.service.Notion.ContractorPayouts
 	if notionService == nil {
 		l.Error(errors.New("contractor payouts service not initialized"), "")
-		h.updateExtraPaymentInteractionResponse(l, appID, interactionToken, 0, 0, nil, "Service not configured")
+		h.updateExtraPaymentInteractionResponse(pb, 0, 0, nil, "Service not configured")
 		return
 	}
 
 	entries, err := notionService.QueryPendingExtraPayments(ctx, month, discordUsername)
 	if err != nil {
 		l.Errorf(err, "failed to query pending extra payments")
-		h.updateExtraPaymentInteractionResponse(l, appID, interactionToken, 0, 0, nil, fmt.Sprintf("Failed to get contractors: %v", err))
+		h.updateExtraPaymentInteractionResponse(pb, 0, 0, nil, fmt.Sprintf("Failed to get contractors: %v", err))
 		return
 	}
 
 	if len(entries) == 0 {
-		h.updateExtraPaymentInteractionResponse(l, appID, interactionToken, 0, 0, nil, "No pending extra payments found")
+		h.updateExtraPaymentInteractionResponse(pb, 0, 0, nil, "No pending extra payments found")
 		return
 	}
 
@@ -1792,7 +1759,7 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 	l.Debugf("grouped %d entries into %d contractors", len(entries), total)
 
 	// Update with initial progress
-	h.updateExtraPaymentProgress(l, appID, interactionToken, 0, total)
+	h.updateExtraPaymentProgress(pb, 0, total)
 
 	// Parse month for email formatting
 	monthTime, _ := time.Parse("2006-01", month)
@@ -1802,13 +1769,13 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 	gmailService := h.service.GoogleMail
 	if gmailService == nil {
 		l.Error(errors.New("gmail service not initialized"), "")
-		h.updateExtraPaymentInteractionResponse(l, appID, interactionToken, 0, 0, nil, "Email service not configured")
+		h.updateExtraPaymentInteractionResponse(pb, 0, 0, nil, "Email service not configured")
 		return
 	}
 
 	// Send ONE email per contractor
 	var sent, failed int
-	var errors []string
+	var errs []string
 	idx := 0
 
 	for _, agg := range contractors {
@@ -1820,7 +1787,7 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 
 		if recipientEmail == "" {
 			errMsg := fmt.Sprintf("%s: no email", agg.Name)
-			errors = append(errors, errMsg)
+			errs = append(errs, errMsg)
 			failed++
 			l.Debugf("skipping contractor %s: no email", agg.Name)
 		} else {
@@ -1851,7 +1818,7 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 			// Send email
 			if err := gmailService.SendExtraPaymentNotificationMail(emailData); err != nil {
 				errMsg := fmt.Sprintf("%s: %v", agg.Name, err)
-				errors = append(errors, errMsg)
+				errs = append(errs, errMsg)
 				failed++
 				l.Debugf("failed to send to %s: %v", agg.Name, err)
 			} else {
@@ -1862,93 +1829,91 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 
 		idx++
 		// Update progress
-		h.updateExtraPaymentProgress(l, appID, interactionToken, idx, total)
+		h.updateExtraPaymentProgress(pb, idx, total)
 	}
 
 	// Show final result
-	h.updateExtraPaymentInteractionResponse(l, appID, interactionToken, sent, failed, errors, "")
+	h.updateExtraPaymentInteractionResponse(pb, sent, failed, errs, "")
 }
 
-// updateExtraPaymentProgress updates the interaction response with progress
-func (h *handler) updateExtraPaymentProgress(l logger.Logger, appID, interactionToken string, current, total int) {
-	embed := map[string]interface{}{
-		"title":       "Sending Extra Payment Notifications",
-		"description": fmt.Sprintf("Sending notifications... (%d/%d)", current, total),
-		"color":       5793266, // Blurple
-		"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+// updateExtraPaymentProgress reports the current send progress via ProgressBar.
+func (h *handler) updateExtraPaymentProgress(pb *discordsvc.ProgressBar, current, total int) {
+	if pb == nil {
+		return
 	}
 
-	payload := map[string]interface{}{
-		"embeds":     []map[string]interface{}{embed},
-		"components": []interface{}{},
+	embed := &discordgo.MessageEmbed{
+		Title:       "Sending Extra Payment Notifications",
+		Description: fmt.Sprintf("Sending notifications... (%d/%d)", current, total),
+		Color:       5793266, // Blurple
+		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
 
-	h.editInteractionResponse(l, appID, interactionToken, payload)
+	pb.Report(embed)
 }
 
-// updateExtraPaymentInteractionResponse updates the interaction response with final result
-func (h *handler) updateExtraPaymentInteractionResponse(l logger.Logger, appID, interactionToken string, sent, failed int, errors []string, errorMsg string) {
-	var embed map[string]interface{}
+// updateExtraPaymentInteractionResponse reports the final send result via ProgressBar.
+func (h *handler) updateExtraPaymentInteractionResponse(pb *discordsvc.ProgressBar, sent, failed int, errs []string, errorMsg string) {
+	if pb == nil {
+		return
+	}
+
+	var embed *discordgo.MessageEmbed
 
 	if errorMsg != "" {
-		embed = map[string]interface{}{
-			"title":       "❌ Extra Payment Notification Failed",
-			"description": errorMsg,
-			"color":       15158332, // Red
-			"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		embed = &discordgo.MessageEmbed{
+			Title:       "❌ Extra Payment Notification Failed",
+			Description: errorMsg,
+			Color:       15158332, // Red
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 		}
 	} else if failed == 0 && sent > 0 {
-		embed = map[string]interface{}{
-			"title":       "✅ Extra Payment Notifications Sent",
-			"description": fmt.Sprintf("Successfully sent **%d** notification emails.", sent),
-			"color":       3066993, // Green
-			"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		embed = &discordgo.MessageEmbed{
+			Title:       "✅ Extra Payment Notifications Sent",
+			Description: fmt.Sprintf("Successfully sent **%d** notification emails.", sent),
+			Color:       3066993, // Green
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 		}
 	} else if sent > 0 {
 		description := fmt.Sprintf("**Sent:** %d\n**Failed:** %d\n\n", sent, failed)
 
-		if len(errors) > 0 {
+		if len(errs) > 0 {
 			description += "**Errors:**\n"
-			displayCount := len(errors)
+			displayCount := len(errs)
 			if displayCount > 5 {
 				displayCount = 5
 			}
 			for i := 0; i < displayCount; i++ {
-				description += fmt.Sprintf("• %s\n", errors[i])
+				description += fmt.Sprintf("• %s\n", errs[i])
 			}
-			if len(errors) > 5 {
-				description += fmt.Sprintf("... and %d more errors\n", len(errors)-5)
+			if len(errs) > 5 {
+				description += fmt.Sprintf("... and %d more errors\n", len(errs)-5)
 			}
 		}
 
-		embed = map[string]interface{}{
-			"title":       "⚠️ Extra Payment Notifications Completed with Errors",
-			"description": description,
-			"color":       16776960, // Orange
-			"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		embed = &discordgo.MessageEmbed{
+			Title:       "⚠️ Extra Payment Notifications Completed with Errors",
+			Description: description,
+			Color:       16776960, // Orange
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 		}
 	} else {
 		description := "No notifications were sent.\n\n"
-		if len(errors) > 0 {
+		if len(errs) > 0 {
 			description += "**Errors:**\n"
-			for _, err := range errors {
-				description += fmt.Sprintf("• %s\n", err)
+			for _, e := range errs {
+				description += fmt.Sprintf("• %s\n", e)
 			}
 		}
-		embed = map[string]interface{}{
-			"title":       "❌ Extra Payment Notifications Failed",
-			"description": description,
-			"color":       15158332, // Red
-			"timestamp":   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		embed = &discordgo.MessageEmbed{
+			Title:       "❌ Extra Payment Notifications Failed",
+			Description: description,
+			Color:       15158332, // Red
+			Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 		}
 	}
 
-	payload := map[string]interface{}{
-		"embeds":     []map[string]interface{}{embed},
-		"components": []interface{}{},
-	}
-
-	h.editInteractionResponse(l, appID, interactionToken, payload)
+	pb.Report(embed)
 }
 
 // handleExtraPaymentCancelButton handles cancellation of extra payment notification
@@ -1972,38 +1937,6 @@ func (h *handler) handleExtraPaymentCancelButton(c *gin.Context, l logger.Logger
 	}
 
 	c.JSON(http.StatusOK, response)
-}
-
-// editInteractionResponse edits the original interaction response via Discord API
-func (h *handler) editInteractionResponse(l logger.Logger, appID, interactionToken string, payload map[string]interface{}) {
-	url := fmt.Sprintf("https://discord.com/api/v10/webhooks/%s/%s/messages/@original", appID, interactionToken)
-
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		l.Errorf(err, "failed to marshal interaction response payload")
-		return
-	}
-
-	req, err := http.NewRequest("PATCH", url, strings.NewReader(string(payloadBytes)))
-	if err != nil {
-		l.Errorf(err, "failed to create request for editing interaction response")
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		l.Errorf(err, "failed to edit interaction response")
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		l.Errorf(nil, "discord returned non-200 status when editing interaction: status=%d body=%s", resp.StatusCode, string(bodyBytes))
-		return
-	}
 }
 
 // formatCurrency formats an amount as USD currency with comma separators

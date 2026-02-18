@@ -21,9 +21,10 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/errs"
 	"github.com/dwarvesf/fortress-api/pkg/handler/invoice/request"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
-	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	discordsvc "github.com/dwarvesf/fortress-api/pkg/service/discord"
+	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/store"
 	"github.com/dwarvesf/fortress-api/pkg/utils/authutils"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -710,6 +711,13 @@ func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateCont
 		close(resultsChan)
 	}()
 
+	// Build a ProgressBar for Discord updates (nil-safe: pb.Report is a no-op when pb is nil)
+	var pb *discordsvc.ProgressBar
+	if req.ChannelID != "" && req.MessageID != "" {
+		reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, req.ChannelID, req.MessageID)
+		pb = discordsvc.NewProgressBar(reporter, l)
+	}
+
 	// Collect results and update Discord progressively
 	allResults := make([]view.BatchInvoiceResult, len(contractors))
 	var successCount int
@@ -734,7 +742,7 @@ func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateCont
 					currentResults = append(currentResults, res)
 				}
 			}
-			h.updateDiscordWithProgress(l, req.ChannelID, req.MessageID, req.Month, req.Batch,
+			h.updateDiscordWithProgress(pb, req.Month, req.Batch,
 				completed, len(contractors), fmt.Sprintf("%d completed", completed), currentResults)
 		}
 
@@ -751,7 +759,7 @@ func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateCont
 	}
 
 	// 3. Send final summary
-	h.updateDiscordWithBatchComplete(l, req.ChannelID, req.MessageID, req.Month, req.Batch,
+	h.updateDiscordWithBatchComplete(pb, req.Month, req.Batch,
 		successCount, len(contractors), totalAmount, results)
 
 	l.Info(fmt.Sprintf("batch invoice processing completed: batch=%d success=%d/%d total=%.2f workers=%d",
@@ -941,10 +949,10 @@ func (h *handler) processContractorInvoice(l logger.Logger, ctx context.Context,
 	}
 }
 
-// updateDiscordWithProgress updates the Discord embed with current progress
-func (h *handler) updateDiscordWithProgress(l logger.Logger, channelID, messageID string, month string, batch int,
+// updateDiscordWithProgress updates the Discord embed with current progress via ProgressBar.
+func (h *handler) updateDiscordWithProgress(pb *discordsvc.ProgressBar, month string, batch int,
 	current, total int, currentContractor string, results []view.BatchInvoiceResult) {
-	if channelID == "" || messageID == "" {
+	if pb == nil {
 		return
 	}
 
@@ -980,16 +988,13 @@ func (h *handler) updateDiscordWithProgress(l logger.Logger, channelID, messageI
 		},
 	}
 
-	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
-	if err != nil {
-		l.Error(err, "failed to update discord progress")
-	}
+	pb.Report(embed)
 }
 
-// updateDiscordWithBatchComplete sends the final success/partial failure embed
-func (h *handler) updateDiscordWithBatchComplete(l logger.Logger, channelID, messageID string, month string, batch int,
+// updateDiscordWithBatchComplete sends the final success/partial failure embed via ProgressBar.
+func (h *handler) updateDiscordWithBatchComplete(pb *discordsvc.ProgressBar, month string, batch int,
 	successCount, totalCount int, totalAmount float64, results []view.BatchInvoiceResult) {
-	if channelID == "" || messageID == "" {
+	if pb == nil {
 		return
 	}
 
@@ -1082,10 +1087,7 @@ func (h *handler) updateDiscordWithBatchComplete(l logger.Logger, channelID, mes
 		Color:       color,
 	}
 
-	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
-	if err != nil {
-		l.Error(err, "failed to update discord with batch complete")
-	}
+	pb.Report(embed)
 }
 
 // updateDiscordWithError updates the Discord embed with an error message

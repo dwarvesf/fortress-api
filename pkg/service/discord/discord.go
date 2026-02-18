@@ -1087,6 +1087,23 @@ func (d *discordClient) UpdateChannelMessage(channelID, messageID string, conten
 	})
 }
 
+// EditInteractionResponse edits the original interaction response with new embeds.
+func (d *discordClient) EditInteractionResponse(appID, token string, embeds []*discordgo.MessageEmbed) error {
+	_, err := d.session.WebhookMessageEdit(appID, token, "@original", &discordgo.WebhookEdit{
+		Embeds: &embeds,
+	})
+	return err
+}
+
+// EditInteractionResponseFull edits the original interaction response with embeds and components.
+func (d *discordClient) EditInteractionResponseFull(appID, token string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) error {
+	_, err := d.session.WebhookMessageEdit(appID, token, "@original", &discordgo.WebhookEdit{
+		Embeds:     &embeds,
+		Components: &components,
+	})
+	return err
+}
+
 // SendInteractionFollowUp sends a follow-up message after an initial interaction response
 func (d *discordClient) SendInteractionFollowUp(interaction *discordgo.Interaction, message string) error {
 	_, err := d.session.FollowupMessageCreate(interaction, true, &discordgo.WebhookParams{

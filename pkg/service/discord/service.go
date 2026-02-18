@@ -80,4 +80,11 @@ type IService interface {
 	SendInteractionFollowUp(interaction *discordgo.Interaction, message string) error
 
 	ListActiveThreadsByChannelID(guildID, channelID string) ([]discordgo.Channel, error)
+
+	// EditInteractionResponse edits the original interaction response with new embeds.
+	// Used by InteractionReporter in ProgressBar to push progress updates to an ephemeral message.
+	EditInteractionResponse(appID, token string, embeds []*discordgo.MessageEmbed) error
+	// EditInteractionResponseFull edits the original interaction response with embeds and components.
+	// Used for rich preview messages that include action buttons.
+	EditInteractionResponseFull(appID, token string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) error
 }
