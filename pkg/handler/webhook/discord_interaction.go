@@ -1643,11 +1643,17 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 					Label:    "Confirm",
 					Style:    discordgo.SuccessButton,
 					CustomID: confirmID,
+					Emoji: discordgo.ComponentEmoji{
+						Name: "✅",
+					},
 				},
 				discordgo.Button{
 					Label:    "Cancel",
 					Style:    discordgo.DangerButton,
 					CustomID: cancelID,
+					Emoji: discordgo.ComponentEmoji{
+						Name: "❌",
+					},
 				},
 			},
 		},
