@@ -22,11 +22,12 @@ import (
 )
 
 type googleService struct {
-	config         *oauth2.Config
-	token          *oauth2.Token
-	StartHistoryId uint64
-	service        *gmail.Service
-	appConfig      *config.Config
+	config              *oauth2.Config
+	token               *oauth2.Token
+	activeRefreshToken  string // tracks which refresh token produced the current access token
+	StartHistoryId      uint64
+	service             *gmail.Service
+	appConfig           *config.Config
 }
 
 // New function return Google service
@@ -50,19 +51,24 @@ func (g *googleService) prepareService() error {
 }
 
 func (g *googleService) ensureToken(refreshToken string) error {
+	// Force refresh when switching between different accounts (e.g., accounting vs team)
+	// to avoid reusing a valid token that belongs to the wrong Google account.
+	if g.token.Valid() && g.activeRefreshToken == refreshToken {
+		return nil
+	}
+
 	token := &oauth2.Token{
 		RefreshToken: refreshToken,
 	}
 
-	if !g.token.Valid() {
-		tks := g.config.TokenSource(context.Background(), token)
-		tok, err := tks.Token()
-		if err != nil {
-			return err
-		}
-
-		g.token = tok
+	tks := g.config.TokenSource(context.Background(), token)
+	tok, err := tks.Token()
+	if err != nil {
+		return err
 	}
+
+	g.token = tok
+	g.activeRefreshToken = refreshToken
 
 	return nil
 }
