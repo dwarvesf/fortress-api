@@ -273,15 +273,21 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 	return "", "", fmt.Errorf("contractor not found for person ID: %s", personID)
 }
 
+// TimesheetQueryResult holds the result of querying timesheets for a contractor/project/month
+type TimesheetQueryResult struct {
+	DateCounts       map[string]int // date (YYYY-MM-DD) -> entry count
+	NotReviewedCount int            // entries with status not "Reviewed" or "Completed"
+}
+
 // QueryTimesheetsByContractorProjectMonth queries timesheet entries for a specific contractor, project, and month.
-// Returns a map of date strings (YYYY-MM-DD) to entry counts.
+// Returns a TimesheetQueryResult with date counts and not-reviewed count.
 func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 	ctx context.Context,
 	contractorPageID string,
 	projectPageID string,
 	year int,
 	month int,
-) (map[string]int, error) {
+) (*TimesheetQueryResult, error) {
 	if s.client == nil {
 		return nil, errors.New("notion client is nil")
 	}
@@ -340,7 +346,9 @@ func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 		PageSize: 100,
 	}
 
-	dateCounts := make(map[string]int)
+	result := &TimesheetQueryResult{
+		DateCounts: make(map[string]int),
+	}
 
 	for {
 		resp, err := s.client.QueryDatabase(ctx, timesheetDBID, query)
@@ -357,7 +365,12 @@ func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 
 			dateStr := ExtractDateString(props, "Date")
 			if dateStr != "" {
-				dateCounts[dateStr]++
+				result.DateCounts[dateStr]++
+			}
+
+			status := ExtractStatus(props, "Status")
+			if status != "Reviewed" && status != "Completed" {
+				result.NotReviewedCount++
 			}
 		}
 
@@ -368,9 +381,9 @@ func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 		query.StartCursor = *resp.NextCursor
 	}
 
-	s.logger.Debug(fmt.Sprintf("found %d unique dates with timesheets for contractor=%s project=%s",
-		len(dateCounts), contractorPageID, projectPageID))
+	s.logger.Debug(fmt.Sprintf("found %d unique dates with timesheets (notReviewed=%d) for contractor=%s project=%s",
+		len(result.DateCounts), result.NotReviewedCount, contractorPageID, projectPageID))
 
-	return dateCounts, nil
+	return result, nil
 }
 

@@ -43,17 +43,19 @@ func New(store *store.Store, repo store.DBRepo, service *service.Service, logger
 
 // ProjectMissingData represents missing timesheet data for a project
 type ProjectMissingData struct {
-	ProjectID   string                  `json:"projectId"`
-	ProjectName string                  `json:"projectName"`
-	Contractors []ContractorMissingData `json:"contractors"`
+	ProjectID        string                  `json:"projectId"`
+	ProjectName      string                  `json:"projectName"`
+	NotReviewedCount int                     `json:"notReviewedCount"`
+	Contractors      []ContractorMissingData `json:"contractors"`
 }
 
 // ContractorMissingData represents missing timesheet data for a contractor
 type ContractorMissingData struct {
-	ContractorID   string   `json:"contractorId"`
-	ContractorName string   `json:"contractorName"`
-	MissingCount   int      `json:"missingCount"`
-	MissingDates   []string `json:"missingDates"` // Format: DD/MM
+	ContractorID     string   `json:"contractorId"`
+	ContractorName   string   `json:"contractorName"`
+	MissingCount     int      `json:"missingCount"`
+	MissingDates     []string `json:"missingDates"` // Format: DD/MM
+	NotReviewedCount int      `json:"notReviewedCount"`
 }
 
 // GetWorkUpdatesResponse represents the full response
@@ -64,12 +66,13 @@ type GetWorkUpdatesResponse struct {
 
 // deploymentResult holds the result of processing a single deployment
 type deploymentResult struct {
-	ContractorID   string
-	ContractorName string
-	ProjectID      string
-	ProjectName    string
-	MissingDates   []string
-	Error          error
+	ContractorID     string
+	ContractorName   string
+	ProjectID        string
+	ProjectName      string
+	MissingDates     []string
+	NotReviewedCount int
+	Error            error
 }
 
 // GetWorkUpdates godoc
@@ -79,6 +82,7 @@ type deploymentResult struct {
 // @Accept json
 // @Produce json
 // @Param month path string true "Month in YYYY-MM format"
+// @Param includeReviewStatus query bool false "Include not-reviewed timesheet counts"
 // @Success 200 {object} view.Response{data=GetWorkUpdatesResponse}
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -88,6 +92,8 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 		"handler": "workupdates",
 		"method":  "GetWorkUpdates",
 	})
+
+	includeReviewStatus := c.Query("includeReviewStatus") == "true"
 
 	month := c.Param("month")
 	if month == "" {
@@ -192,25 +198,49 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	// Group results by project
 	projectMap := make(map[string]*ProjectMissingData)
 	for _, r := range results {
-		if len(r.MissingDates) == 0 {
-			continue
-		}
-
-		proj, ok := projectMap[r.ProjectID]
-		if !ok {
-			proj = &ProjectMissingData{
-				ProjectID:   r.ProjectID,
-				ProjectName: r.ProjectName,
+		if includeReviewStatus {
+			// Not-review mode: only show contractors with not-reviewed entries
+			if r.NotReviewedCount == 0 {
+				continue
 			}
-			projectMap[r.ProjectID] = proj
-		}
 
-		proj.Contractors = append(proj.Contractors, ContractorMissingData{
-			ContractorID:   r.ContractorID,
-			ContractorName: r.ContractorName,
-			MissingCount:   len(r.MissingDates),
-			MissingDates:   r.MissingDates,
-		})
+			proj, ok := projectMap[r.ProjectID]
+			if !ok {
+				proj = &ProjectMissingData{
+					ProjectID:   r.ProjectID,
+					ProjectName: r.ProjectName,
+				}
+				projectMap[r.ProjectID] = proj
+			}
+
+			proj.NotReviewedCount += r.NotReviewedCount
+			proj.Contractors = append(proj.Contractors, ContractorMissingData{
+				ContractorID:     r.ContractorID,
+				ContractorName:   r.ContractorName,
+				NotReviewedCount: r.NotReviewedCount,
+			})
+		} else {
+			// Default mode: show contractors with missing timesheets
+			if len(r.MissingDates) == 0 {
+				continue
+			}
+
+			proj, ok := projectMap[r.ProjectID]
+			if !ok {
+				proj = &ProjectMissingData{
+					ProjectID:   r.ProjectID,
+					ProjectName: r.ProjectName,
+				}
+				projectMap[r.ProjectID] = proj
+			}
+
+			proj.Contractors = append(proj.Contractors, ContractorMissingData{
+				ContractorID:   r.ContractorID,
+				ContractorName: r.ContractorName,
+				MissingCount:   len(r.MissingDates),
+				MissingDates:   r.MissingDates,
+			})
+		}
 	}
 
 	// Convert to slice and sort
@@ -285,7 +315,7 @@ func (h *handler) processDeploymentsConcurrently(
 			}
 
 			// Query timesheet entries
-			timesheetDates, err := timesheet.QueryTimesheetsByContractorProjectMonth(
+			timesheetResult, err := timesheet.QueryTimesheetsByContractorProjectMonth(
 				ctx, dep.ContractorPageID, dep.ProjectPageID, year, month,
 			)
 			if err != nil {
@@ -296,11 +326,13 @@ func (h *handler) processDeploymentsConcurrently(
 				return
 			}
 
+			result.NotReviewedCount = timesheetResult.NotReviewedCount
+
 			// Query leave dates from Notion
 			leaveDates := h.getApprovedLeaveDates(ctx, dep.ContractorPageID, year, month)
 
 			// Calculate missing dates
-			result.MissingDates = calculateMissingDates(workingDays, timesheetDates, leaveDates)
+			result.MissingDates = calculateMissingDates(workingDays, timesheetResult.DateCounts, leaveDates)
 
 			resultsCh <- result
 		}(dep)
