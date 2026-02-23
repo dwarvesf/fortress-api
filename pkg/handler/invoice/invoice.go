@@ -391,8 +391,8 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		return
 	}
 
-	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v dryRun=%v invoiceType=%s batch=%d channelID=%s messageID=%s",
-		req.Contractor, req.Month, req.SkipUpload, req.DryRun, req.InvoiceType, req.Batch, req.ChannelID, req.MessageID))
+	l.Debug(fmt.Sprintf("received request: contractor=%s month=%s skipUpload=%v dryRun=%v invoiceType=%s batch=%d channelID=%s",
+		req.Contractor, req.Month, req.SkipUpload, req.DryRun, req.InvoiceType, req.Batch, req.ChannelID))
 
 	// 2. Validate month format (YYYY-MM) - only if month is provided
 	if req.Month != "" && !isValidMonthFormat(req.Month) {
@@ -410,7 +410,7 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 
 	// 4. Handle batch processing for "all" contractors (async)
 	if req.Contractor == "all" && req.Batch > 0 {
-		l.Debug(fmt.Sprintf("batch processing mode: batch=%d channelID=%s messageID=%s", req.Batch, req.ChannelID, req.MessageID))
+		l.Debug(fmt.Sprintf("batch processing mode: batch=%d channelID=%s", req.Batch, req.ChannelID))
 
 		// Return 200 OK immediately and process asynchronously
 		c.JSON(http.StatusOK, view.CreateResponse(view.BatchInvoiceResponse{
@@ -597,17 +597,17 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 
 	l.Info(fmt.Sprintf("contractor invoice generated successfully: invoice_number=%s", response.InvoiceNumber))
 
-	// Update Discord message if channelID and messageID are provided
-	if req.ChannelID != "" && req.MessageID != "" {
-		l.Debug(fmt.Sprintf("updating Discord message: channelID=%s messageID=%s", req.ChannelID, req.MessageID))
-		h.updateDiscordWithSingleInvoiceSuccess(l, req.ChannelID, req.MessageID, invoiceData, fileURL)
+	// Send Discord message with result if channelID is provided (API creates the message)
+	if req.ChannelID != "" {
+		l.Debug(fmt.Sprintf("sending Discord result message: channelID=%s", req.ChannelID))
+		h.sendDiscordSingleInvoiceSuccess(l, req.ChannelID, invoiceData, fileURL)
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse(response, nil, nil, req, ""))
 }
 
-// updateDiscordWithSingleInvoiceSuccess updates the Discord embed with single invoice success
-func (h *handler) updateDiscordWithSingleInvoiceSuccess(l logger.Logger, channelID, messageID string, invoiceData interface{}, fileURL string) {
+// sendDiscordSingleInvoiceSuccess sends a Discord embed with single invoice success (API creates a new message)
+func (h *handler) sendDiscordSingleInvoiceSuccess(l logger.Logger, channelID string, invoiceData interface{}, fileURL string) {
 	// Type assert to get invoice data
 	data, ok := invoiceData.(*invoiceCtrl.ContractorInvoiceData)
 	if !ok {
@@ -633,11 +633,11 @@ func (h *handler) updateDiscordWithSingleInvoiceSuccess(l logger.Logger, channel
 		Color:       5763719, // Green
 	}
 
-	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
+	_, err := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{embed}, nil)
 	if err != nil {
-		l.Error(err, "failed to update discord with single invoice success")
+		l.Error(err, "failed to send discord single invoice success message")
 	} else {
-		l.Debug("discord message updated successfully")
+		l.Debug("discord single invoice success message sent")
 	}
 }
 
@@ -649,24 +649,43 @@ func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateCont
 	l.Debug(fmt.Sprintf("starting batch invoice processing: batch=%d month=%s workers=%d",
 		req.Batch, req.Month, maxConcurrentInvoiceWorkers))
 
+	// 0. Create initial Discord progress message if channelID is provided (API owns the message lifecycle)
+	var messageID string
+	if req.ChannelID != "" {
+		displayMonth := formatMonthDisplay(req.Month)
+		initEmbed := &discordgo.MessageEmbed{
+			Title:       "⏳ Generating Contractor Invoices",
+			Description: fmt.Sprintf("Processing invoices for **%s** (batch %d)...\n\nThis may take a few moments.", displayMonth, req.Batch),
+			Color:       5793266, // Discord Blurple
+			Footer:      &discordgo.MessageEmbedFooter{Text: "Processing..."},
+		}
+		msg, err := h.service.Discord.SendChannelMessageComplex(req.ChannelID, "", []*discordgo.MessageEmbed{initEmbed}, nil)
+		if err != nil {
+			l.Error(err, "failed to send initial discord progress message")
+		} else if msg != nil {
+			messageID = msg.ID
+			l.Debug(fmt.Sprintf("created discord progress message: messageID=%s channelID=%s", messageID, req.ChannelID))
+		}
+	}
+
 	// 1. Get list of contractors for this batch
 	ratesService := notion.NewContractorRatesService(h.config, h.logger)
 	if ratesService == nil {
 		l.Error(nil, "failed to create contractor rates service")
-		h.updateDiscordWithError(l, req.ChannelID, req.MessageID, "Failed to initialize contractor rates service")
+		h.updateDiscordWithError(l, req.ChannelID, messageID, "Failed to initialize contractor rates service")
 		return
 	}
 
 	contractors, err := ratesService.ListActiveContractorsByBatch(ctx, req.Month, req.Batch)
 	if err != nil {
 		l.Error(err, fmt.Sprintf("failed to list contractors for batch %d", req.Batch))
-		h.updateDiscordWithError(l, req.ChannelID, req.MessageID, fmt.Sprintf("Failed to list contractors: %v", err))
+		h.updateDiscordWithError(l, req.ChannelID, messageID, fmt.Sprintf("Failed to list contractors: %v", err))
 		return
 	}
 
 	if len(contractors) == 0 {
 		l.Debug(fmt.Sprintf("no contractors found for batch %d", req.Batch))
-		h.updateDiscordWithNoContractors(l, req.ChannelID, req.MessageID, req.Month, req.Batch)
+		h.updateDiscordWithNoContractors(l, req.ChannelID, messageID, req.Month, req.Batch)
 		return
 	}
 
@@ -713,8 +732,8 @@ func (h *handler) processBatchInvoices(l logger.Logger, req request.GenerateCont
 
 	// Build a ProgressBar for Discord updates (nil-safe: pb.Report is a no-op when pb is nil)
 	var pb *discordsvc.ProgressBar
-	if req.ChannelID != "" && req.MessageID != "" {
-		reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, req.ChannelID, req.MessageID)
+	if req.ChannelID != "" && messageID != "" {
+		reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, req.ChannelID, messageID)
 		pb = discordsvc.NewProgressBar(reporter, l)
 	}
 
