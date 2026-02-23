@@ -1087,6 +1087,11 @@ func (d *discordClient) UpdateChannelMessage(channelID, messageID string, conten
 	})
 }
 
+// DeleteChannelMessage deletes a message from a channel
+func (d *discordClient) DeleteChannelMessage(channelID, messageID string) error {
+	return d.session.ChannelMessageDelete(channelID, messageID)
+}
+
 // EditInteractionResponse edits the original interaction response with new embeds.
 func (d *discordClient) EditInteractionResponse(appID, token string, embeds []*discordgo.MessageEmbed) error {
 	_, err := d.session.WebhookMessageEdit(appID, token, "@original", &discordgo.WebhookEdit{

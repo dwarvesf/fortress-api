@@ -87,4 +87,6 @@ type IService interface {
 	// EditInteractionResponseFull edits the original interaction response with embeds and components.
 	// Used for rich preview messages that include action buttons.
 	EditInteractionResponseFull(appID, token string, embeds []*discordgo.MessageEmbed, components []discordgo.MessageComponent) error
+	// DeleteChannelMessage deletes a message from a channel
+	DeleteChannelMessage(channelID, messageID string) error
 }

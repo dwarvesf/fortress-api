@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -84,9 +85,8 @@ type deploymentResult struct {
 // @Accept json
 // @Produce json
 // @Param month path string true "Month in YYYY-MM format"
-// @Param includeReviewStatus query bool false "Include not-reviewed timesheet counts"
+// @Param includeReviewStatus query bool false "When true, show only not-reviewed timesheets instead of missing timesheets"
 // @Param channelId query string false "Discord channel ID for live progress updates"
-// @Param messageId query string false "Discord message ID to edit for live progress updates"
 // @Success 200 {object} view.Response{data=GetWorkUpdatesResponse}
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -99,7 +99,6 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 
 	includeReviewStatus := c.Query("includeReviewStatus") == "true"
 	channelID := c.Query("channelId")
-	messageID := c.Query("messageId")
 
 	month := c.Param("month")
 	if month == "" {
@@ -198,15 +197,31 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 		return
 	}
 
-	// Build progress bar for live Discord updates (nil-safe: pb.Report is a no-op when pb is nil)
+	// Build progress bar for live Discord updates
 	var pb *discordsvc.ProgressBar
-	if channelID != "" && messageID != "" {
-		reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, messageID)
-		pb = discordsvc.NewProgressBar(reporter, l)
+	var progressMessageID string
+	if channelID != "" && h.service.Discord != nil {
+		// Create initial progress message in the Discord channel
+		initEmbed := buildProgressEmbed(0, len(deployments), month, includeReviewStatus)
+		msg, sendErr := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{initEmbed}, nil)
+		if sendErr != nil {
+			l.Error(sendErr, "failed to send initial progress message to Discord")
+		} else {
+			progressMessageID = msg.ID
+			reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, progressMessageID)
+			pb = discordsvc.NewProgressBar(reporter, l)
+		}
 	}
 
 	// Process deployments concurrently
 	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum, pb, includeReviewStatus, month)
+
+	// Clean up progress message after processing completes
+	if progressMessageID != "" && h.service.Discord != nil {
+		if err := h.service.Discord.DeleteChannelMessage(channelID, progressMessageID); err != nil {
+			l.Error(err, "failed to delete progress message from Discord")
+		}
+	}
 
 	// Group results by project
 	projectMap := make(map[string]*ProjectMissingData)
@@ -386,14 +401,15 @@ func buildProgressEmbed(completed, total int, month string, notReviewMode bool) 
 
 	// Build progress bar visual
 	filled := int(pct / 5) // 20 chars total
-	bar := ""
-	for i := 0; i < 20; i++ {
+	var sb strings.Builder
+	for i := range 20 {
 		if i < filled {
-			bar += "█"
+			sb.WriteString("█")
 		} else {
-			bar += "░"
+			sb.WriteString("░")
 		}
 	}
+	bar := sb.String()
 
 	mode := "missing timesheets"
 	if notReviewMode {
