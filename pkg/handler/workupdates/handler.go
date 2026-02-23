@@ -8,11 +8,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	discordsvc "github.com/dwarvesf/fortress-api/pkg/service/discord"
 	"github.com/dwarvesf/fortress-api/pkg/service/google"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/store"
@@ -83,6 +85,8 @@ type deploymentResult struct {
 // @Produce json
 // @Param month path string true "Month in YYYY-MM format"
 // @Param includeReviewStatus query bool false "Include not-reviewed timesheet counts"
+// @Param channelId query string false "Discord channel ID for live progress updates"
+// @Param messageId query string false "Discord message ID to edit for live progress updates"
 // @Success 200 {object} view.Response{data=GetWorkUpdatesResponse}
 // @Failure 400 {object} view.ErrorResponse
 // @Failure 500 {object} view.ErrorResponse
@@ -94,6 +98,8 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	})
 
 	includeReviewStatus := c.Query("includeReviewStatus") == "true"
+	channelID := c.Query("channelId")
+	messageID := c.Query("messageId")
 
 	month := c.Param("month")
 	if month == "" {
@@ -192,8 +198,15 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 		return
 	}
 
+	// Build progress bar for live Discord updates (nil-safe: pb.Report is a no-op when pb is nil)
+	var pb *discordsvc.ProgressBar
+	if channelID != "" && messageID != "" {
+		reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, messageID)
+		pb = discordsvc.NewProgressBar(reporter, l)
+	}
+
 	// Process deployments concurrently
-	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum)
+	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum, pb, includeReviewStatus, month)
 
 	// Group results by project
 	projectMap := make(map[string]*ProjectMissingData)
@@ -273,6 +286,9 @@ func (h *handler) processDeploymentsConcurrently(
 	deployments []*notion.DeploymentData,
 	workingDays []time.Time,
 	year, month int,
+	pb *discordsvc.ProgressBar,
+	includeReviewStatus bool,
+	monthStr string,
 ) []deploymentResult {
 	resultsCh := make(chan deploymentResult, len(deployments))
 	var wg sync.WaitGroup
@@ -343,16 +359,55 @@ func (h *handler) processDeploymentsConcurrently(
 		close(resultsCh)
 	}()
 
+	total := len(deployments)
+	completed := 0
 	var results []deploymentResult
 	for r := range resultsCh {
+		completed++
+
 		if r.Error != nil {
 			h.logger.Error(r.Error, fmt.Sprintf("skipping deployment: contractor=%s project=%s", r.ContractorID, r.ProjectID))
-			continue
+		} else {
+			results = append(results, r)
 		}
-		results = append(results, r)
+
+		// Send live progress update every 3 completions or at the end
+		if pb != nil && (completed%3 == 0 || completed == total) {
+			pb.Report(buildProgressEmbed(completed, total, monthStr, includeReviewStatus))
+		}
 	}
 
 	return results
+}
+
+// buildProgressEmbed creates a Discord embed showing processing progress
+func buildProgressEmbed(completed, total int, month string, notReviewMode bool) *discordgo.MessageEmbed {
+	pct := float64(completed) / float64(total) * 100
+
+	// Build progress bar visual
+	filled := int(pct / 5) // 20 chars total
+	bar := ""
+	for i := 0; i < 20; i++ {
+		if i < filled {
+			bar += "█"
+		} else {
+			bar += "░"
+		}
+	}
+
+	mode := "missing timesheets"
+	if notReviewMode {
+		mode = "not-reviewed timesheets"
+	}
+
+	description := fmt.Sprintf("Checking %s for **%s**...\n\n`%s` %.0f%% (%d/%d deployments)",
+		mode, month, bar, pct, completed, total)
+
+	return &discordgo.MessageEmbed{
+		Title:       "Processing...",
+		Description: description,
+		Color:       5793266, // colorBlue
+	}
 }
 
 // getApprovedLeaveDates returns a set of date strings (YYYY-MM-DD) for approved leave days
