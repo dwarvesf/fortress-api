@@ -374,22 +374,6 @@ func (s *LeaveService) parseEmailFromOptionName(optionName string) string {
 	return ""
 }
 
-// extractRichText concatenates rich text parts into a single string
-// Returns empty string if rich text property is not found or empty
-func (s *LeaveService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
-		var parts []string
-		for _, rt := range prop.RichText {
-			parts = append(parts, rt.PlainText)
-		}
-		result := strings.TrimSpace(strings.Join(parts, ""))
-		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
-		return result
-	}
-	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
-	return ""
-}
-
 // QueryAcknowledgedLeaveDatesByContractorMonth queries the leave database for acknowledged leave
 // requests for a specific contractor in a given month. Returns a set of date strings (YYYY-MM-DD)
 // that fall within approved leave periods.

@@ -355,7 +355,7 @@ func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 				continue
 			}
 
-			dateStr := s.extractDateString(props, "Date")
+			dateStr := ExtractDateString(props, "Date")
 			if dateStr != "" {
 				dateCounts[dateStr]++
 			}
@@ -374,63 +374,3 @@ func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 	return dateCounts, nil
 }
 
-// Property extraction helpers
-
-// extractTitle extracts a title property value
-func (s *TimesheetService) extractTitle(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Title) > 0 {
-		var parts []string
-		for _, rt := range prop.Title {
-			parts = append(parts, rt.PlainText)
-		}
-		return strings.Join(parts, "")
-	}
-	return ""
-}
-
-// extractStatus extracts a status property value
-func (s *TimesheetService) extractStatus(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Status != nil {
-		return prop.Status.Name
-	}
-	return ""
-}
-
-// extractFirstRelationID extracts the first relation page ID
-func (s *TimesheetService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.Relation) > 0 {
-		return prop.Relation[0].ID
-	}
-	return ""
-}
-
-// extractRichText concatenates rich text parts into a single string
-func (s *TimesheetService) extractRichText(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
-		var parts []string
-		for _, rt := range prop.RichText {
-			parts = append(parts, rt.PlainText)
-		}
-		result := strings.TrimSpace(strings.Join(parts, ""))
-		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
-		return result
-	}
-	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
-	return ""
-}
-
-// extractDateString extracts a date property value as a YYYY-MM-DD string
-func (s *TimesheetService) extractDateString(props nt.DatabasePageProperties, propName string) string {
-	if prop, ok := props[propName]; ok && prop.Date != nil {
-		return prop.Date.Start.Format("2006-01-02")
-	}
-	return ""
-}
-
-// extractNumber extracts a number property value
-func (s *TimesheetService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
-	if prop, ok := props[propName]; ok && prop.Number != nil {
-		return *prop.Number
-	}
-	return 0
-}
