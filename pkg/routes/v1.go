@@ -482,6 +482,12 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		subscribeMemoGroup.POST("", h.DynamicEvents.Events)
 	}
 
+	// work updates - timesheet completion tracking
+	workUpdatesGroup := v1.Group("/work-updates")
+	{
+		workUpdatesGroup.GET("/:month", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.WorkUpdates.GetWorkUpdates)
+	}
+
 	// notify - extra payment notifications
 	notifyGroup := v1.Group("/notify")
 	{

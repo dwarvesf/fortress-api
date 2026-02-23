@@ -374,6 +374,132 @@ func (s *LeaveService) parseEmailFromOptionName(optionName string) string {
 	return ""
 }
 
+// extractRichText concatenates rich text parts into a single string
+// Returns empty string if rich text property is not found or empty
+func (s *LeaveService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
+		var parts []string
+		for _, rt := range prop.RichText {
+			parts = append(parts, rt.PlainText)
+		}
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
+		return result
+	}
+	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
+	return ""
+}
+
+// QueryAcknowledgedLeaveDatesByContractorMonth queries the leave database for acknowledged leave
+// requests for a specific contractor in a given month. Returns a set of date strings (YYYY-MM-DD)
+// that fall within approved leave periods.
+func (s *LeaveService) QueryAcknowledgedLeaveDatesByContractorMonth(
+	ctx context.Context,
+	contractorPageID string,
+	year int,
+	month int,
+) (map[string]bool, error) {
+	if s.client == nil {
+		return nil, errors.New("notion client is nil")
+	}
+
+	leaveDBID := s.cfg.LeaveIntegration.Notion.LeaveDBID
+	if leaveDBID == "" {
+		s.logger.Debug("leave database ID not configured, skipping leave query")
+		return make(map[string]bool), nil
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying leave requests: contractor=%s year=%d month=%d", contractorPageID, year, month))
+
+	monthStart := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	monthEnd := monthStart.AddDate(0, 1, 0).Add(-time.Second)
+
+	// Query for acknowledged leave requests for this contractor that overlap with the month
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Contractor",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: contractorPageID,
+				},
+			},
+		},
+		{
+			Property: "Status",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Status: &nt.StatusDatabaseQueryFilter{
+					Equals: "Acknowledged",
+				},
+			},
+		},
+		// Start Date must be on or before end of month
+		{
+			Property: "Start Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					OnOrBefore: &monthEnd,
+				},
+			},
+		},
+		// End Date must be on or after start of month
+		{
+			Property: "End Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					OnOrAfter: &monthStart,
+				},
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
+		},
+		PageSize: 100,
+	}
+
+	leaveDates := make(map[string]bool)
+
+	for {
+		resp, err := s.client.QueryDatabase(ctx, leaveDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query leave requests: contractor=%s", contractorPageID))
+			return nil, fmt.Errorf("failed to query leave requests: %w", err)
+		}
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			startDate := ExtractDate(props, "Start Date")
+			endDate := ExtractDate(props, "End Date")
+			if startDate == nil || endDate == nil {
+				continue
+			}
+
+			// Expand date range into individual dates, clamped to the target month
+			for d := *startDate; !d.After(*endDate); d = d.AddDate(0, 0, 1) {
+				if d.Year() == year && int(d.Month()) == month {
+					leaveDates[d.Format("2006-01-02")] = true
+				}
+			}
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d leave dates for contractor=%s in %d-%02d",
+		len(leaveDates), contractorPageID, year, month))
+
+	return leaveDates, nil
+}
+
 // GetActiveDeploymentsForContractor queries Deployment Tracker for active deployments
 // Returns empty array if none found (graceful handling)
 // Returns error only on API failures

@@ -273,3 +273,164 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 	return "", "", fmt.Errorf("contractor not found for person ID: %s", personID)
 }
 
+// QueryTimesheetsByContractorProjectMonth queries timesheet entries for a specific contractor, project, and month.
+// Returns a map of date strings (YYYY-MM-DD) to entry counts.
+func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
+	ctx context.Context,
+	contractorPageID string,
+	projectPageID string,
+	year int,
+	month int,
+) (map[string]int, error) {
+	if s.client == nil {
+		return nil, errors.New("notion client is nil")
+	}
+
+	timesheetDBID := s.cfg.Notion.Databases.Timesheet
+	if timesheetDBID == "" {
+		return nil, errors.New("timesheet database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("querying timesheets: contractor=%s project=%s year=%d month=%d",
+		contractorPageID, projectPageID, year, month))
+
+	// Build date range filter
+	startDate := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	endDate := startDate.AddDate(0, 1, 0).AddDate(0, 0, -1)
+
+	filters := []nt.DatabaseQueryFilter{
+		{
+			Property: "Contractor",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: contractorPageID,
+				},
+			},
+		},
+		{
+			Property: "Project",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Relation: &nt.RelationDatabaseQueryFilter{
+					Contains: projectPageID,
+				},
+			},
+		},
+		{
+			Property: "Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					OnOrAfter: &startDate,
+				},
+			},
+		},
+		{
+			Property: "Date",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				Date: &nt.DatePropertyFilter{
+					OnOrBefore: &endDate,
+				},
+			},
+		},
+	}
+
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			And: filters,
+		},
+		PageSize: 100,
+	}
+
+	dateCounts := make(map[string]int)
+
+	for {
+		resp, err := s.client.QueryDatabase(ctx, timesheetDBID, query)
+		if err != nil {
+			s.logger.Error(err, fmt.Sprintf("failed to query timesheets: contractor=%s project=%s", contractorPageID, projectPageID))
+			return nil, fmt.Errorf("failed to query timesheets: %w", err)
+		}
+
+		for _, page := range resp.Results {
+			props, ok := page.Properties.(nt.DatabasePageProperties)
+			if !ok {
+				continue
+			}
+
+			dateStr := s.extractDateString(props, "Date")
+			if dateStr != "" {
+				dateCounts[dateStr]++
+			}
+		}
+
+		if !resp.HasMore || resp.NextCursor == nil {
+			break
+		}
+
+		query.StartCursor = *resp.NextCursor
+	}
+
+	s.logger.Debug(fmt.Sprintf("found %d unique dates with timesheets for contractor=%s project=%s",
+		len(dateCounts), contractorPageID, projectPageID))
+
+	return dateCounts, nil
+}
+
+// Property extraction helpers
+
+// extractTitle extracts a title property value
+func (s *TimesheetService) extractTitle(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && len(prop.Title) > 0 {
+		var parts []string
+		for _, rt := range prop.Title {
+			parts = append(parts, rt.PlainText)
+		}
+		return strings.Join(parts, "")
+	}
+	return ""
+}
+
+// extractStatus extracts a status property value
+func (s *TimesheetService) extractStatus(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && prop.Status != nil {
+		return prop.Status.Name
+	}
+	return ""
+}
+
+// extractFirstRelationID extracts the first relation page ID
+func (s *TimesheetService) extractFirstRelationID(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && len(prop.Relation) > 0 {
+		return prop.Relation[0].ID
+	}
+	return ""
+}
+
+// extractRichText concatenates rich text parts into a single string
+func (s *TimesheetService) extractRichText(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && len(prop.RichText) > 0 {
+		var parts []string
+		for _, rt := range prop.RichText {
+			parts = append(parts, rt.PlainText)
+		}
+		result := strings.TrimSpace(strings.Join(parts, ""))
+		s.logger.Debug(fmt.Sprintf("extractRichText: property %s has value: %s", propName, result))
+		return result
+	}
+	s.logger.Debug(fmt.Sprintf("extractRichText: property %s not found or empty", propName))
+	return ""
+}
+
+// extractDateString extracts a date property value as a YYYY-MM-DD string
+func (s *TimesheetService) extractDateString(props nt.DatabasePageProperties, propName string) string {
+	if prop, ok := props[propName]; ok && prop.Date != nil {
+		return prop.Date.Start.Format("2006-01-02")
+	}
+	return ""
+}
+
+// extractNumber extracts a number property value
+func (s *TimesheetService) extractNumber(props nt.DatabasePageProperties, propName string) float64 {
+	if prop, ok := props[propName]; ok && prop.Number != nil {
+		return *prop.Number
+	}
+	return 0
+}

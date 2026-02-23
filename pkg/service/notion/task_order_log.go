@@ -2460,3 +2460,41 @@ func (s *TaskOrderLogService) getContractorDetails(ctx context.Context, contract
 
 	return name, discord
 }
+
+// GetContractorName fetches the Full Name of a contractor by page ID
+func (s *TaskOrderLogService) GetContractorName(ctx context.Context, contractorPageID string) (string, error) {
+	if contractorPageID == "" {
+		return "", errors.New("contractor page ID is empty")
+	}
+
+	page, err := s.client.FindPageByID(ctx, contractorPageID)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch contractor page %s: %w", contractorPageID, err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return "", fmt.Errorf("failed to cast contractor page properties: %s", contractorPageID)
+	}
+
+	return ExtractTitle(props, "Full Name"), nil
+}
+
+// GetProjectName fetches the project name by page ID
+func (s *TaskOrderLogService) GetProjectName(ctx context.Context, projectPageID string) (string, error) {
+	if projectPageID == "" {
+		return "", errors.New("project page ID is empty")
+	}
+
+	page, err := s.client.FindPageByID(ctx, projectPageID)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch project page %s: %w", projectPageID, err)
+	}
+
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return "", fmt.Errorf("failed to cast project page properties: %s", projectPageID)
+	}
+
+	return ExtractTitle(props, "Project"), nil
+}

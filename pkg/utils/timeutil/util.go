@@ -303,6 +303,25 @@ func FormatMonthYear(month string) string {
 	return fmt.Sprintf("%s %s", time.Month(monthNum).String(), year)
 }
 
+// GetWorkingDaysInMonth returns all weekdays (Mon-Fri) for a given month
+func GetWorkingDaysInMonth(year, month int) []time.Time {
+	start := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	end := start.AddDate(0, 1, 0)
+
+	var workingDays []time.Time
+	for d := start; d.Before(end); d = d.AddDate(0, 0, 1) {
+		if IsWeekday(d) {
+			workingDays = append(workingDays, d)
+		}
+	}
+	return workingDays
+}
+
+// IsWeekday checks if a date is Monday-Friday
+func IsWeekday(date time.Time) bool {
+	return date.Weekday() != time.Saturday && date.Weekday() != time.Sunday
+}
+
 func ChunkDateRange(start, end time.Time) [][2]time.Time {
 	var weeks [][2]time.Time
 
