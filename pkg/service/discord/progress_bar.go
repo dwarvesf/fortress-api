@@ -1,10 +1,31 @@
 package discord
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
+
+// BuildBar returns a 20-char visual progress bar, e.g. "`████████░░░░░░░░░░░░` 40% (8/20)".
+func BuildBar(completed, total int) string {
+	if total == 0 {
+		return "`░░░░░░░░░░░░░░░░░░░░` 0% (0/0)"
+	}
+	pct := float64(completed) / float64(total) * 100
+	filled := int(pct / 5) // 20 blocks total
+	var sb strings.Builder
+	for i := range 20 {
+		if i < filled {
+			sb.WriteString("█")
+		} else {
+			sb.WriteString("░")
+		}
+	}
+	return fmt.Sprintf("`%s` %.0f%% (%d/%d)", sb.String(), pct, completed, total)
+}
 
 // Reporter abstracts the mechanism for pushing a Discord embed update.
 type Reporter interface {

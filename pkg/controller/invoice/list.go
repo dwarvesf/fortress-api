@@ -14,6 +14,7 @@ type GetListInvoiceInput struct {
 	ProjectIDs    []string
 	Statuses      []string
 	InvoiceNumber string
+	OnProgress    func(completed, total int) // optional progress callback, nil-safe
 }
 
 func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, error) {
@@ -97,9 +98,12 @@ func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, erro
 		result := <-results
 		if result.err != nil {
 			l.AddField("pageID", result.pageID).Error(result.err, "failed to process Notion invoice")
-			continue
+		} else {
+			notionInvoices = append(notionInvoices, result.invoice)
 		}
-		notionInvoices = append(notionInvoices, result.invoice)
+		if in.OnProgress != nil {
+			in.OnProgress(i+1, len(notionPages))
+		}
 	}
 	close(results)
 

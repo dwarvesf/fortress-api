@@ -104,6 +104,8 @@ func (h *handler) List(c *gin.Context) {
 		"query":   query,
 	})
 
+	channelID := c.Query("channelId")
+
 	pagination := query.StandardizeInput()
 
 	if err := query.Validate(); err != nil {
@@ -111,11 +113,43 @@ func (h *handler) List(c *gin.Context) {
 		return
 	}
 
+	// Wire ProgressBar if channelID is provided
+	var pb *discordsvc.ProgressBar
+	if channelID != "" && h.service.Discord != nil {
+		initEmbed := &discordgo.MessageEmbed{
+			Title:       "⏳ Loading Invoices",
+			Description: "Fetching invoices from Notion...",
+			Color:       5793266,
+		}
+		msg, sendErr := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{initEmbed}, nil)
+		if sendErr != nil {
+			l.Error(sendErr, "failed to send initial discord progress message")
+		} else if msg != nil {
+			reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, msg.ID)
+			pb = discordsvc.NewProgressBar(reporter, l)
+		}
+	}
+
+	// Build progress callback that throttles updates (every 3 or at end)
+	var onProgress func(completed, total int)
+	if pb != nil {
+		onProgress = func(completed, total int) {
+			if completed%3 == 0 || completed == total {
+				pb.Report(&discordgo.MessageEmbed{
+					Title:       "⏳ Loading Invoices",
+					Description: fmt.Sprintf("Fetching line items...\n\n%s", discordsvc.BuildBar(completed, total)),
+					Color:       5793266,
+				})
+			}
+		}
+	}
+
 	invoices, total, err := h.controller.Invoice.List(invoiceCtrl.GetListInvoiceInput{
 		Pagination:    pagination,
 		ProjectIDs:    query.ProjectID,
 		Statuses:      query.Status,
 		InvoiceNumber: query.InvoiceNumber,
+		OnProgress:    onProgress,
 	})
 	if err != nil {
 		l.Error(err, "failed to get latest invoice")
