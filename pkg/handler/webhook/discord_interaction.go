@@ -1850,9 +1850,8 @@ func (h *handler) updateExtraPaymentProgress(pb *discordsvc.ProgressBar, current
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "Sending Extra Payment Notifications",
-		Description: fmt.Sprintf("Sending notifications... (%d/%d)", current, total),
+		Description: fmt.Sprintf("Sending notifications...\n\n%s", discordsvc.BuildBar(current, total)),
 		Color:       5793266, // Blurple
-		Timestamp:   time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
 
 	pb.Report(embed)

@@ -30,6 +30,7 @@ func BuildBar(completed, total int) string {
 // Reporter abstracts the mechanism for pushing a Discord embed update.
 type Reporter interface {
 	Update(embed *discordgo.MessageEmbed) error
+	Delete() error
 }
 
 // ProgressBar wraps a Reporter and handles error logging on failed updates.
@@ -51,6 +52,13 @@ func NewProgressBar(reporter Reporter, l logger.Logger) *ProgressBar {
 func (pb *ProgressBar) Report(embed *discordgo.MessageEmbed) {
 	if err := pb.reporter.Update(embed); err != nil {
 		pb.logger.Error(err, "failed to report discord progress update")
+	}
+}
+
+// Delete removes the progress message. Errors are logged but not propagated.
+func (pb *ProgressBar) Delete() {
+	if err := pb.reporter.Delete(); err != nil {
+		pb.logger.Error(err, "failed to delete discord progress message")
 	}
 }
 
@@ -76,6 +84,10 @@ func (r *channelMessageReporter) Update(embed *discordgo.MessageEmbed) error {
 	return err
 }
 
+func (r *channelMessageReporter) Delete() error {
+	return r.svc.DeleteChannelMessage(r.channelID, r.messageID)
+}
+
 // interactionReporter implements Reporter by editing the original interaction response.
 // Used for extra payment notification progress updates (impl 3).
 type interactionReporter struct {
@@ -95,4 +107,8 @@ func NewInteractionReporter(svc IService, appID, token string) Reporter {
 
 func (r *interactionReporter) Update(embed *discordgo.MessageEmbed) error {
 	return r.svc.EditInteractionResponse(r.appID, r.token, []*discordgo.MessageEmbed{embed})
+}
+
+func (r *interactionReporter) Delete() error {
+	return nil // interaction responses cannot be deleted; no-op
 }

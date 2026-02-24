@@ -160,8 +160,19 @@ func (h *handler) List(c *gin.Context) {
 	rs, err := view.ToInvoiceListResponse(invoices)
 	if err != nil {
 		l.Error(err, "failed to parse invoice list response")
+		if pb != nil {
+			pb.Report(&discordgo.MessageEmbed{
+				Title:       "❌ Failed to Load Invoices",
+				Description: err.Error(),
+				Color:       15548997,
+			})
+		}
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, query, ""))
 		return
+	}
+
+	if pb != nil {
+		pb.Delete()
 	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](rs, &view.PaginationResponse{Total: total, Pagination: view.Pagination{Page: pagination.Page, Size: pagination.Size, Sort: pagination.Sort}}, nil, nil, ""))

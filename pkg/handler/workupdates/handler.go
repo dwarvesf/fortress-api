@@ -199,29 +199,20 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 
 	// Build progress bar for live Discord updates
 	var pb *discordsvc.ProgressBar
-	var progressMessageID string
 	if channelID != "" && h.service.Discord != nil {
 		// Create initial progress message in the Discord channel
 		initEmbed := buildProgressEmbed(0, len(deployments), month, includeReviewStatus)
 		msg, sendErr := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{initEmbed}, nil)
 		if sendErr != nil {
 			l.Error(sendErr, "failed to send initial progress message to Discord")
-		} else {
-			progressMessageID = msg.ID
-			reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, progressMessageID)
+		} else if msg != nil {
+			reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, msg.ID)
 			pb = discordsvc.NewProgressBar(reporter, l)
 		}
 	}
 
 	// Process deployments concurrently
 	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum, pb, includeReviewStatus, month)
-
-	// Clean up progress message after processing completes
-	if progressMessageID != "" && h.service.Discord != nil {
-		if err := h.service.Discord.DeleteChannelMessage(channelID, progressMessageID); err != nil {
-			l.Error(err, "failed to delete progress message from Discord")
-		}
-	}
 
 	// Group results by project
 	projectMap := make(map[string]*ProjectMissingData)
@@ -292,6 +283,10 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	}
 
 	l.Debugf("work updates response: %d projects with missing timesheets", len(projects))
+
+	if pb != nil {
+		pb.Delete()
+	}
 
 	c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
 }

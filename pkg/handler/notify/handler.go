@@ -16,6 +16,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
+	discordsvc "github.com/dwarvesf/fortress-api/pkg/service/discord"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/view"
 )
@@ -240,20 +241,16 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 		return
 	}
 
-	// Create Discord progress message if channelID is provided (API owns the message lifecycle)
-	var progressMessageID string
-	if channelID != "" {
-		initEmbed := &discordgo.MessageEmbed{
-			Title:       "Sending Extra Payment Notifications",
-			Description: fmt.Sprintf("Sending notifications... (0/%d)", len(entries)),
-			Color:       5793266, // Discord Blurple
-		}
+	// Wire ProgressBar if channelID is provided
+	var pb *discordsvc.ProgressBar
+	if channelID != "" && h.service.Discord != nil {
+		initEmbed := buildNotifyProgressEmbed(0, len(entries))
 		msg, discordErr := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{initEmbed}, nil)
 		if discordErr != nil {
 			l.Error(discordErr, "failed to send initial discord progress message")
 		} else if msg != nil {
-			progressMessageID = msg.ID
-			l.Debugf("created discord progress message: messageID=%s channelID=%s", progressMessageID, channelID)
+			reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, msg.ID)
+			pb = discordsvc.NewProgressBar(reporter, l)
 		}
 	}
 
@@ -264,7 +261,13 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 	gmailService := h.service.GoogleMail
 	if gmailService == nil {
 		l.Debug("gmail service is not initialized")
-		h.deleteProgressMessage(l, channelID, progressMessageID)
+		if pb != nil {
+			pb.Report(&discordgo.MessageEmbed{
+				Title:       "❌ Failed",
+				Description: "Gmail service not initialized.",
+				Color:       15548997,
+			})
+		}
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, fmt.Errorf("gmail service not initialized"), nil, ""))
 		return
 	}
@@ -307,8 +310,11 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 				errors = append(errors, errMsg)
 				failed++
 				completed++
-				h.updateProgressMessage(l, channelID, progressMessageID, completed, total)
+				cur, tot := completed, total
 				mu.Unlock()
+				if pb != nil && (cur%3 == 0 || cur == tot) {
+					pb.Report(buildNotifyProgressEmbed(cur, tot))
+				}
 				return
 			}
 
@@ -362,8 +368,11 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 				errors = append(errors, errMsg)
 				failed++
 				completed++
-				h.updateProgressMessage(l, channelID, progressMessageID, completed, total)
+				cur, tot := completed, total
 				mu.Unlock()
+				if pb != nil && (cur%3 == 0 || cur == tot) {
+					pb.Report(buildNotifyProgressEmbed(cur, tot))
+				}
 				return
 			}
 
@@ -371,16 +380,20 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 			mu.Lock()
 			sent++
 			completed++
-			h.updateProgressMessage(l, channelID, progressMessageID, completed, total)
+			cur, tot := completed, total
 			mu.Unlock()
+			if pb != nil && (cur%3 == 0 || cur == tot) {
+				pb.Report(buildNotifyProgressEmbed(cur, tot))
+			}
 		}(entry)
 	}
 
 	// Wait for all goroutines to complete
 	wg.Wait()
 
-	// Delete progress message after processing completes
-	h.deleteProgressMessage(l, channelID, progressMessageID)
+	if pb != nil {
+		pb.Report(buildNotifyCompleteEmbed(sent, failed, errors))
+	}
 
 	response := SendExtraPaymentNotificationResponse{
 		Sent:   sent,
@@ -552,36 +565,31 @@ func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
 }
 
-// updateProgressMessage updates the Discord progress message (rate-limited: every 3 completions or at end)
-func (h *handler) updateProgressMessage(l logger.Logger, channelID, messageID string, completed, total int) {
-	if channelID == "" || messageID == "" {
-		return
-	}
-
-	// Only update every 3 completions or at the end to avoid rate limiting
-	if completed%3 != 0 && completed != total {
-		return
-	}
-
-	embed := &discordgo.MessageEmbed{
+// buildNotifyProgressEmbed creates a Discord embed showing email sending progress.
+func buildNotifyProgressEmbed(completed, total int) *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
 		Title:       "Sending Extra Payment Notifications",
-		Description: fmt.Sprintf("Sending notifications... (%d/%d)", completed, total),
+		Description: fmt.Sprintf("Sending notifications...\n\n%s", discordsvc.BuildBar(completed, total)),
 		Color:       5793266, // Discord Blurple
-	}
-
-	_, err := h.service.Discord.UpdateChannelMessage(channelID, messageID, "", []*discordgo.MessageEmbed{embed}, nil)
-	if err != nil {
-		l.Debugf("failed to update discord progress message: %v", err)
 	}
 }
 
-// deleteProgressMessage deletes the Discord progress message
-func (h *handler) deleteProgressMessage(l logger.Logger, channelID, messageID string) {
-	if channelID == "" || messageID == "" {
-		return
+// buildNotifyCompleteEmbed creates a Discord embed summarizing the completed send.
+func buildNotifyCompleteEmbed(sent, failed int, errors []string) *discordgo.MessageEmbed {
+	if failed == 0 {
+		return &discordgo.MessageEmbed{
+			Title:       "✅ Notifications Sent",
+			Description: fmt.Sprintf("Successfully sent **%d** extra payment notification(s).", sent),
+			Color:       3066993, // Green
+		}
 	}
-
-	if err := h.service.Discord.DeleteChannelMessage(channelID, messageID); err != nil {
-		l.Debugf("failed to delete discord progress message: %v", err)
+	desc := fmt.Sprintf("Sent: **%d** | Failed: **%d**", sent, failed)
+	if len(errors) > 0 && len(errors) <= 5 {
+		desc += "\n\nErrors:\n• " + strings.Join(errors, "\n• ")
+	}
+	return &discordgo.MessageEmbed{
+		Title:       "⚠️ Notifications Complete (with errors)",
+		Description: desc,
+		Color:       15105570, // Orange
 	}
 }
