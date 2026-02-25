@@ -3,7 +3,7 @@ package webhook
 import (
 	"context"
 	"crypto/hmac"
-	"crypto/sha256"
+"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -214,6 +214,16 @@ func (h *handler) getAMDLMentionsFromDeployments(
 	}
 
 	return mentions
+}
+
+// generateLeaveRequestID generates a leave request ID in the format OOO-YYYY-USERNAME-CODE
+// completeLeaveRequestID fills the missing username in an incomplete Notion Request ID.
+// Notion generates "OOO-YYYY--CODE" (empty username) when Contractor relation is not yet filled.
+// This inserts the contractor's Discord username to produce "OOO-YYYY-username-CODE".
+func completeLeaveRequestID(incompleteID, discordUsername string) string {
+	// Replace the double dash (empty username slot) with the username
+	// e.g. "OOO-2026--V9VN" -> "OOO-2026-nlk0211-V9VN"
+	return strings.Replace(incompleteID, "--", "-"+discordUsername+"-", 1)
 }
 
 // isValidLeaveRequestID validates the format of a leave request ID
@@ -532,6 +542,13 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		}
 	}
 
+	// Complete the Request ID by filling in the contractor's Discord username.
+	// Notion generates "OOO-YYYY--CODE" (missing username) since Contractor relation isn't filled yet.
+	if contractor != nil && contractor.DiscordUsername != "" && strings.Contains(leave.LeaveRequestTitle, "--") {
+		leave.LeaveRequestTitle = completeLeaveRequestID(leave.LeaveRequestTitle, contractor.DiscordUsername)
+		l.Debug(fmt.Sprintf("completed leave request ID: %s", leave.LeaveRequestTitle))
+	}
+
 	// Validate dates
 	if leave.StartDate == nil || leave.EndDate == nil {
 		errMsg := "missing start or end date"
@@ -592,28 +609,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 			autoFillError = fmt.Sprintf("contractor relation update failed: %v", err)
 		} else {
 			l.Debug(fmt.Sprintf("successfully updated contractor relation: onleave_page=%s contractor_page=%s", pageID, contractorPageID))
-
-			// Step 6: Best-effort retry for Request ID (generated after Contractor is filled)
-			maxRetries := 3
-			baseDelay := 2 * time.Second
-			for i := 0; i < maxRetries && !isValidLeaveRequestID(leave.LeaveRequestTitle); i++ {
-				retryDelay := baseDelay * (1 << i) // 2s, 4s, 8s
-				l.Debug(fmt.Sprintf("waiting for request ID (attempt %d/%d): '%s', waiting %v",
-					i+1, maxRetries, leave.LeaveRequestTitle, retryDelay))
-				time.Sleep(retryDelay)
-
-				leave, err = leaveService.GetLeaveRequest(ctx, pageID)
-				if err != nil {
-					l.Error(err, fmt.Sprintf("failed to fetch leave request on retry: page_id=%s", pageID))
-					break
-				}
-				l.Debug(fmt.Sprintf("retry %d: fetched request_id='%s'", i+1, leave.LeaveRequestTitle))
-			}
-
-			if !isValidLeaveRequestID(leave.LeaveRequestTitle) {
-				l.Warn(fmt.Sprintf("leave request ID still invalid after %d retries: page_id=%s request_id='%s'",
-					maxRetries, pageID, leave.LeaveRequestTitle))
-			}
 		}
 	} else {
 		autoFillFailed = true
