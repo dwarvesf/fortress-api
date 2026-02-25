@@ -398,6 +398,17 @@ type NotionAutomationUserObject struct {
 
 // HandleNotionOnLeave handles on-leave webhook events from Notion automation
 // This endpoint auto-fills the Employee relation based on Team Email
+//
+// Flow (restructured for reliability):
+//  1. Parse payload, status gate
+//  2. Fetch leave request (dates, basic info)
+//  3. Lookup contractor by created_by user ID
+//  4. Fetch contractor details (name, Discord, email)
+//  5. Send notification (priority — must happen even if auto-fill fails)
+//  6. Best-effort: auto-fill Contractor relation on Notion page
+//  7. Best-effort: retry for Request ID (generated after Contractor is filled)
+//  8. Best-effort: auto-fill Unavailability Type
+//  9. If auto-fill fails, send error notification to fortress-logs
 func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	l := h.logger.Fields(logger.Fields{
 		"handler": "webhook",
@@ -456,8 +467,10 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		return
 	}
 
-	// Fetch full leave request from Notion
-	ctx := c.Request.Context()
+	// Use background context for Notion operations to avoid HTTP request timeout
+	ctx := context.Background()
+
+	// Step 1: Fetch leave request from Notion (dates, basic info — Request ID won't be ready yet)
 	leave, err := leaveService.GetLeaveRequest(ctx, pageID)
 	if err != nil {
 		l.Error(err, fmt.Sprintf("failed to fetch leave request from Notion: page_id=%s", pageID))
@@ -468,181 +481,177 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	l.Debug(fmt.Sprintf("fetched leave request: page_id=%s email=%s start_date=%v end_date=%v request_id=%s",
 		pageID, leave.Email, leave.StartDate, leave.EndDate, leave.LeaveRequestTitle))
 
-	// Wait for Request ID to be fully generated with valid format
-	// Retry up to 5 times with exponential backoff if Request ID is invalid/incomplete
-	// Backoff: 1s, 2s, 4s, 8s, 16s (total up to 31 seconds)
-	maxRetries := 5
-	baseDelay := 1 * time.Second
-	for i := 0; i < maxRetries && !isValidLeaveRequestID(leave.LeaveRequestTitle); i++ {
-		// Calculate exponential backoff: 1s, 2s, 4s, 8s, 16s
-		retryDelay := baseDelay * (1 << i) // 2^i seconds
-		l.Debug(fmt.Sprintf("leave request ID invalid or incomplete (attempt %d/%d): '%s', waiting %v",
-			i+1, maxRetries, leave.LeaveRequestTitle, retryDelay))
-		time.Sleep(retryDelay)
+	// Step 2: Lookup contractor by created_by user ID
+	var contractorPageID string
+	if createdByUserID != "" {
+		l.Debug(fmt.Sprintf("looking up contractor by user_id: %s", createdByUserID))
 
-		leave, err = leaveService.GetLeaveRequest(ctx, pageID)
-		if err != nil {
-			l.Error(err, fmt.Sprintf("failed to fetch leave request on retry: page_id=%s", pageID))
-			break
-		}
-
-		l.Debug(fmt.Sprintf("retry %d: fetched request_id='%s'", i+1, leave.LeaveRequestTitle))
-	}
-
-	// Log warning if still invalid after retries
-	if !isValidLeaveRequestID(leave.LeaveRequestTitle) {
-		l.Warn(fmt.Sprintf("leave request ID still invalid after %d retries: page_id=%s request_id='%s'",
-			maxRetries, pageID, leave.LeaveRequestTitle))
-	}
-
-	// Update contractor relation if empty and fetch email
-	if len(payload.Data.Properties.Contractor.Relation) == 0 && createdByUserID != "" {
-		l.Debug(fmt.Sprintf("contractor relation is empty, looking up contractor by user_id: %s", createdByUserID))
-
-		contractorPageID, err := h.lookupContractorByUserIDForOnLeave(ctx, l, createdByUserID)
+		contractorPageID, err = h.lookupContractorByUserIDForOnLeave(ctx, l, createdByUserID)
 		if err != nil {
 			l.Error(err, fmt.Sprintf("failed to lookup contractor by user_id: %s", createdByUserID))
 		} else if contractorPageID != "" {
+			leave.EmployeeID = contractorPageID
 			l.Debug(fmt.Sprintf("found contractor page: user_id=%s page_id=%s", createdByUserID, contractorPageID))
 
-			// Update local leave object with contractor page ID (even if Notion update fails)
-			leave.EmployeeID = contractorPageID
-
-			// Fetch email from contractor page since Team Email rollup might be empty
+			// Fetch email from contractor page
 			email, err := h.getContractorEmail(ctx, l, contractorPageID)
 			if err != nil {
 				l.Error(err, fmt.Sprintf("failed to fetch contractor email: contractor_page_id=%s", contractorPageID))
 			} else if email != "" {
-				l.Debug(fmt.Sprintf("fetched contractor email: contractor_page_id=%s email=%s", contractorPageID, email))
 				leave.Email = email
-			}
-
-			// Try to update Notion page with contractor relation (best effort)
-			if err := h.updateOnLeaveContractor(ctx, l, pageID, contractorPageID); err != nil {
-				l.Error(err, fmt.Sprintf("failed to update contractor relation: page_id=%s", pageID))
-			} else {
-				l.Debug(fmt.Sprintf("successfully updated contractor relation: onleave_page=%s contractor_page=%s", pageID, contractorPageID))
+				l.Debug(fmt.Sprintf("fetched contractor email: contractor_page_id=%s email=%s", contractorPageID, email))
 			}
 		}
-	} else {
-		l.Debug(fmt.Sprintf("contractor relation already set: %v", payload.Data.Properties.Contractor.Relation))
 	}
 
-	// Auto-fill Unavailability Type to "Personal Time" if empty
-	if leave.UnavailabilityType == "" {
-		l.Debug("unavailability type is empty, auto-filling with Personal Time")
-		if err := h.updateUnavailabilityType(ctx, l, pageID, "Personal Time"); err != nil {
-			l.Error(err, fmt.Sprintf("failed to update unavailability type: page_id=%s", pageID))
+	// Step 3: Fetch contractor details if we have the ID
+	var contractor *notion.ContractorDetails
+	var contractorDiscordMention string
+
+	if leave.EmployeeID != "" {
+		l.Debug(fmt.Sprintf("fetching contractor details from Notion: contractor_id=%s", leave.EmployeeID))
+		contractor, err = leaveService.GetContractorDetails(ctx, leave.EmployeeID)
+		if err != nil || contractor == nil {
+			l.Error(err, fmt.Sprintf("failed to fetch contractor details: contractor_id=%s", leave.EmployeeID))
+		} else if contractor.Status != "Active" {
+			l.Debug(fmt.Sprintf("contractor is not active: contractor_id=%s status=%s", leave.EmployeeID, contractor.Status))
+			h.sendNotionLeaveDiscordNotification(ctx,
+				"❌ Leave Request Validation Failed",
+				fmt.Sprintf("Contractor is not active (status: %s)", contractor.Status),
+				15158332,
+				[]model.DiscordMessageField{
+					{Name: "Contractor", Value: contractor.FullName, Inline: nil},
+				},
+			)
+			c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:contractor_inactive"))
+			return
 		} else {
-			l.Debug(fmt.Sprintf("successfully updated unavailability type: page_id=%s type=Personal Time", pageID))
-			leave.UnavailabilityType = "Personal Time" // Update local object
+			l.Debug(fmt.Sprintf("found contractor: id=%s full_name=%s email=%s discord=%s",
+				leave.EmployeeID, contractor.FullName, contractor.TeamEmail, contractor.DiscordUsername))
+			contractorDiscordMention = h.getDiscordMentionFromUsername(l, contractor.DiscordUsername)
 		}
-	} else {
-		l.Debug(fmt.Sprintf("unavailability type already set: %s", leave.UnavailabilityType))
 	}
 
-	// Validate contractor exists in Notion - use Contractor relation
-	if leave.EmployeeID == "" {
-		l.Error(errors.New("missing contractor relation"), "Contractor relation is empty")
+	// Validate dates
+	if leave.StartDate == nil || leave.EndDate == nil {
+		errMsg := "missing start or end date"
+		l.Error(errors.New(errMsg), errMsg)
+		contractorName := "Unknown"
+		if contractor != nil {
+			contractorName = contractor.FullName
+		}
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"❌ Leave Request Validation Failed",
-			"Contractor relation not set",
-			15158332, // Red color
+			errMsg,
+			15158332,
 			[]model.DiscordMessageField{
+				{Name: "Contractor", Value: contractorName, Inline: nil},
 				{Name: "Page ID", Value: pageID, Inline: nil},
 			},
 		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_contractor"))
-		return
-	}
-
-	// Fetch contractor details from Notion
-	l.Debug(fmt.Sprintf("fetching contractor details from Notion: contractor_id=%s", leave.EmployeeID))
-	contractor, err := leaveService.GetContractorDetails(ctx, leave.EmployeeID)
-	if err != nil || contractor == nil {
-		l.Error(err, fmt.Sprintf("contractor not found in Notion: contractor_id=%s", leave.EmployeeID))
-		h.sendNotionLeaveDiscordNotification(ctx,
-			"❌ Leave Request Validation Failed",
-			"Contractor not found in Notion",
-			15158332, // Red color
-			[]model.DiscordMessageField{
-				{Name: "Contractor ID", Value: leave.EmployeeID, Inline: nil},
-			},
-		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:contractor_not_found"))
-		return
-	}
-
-	// Validate contractor is active
-	if contractor.Status != "Active" {
-		l.Debug(fmt.Sprintf("contractor is not active: contractor_id=%s status=%s", leave.EmployeeID, contractor.Status))
-		h.sendNotionLeaveDiscordNotification(ctx,
-			"❌ Leave Request Validation Failed",
-			fmt.Sprintf("Contractor is not active (status: %s)", contractor.Status),
-			15158332,
-			[]model.DiscordMessageField{
-				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
-			},
-		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:contractor_inactive"))
-		return
-	}
-
-	l.Debug(fmt.Sprintf("found contractor: id=%s full_name=%s email=%s discord=%s",
-		leave.EmployeeID, contractor.FullName, contractor.TeamEmail, contractor.DiscordUsername))
-
-	// Get Discord mention from contractor's Discord username
-	contractorDiscordMention := h.getDiscordMentionFromUsername(l, contractor.DiscordUsername)
-
-	// Validate dates
-	if leave.StartDate == nil {
-		l.Error(errors.New("missing start date"), "start date is required")
-		h.sendNotionLeaveDiscordNotification(ctx,
-			"❌ Leave Request Validation Failed",
-			"Start date is required",
-			15158332,
-			[]model.DiscordMessageField{
-				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
-			},
-		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_start_date"))
-		return
-	}
-
-	if leave.EndDate == nil {
-		l.Error(errors.New("missing end date"), "end date is required")
-		h.sendNotionLeaveDiscordNotification(ctx,
-			"❌ Leave Request Validation Failed",
-			"End date is required",
-			15158332,
-			[]model.DiscordMessageField{
-				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
-			},
-		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_end_date"))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:missing_dates"))
 		return
 	}
 
 	if leave.EndDate.Before(*leave.StartDate) {
-		l.Debug(fmt.Sprintf("end date before start date: start_date=%v end_date=%v", leave.StartDate, leave.EndDate))
+		contractorName := "Unknown"
+		if contractor != nil {
+			contractorName = contractor.FullName
+		}
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"❌ Leave Request Validation Failed",
 			"End date must be after start date",
 			15158332,
 			[]model.DiscordMessageField{
-				{Name: "Contractor", Value: contractor.FullName, Inline: nil},
+				{Name: "Contractor", Value: contractorName, Inline: nil},
 			},
 		)
 		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validation_failed:invalid_date_range"))
 		return
 	}
 
-	// Send Discord notification with AM/DL mentions
+	// Step 4: Send notification (priority path — must happen even if auto-fill fails later)
+	if contractor != nil {
+		h.sendLeaveNotification(ctx, l, leaveService, leave, contractor, contractorDiscordMention)
+	} else {
+		// Contractor lookup failed — we can't send a proper leave notification
+		l.Error(errors.New("contractor not found"), fmt.Sprintf("cannot send leave notification: page_id=%s created_by=%s", pageID, createdByUserID))
+	}
+
+	// Respond to webhook immediately — remaining steps are best-effort
+	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
+
+	// Step 5: Best-effort auto-fill Contractor relation on Notion page
+	autoFillFailed := false
+	var autoFillError string
+
+	if contractorPageID != "" {
+		if err := h.updateOnLeaveContractor(ctx, l, pageID, contractorPageID); err != nil {
+			l.Error(err, fmt.Sprintf("failed to update contractor relation: page_id=%s", pageID))
+			autoFillFailed = true
+			autoFillError = fmt.Sprintf("contractor relation update failed: %v", err)
+		} else {
+			l.Debug(fmt.Sprintf("successfully updated contractor relation: onleave_page=%s contractor_page=%s", pageID, contractorPageID))
+
+			// Step 6: Best-effort retry for Request ID (generated after Contractor is filled)
+			maxRetries := 3
+			baseDelay := 2 * time.Second
+			for i := 0; i < maxRetries && !isValidLeaveRequestID(leave.LeaveRequestTitle); i++ {
+				retryDelay := baseDelay * (1 << i) // 2s, 4s, 8s
+				l.Debug(fmt.Sprintf("waiting for request ID (attempt %d/%d): '%s', waiting %v",
+					i+1, maxRetries, leave.LeaveRequestTitle, retryDelay))
+				time.Sleep(retryDelay)
+
+				leave, err = leaveService.GetLeaveRequest(ctx, pageID)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to fetch leave request on retry: page_id=%s", pageID))
+					break
+				}
+				l.Debug(fmt.Sprintf("retry %d: fetched request_id='%s'", i+1, leave.LeaveRequestTitle))
+			}
+
+			if !isValidLeaveRequestID(leave.LeaveRequestTitle) {
+				l.Warn(fmt.Sprintf("leave request ID still invalid after %d retries: page_id=%s request_id='%s'",
+					maxRetries, pageID, leave.LeaveRequestTitle))
+			}
+		}
+	} else {
+		autoFillFailed = true
+		autoFillError = fmt.Sprintf("contractor lookup failed for user_id=%s", createdByUserID)
+	}
+
+	// Step 7: Best-effort auto-fill Unavailability Type
+	if leave.UnavailabilityType == "" {
+		l.Debug("unavailability type is empty, auto-filling with Personal Time")
+		if err := h.updateUnavailabilityType(ctx, l, pageID, "Personal Time"); err != nil {
+			l.Error(err, fmt.Sprintf("failed to update unavailability type: page_id=%s", pageID))
+		} else {
+			l.Debug(fmt.Sprintf("successfully updated unavailability type: page_id=%s type=Personal Time", pageID))
+		}
+	}
+
+	// Step 8: Send error notification to fortress-logs if auto-fill failed
+	if autoFillFailed {
+		h.sendOnLeaveAutoFillErrorNotification(pageID, createdByUserID, autoFillError)
+	}
+
+	l.Debug(fmt.Sprintf("leave request processing complete: page_id=%s contractor_id=%s auto_fill_failed=%v",
+		pageID, leave.EmployeeID, autoFillFailed))
+}
+
+// sendLeaveNotification sends the leave request notification to Discord
+func (h *handler) sendLeaveNotification(
+	ctx context.Context,
+	l logger.Logger,
+	leaveService *notion.LeaveService,
+	leave *notion.LeaveRequest,
+	contractor *notion.ContractorDetails,
+	contractorDiscordMention string,
+) {
 	channelID := h.config.Discord.IDs.OnLeaveChannel
 	if channelID == "" {
 		l.Debug("onleave channel not configured, falling back to auditlog webhook")
 
-		// Use Discord mention if available, otherwise use full name
 		description := fmt.Sprintf("%s request time off", contractor.FullName)
 		if contractorDiscordMention != "" {
 			description = fmt.Sprintf("%s request time off", contractorDiscordMention)
@@ -651,7 +660,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		h.sendNotionLeaveDiscordNotification(ctx,
 			"📋 Leave Request",
 			description,
-			3447003, // Blue color
+			3447003,
 			[]model.DiscordMessageField{
 				{Name: "Request", Value: leave.LeaveRequestTitle, Inline: &inlineTrue},
 				{Name: "Type", Value: leave.UnavailabilityType, Inline: &inlineTrue},
@@ -659,7 +668,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 				{Name: "Details", Value: leave.AdditionalContext, Inline: nil},
 			},
 		)
-		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
 		return
 	}
 
@@ -673,7 +681,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		assigneeMentions = fmt.Sprintf("🔔 **Assignees:** %s", strings.Join(mentions, " "))
 	}
 
-	// Build embed description with Discord mention
 	description := fmt.Sprintf("%s request time off", contractor.FullName)
 	if contractorDiscordMention != "" {
 		description = fmt.Sprintf("%s request time off", contractorDiscordMention)
@@ -682,7 +689,7 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	embed := &discordgo.MessageEmbed{
 		Title:       "📋 Leave Request",
 		Description: description,
-		Color:       3447003, // Blue color
+		Color:       3447003,
 		Fields: []*discordgo.MessageEmbedField{
 			{Name: "Request", Value: leave.LeaveRequestTitle, Inline: true},
 			{Name: "Type", Value: leave.UnavailabilityType, Inline: true},
@@ -692,7 +699,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
 
-	// Build buttons
 	components := []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
@@ -716,7 +722,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		},
 	}
 
-	// Send message with assignee mentions as content
 	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, assigneeMentions, []*discordgo.MessageEmbed{embed}, components)
 	if err != nil {
 		l.Error(err, "failed to send leave request message to discord channel")
@@ -740,10 +745,70 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 	} else {
 		l.Debug(fmt.Sprintf("sent leave request message to discord channel: message_id=%s", msg.ID))
 	}
+}
 
-	l.Debug(fmt.Sprintf("leave request validated successfully: contractor_id=%s page_id=%s", leave.EmployeeID, leave.PageID))
+// sendOnLeaveAutoFillErrorNotification sends an error notification to the fortress-logs Discord channel
+// when on-leave contractor auto-fill fails
+func (h *handler) sendOnLeaveAutoFillErrorNotification(pageID, userID, errorMsg string) {
+	const fortressLogsChannelID = "1409767264298860665"
 
-	c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "validated"))
+	l := h.logger.Fields(logger.Fields{
+		"handler": "webhook",
+		"method":  "sendOnLeaveAutoFillErrorNotification",
+		"page_id": pageID,
+	})
+
+	if h.service.Discord == nil {
+		l.Debug("discord service not configured, skipping error notification")
+		return
+	}
+
+	l.Debug(fmt.Sprintf("sending on-leave auto-fill error notification to fortress-logs channel: %s", fortressLogsChannelID))
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "⚠️ On-Leave Contractor Fill Failed",
+		Description: "Failed to automatically fill contractor information in leave request.",
+		Color:       0xFF0000,
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Page ID",
+				Value:  pageID,
+				Inline: true,
+			},
+			{
+				Name:   "Created By User",
+				Value:  userID,
+				Inline: true,
+			},
+			{
+				Name:   "Error",
+				Value:  errorMsg,
+				Inline: false,
+			},
+			{
+				Name:   "Action Required",
+				Value:  "Please manually fill the contractor field in Notion",
+				Inline: false,
+			},
+		},
+		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
+		Footer: &discordgo.MessageEmbedFooter{
+			Text: "Fortress API - Notion Webhook Handler",
+		},
+	}
+
+	_, err := h.service.Discord.SendChannelMessageComplex(
+		fortressLogsChannelID,
+		"",
+		[]*discordgo.MessageEmbed{embed},
+		nil,
+	)
+	if err != nil {
+		l.Error(err, "failed to send on-leave auto-fill error notification to discord")
+		return
+	}
+
+	l.Info(fmt.Sprintf("successfully sent on-leave auto-fill error notification to fortress-logs channel: page_id=%s", pageID))
 }
 
 // lookupContractorByUserIDForOnLeave queries the contractor database to find a contractor by Notion user ID
