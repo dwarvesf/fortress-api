@@ -1091,9 +1091,13 @@ func (s *ContractorPayablesService) QueryNewPayables(ctx context.Context) ([]New
 		return nil, errors.New("contractor payables database ID not configured")
 	}
 
-	s.logger.Debug("[DEBUG] contractor_payables: querying new payables for email matching")
+	// Only look at payables created within the last 10 days to avoid
+	// reprocessing old records that may have been accidentally reset to "New".
+	cutoff := time.Now().AddDate(0, 0, -10)
 
-	// Build filter: Payment Status = "New" AND Invoice ID is not empty
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: querying new payables for email matching (created after %s)", cutoff.Format("2006-01-02")))
+
+	// Build filter: Payment Status = "New" AND Invoice ID is not empty AND Created Time >= cutoff
 	filter := &nt.DatabaseQueryFilter{
 		And: []nt.DatabaseQueryFilter{
 			{
@@ -1109,6 +1113,14 @@ func (s *ContractorPayablesService) QueryNewPayables(ctx context.Context) ([]New
 				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 					RichText: &nt.TextPropertyFilter{
 						IsNotEmpty: true,
+					},
+				},
+			},
+			{
+				Timestamp: nt.TimestampCreatedTime,
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					CreatedTime: &nt.DatePropertyFilter{
+						OnOrAfter: &cutoff,
 					},
 				},
 			},
