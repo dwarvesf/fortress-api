@@ -1782,6 +1782,26 @@ func (n *notionService) cloneLineItem(sourceProps nt.DatabasePageProperties, new
 		}
 	}
 
+	// Copy Currency
+	if currencyProp, ok := sourceProps["Currency"]; ok && currencyProp.Select != nil {
+		propsMap["Currency"] = map[string]interface{}{
+			"select": map[string]string{
+				"name": currencyProp.Select.Name,
+			},
+		}
+	}
+
+	// Copy Project relation
+	if projectProp, ok := sourceProps["Project"]; ok && projectProp.Relation != nil && len(projectProp.Relation) > 0 {
+		relations := []map[string]string{}
+		for _, rel := range projectProp.Relation {
+			relations = append(relations, map[string]string{"id": rel.ID})
+		}
+		propsMap["Project"] = map[string]interface{}{
+			"relation": relations,
+		}
+	}
+
 	// Copy commission percentages
 	commissionFields := []string{"% Sales", "% Account Mgr", "% Delivery Lead", "% Hiring Referral"}
 	for _, field := range commissionFields {
