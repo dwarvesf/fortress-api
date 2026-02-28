@@ -226,7 +226,8 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	}
 
 	// Process deployments concurrently
-	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum, pb, includeReviewStatus, month)
+	extraHoursMode := extraHoursThreshold > 0
+	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum, pb, includeReviewStatus, month, extraHoursMode)
 
 	var response GetWorkUpdatesResponse
 	response.Month = month
@@ -327,6 +328,12 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	c.JSON(http.StatusOK, view.CreateResponse[any](response, nil, nil, nil, ""))
 }
 
+// nameCache provides thread-safe caching for contractor and project name lookups
+type nameCache struct {
+	contractors sync.Map // contractorPageID -> string
+	projects    sync.Map // projectPageID -> string
+}
+
 func (h *handler) processDeploymentsConcurrently(
 	ctx context.Context,
 	deployments []*notion.DeploymentData,
@@ -335,9 +342,19 @@ func (h *handler) processDeploymentsConcurrently(
 	pb *discordsvc.ProgressBar,
 	includeReviewStatus bool,
 	monthStr string,
+	extraHoursMode bool,
 ) []deploymentResult {
 	resultsCh := make(chan deploymentResult, len(deployments))
 	var wg sync.WaitGroup
+
+	// Shared caches to avoid redundant Notion API calls for the same contractor/project
+	cache := &nameCache{}
+
+	// Create leave service once, reuse across all goroutines
+	var leaveService *notion.LeaveService
+	if !extraHoursMode {
+		leaveService = notion.NewLeaveService(h.config, h.store, h.repo, h.logger)
+	}
 
 	// Limit concurrency to avoid overwhelming Notion API
 	semaphore := make(chan struct{}, 10)
@@ -358,32 +375,83 @@ func (h *handler) processDeploymentsConcurrently(
 			taskOrderLog := h.service.Notion.TaskOrderLog
 			timesheet := h.service.Notion.Timesheet
 
-			// Fetch contractor name
-			name, err := taskOrderLog.GetContractorName(ctx, dep.ContractorPageID)
-			if err != nil {
-				h.logger.Error(err, fmt.Sprintf("failed to get contractor name: %s", dep.ContractorPageID))
-				result.ContractorName = dep.ContractorPageID
-			} else {
-				result.ContractorName = name
+			// Run independent lookups in parallel:
+			// - contractor name (cached)
+			// - project name (cached)
+			// - timesheet query
+			// - leave dates (skipped in extra hours mode)
+			var innerWg sync.WaitGroup
+
+			// 1. Contractor name (with cache)
+			innerWg.Add(1)
+			go func() {
+				defer innerWg.Done()
+				if cached, ok := cache.contractors.Load(dep.ContractorPageID); ok {
+					result.ContractorName = cached.(string)
+					return
+				}
+				name, err := taskOrderLog.GetContractorName(ctx, dep.ContractorPageID)
+				if err != nil {
+					h.logger.Error(err, fmt.Sprintf("failed to get contractor name: %s", dep.ContractorPageID))
+					result.ContractorName = dep.ContractorPageID
+				} else {
+					result.ContractorName = name
+					cache.contractors.Store(dep.ContractorPageID, name)
+				}
+			}()
+
+			// 2. Project name (with cache)
+			innerWg.Add(1)
+			go func() {
+				defer innerWg.Done()
+				if cached, ok := cache.projects.Load(dep.ProjectPageID); ok {
+					result.ProjectName = cached.(string)
+					return
+				}
+				projName, err := taskOrderLog.GetProjectName(ctx, dep.ProjectPageID)
+				if err != nil {
+					h.logger.Error(err, fmt.Sprintf("failed to get project name: %s", dep.ProjectPageID))
+					result.ProjectName = dep.ProjectPageID
+				} else {
+					result.ProjectName = projName
+					cache.projects.Store(dep.ProjectPageID, projName)
+				}
+			}()
+
+			// 3. Timesheet query
+			var timesheetResult *notion.TimesheetQueryResult
+			var timesheetErr error
+			innerWg.Add(1)
+			go func() {
+				defer innerWg.Done()
+				timesheetResult, timesheetErr = timesheet.QueryTimesheetsByContractorProjectMonth(
+					ctx, dep.ContractorPageID, dep.ProjectPageID, year, month,
+				)
+			}()
+
+			// 4. Leave dates (skip in extra hours mode — not needed)
+			var leaveDates map[string]bool
+			if !extraHoursMode && leaveService != nil {
+				innerWg.Add(1)
+				go func() {
+					defer innerWg.Done()
+					dates, err := leaveService.QueryAcknowledgedLeaveDatesByContractorMonth(ctx, dep.ContractorPageID, year, month)
+					if err != nil {
+						h.logger.Error(err, fmt.Sprintf("failed to query leave dates: contractor=%s", dep.ContractorPageID))
+						leaveDates = make(map[string]bool)
+					} else {
+						leaveDates = dates
+					}
+				}()
 			}
 
-			// Fetch project name
-			projName, err := taskOrderLog.GetProjectName(ctx, dep.ProjectPageID)
-			if err != nil {
-				h.logger.Error(err, fmt.Sprintf("failed to get project name: %s", dep.ProjectPageID))
-				result.ProjectName = dep.ProjectPageID
-			} else {
-				result.ProjectName = projName
-			}
+			innerWg.Wait()
 
-			// Query timesheet entries
-			timesheetResult, err := timesheet.QueryTimesheetsByContractorProjectMonth(
-				ctx, dep.ContractorPageID, dep.ProjectPageID, year, month,
-			)
-			if err != nil {
-				h.logger.Error(err, fmt.Sprintf("failed to query timesheets: contractor=%s project=%s",
+			// Process timesheet result
+			if timesheetErr != nil {
+				h.logger.Error(timesheetErr, fmt.Sprintf("failed to query timesheets: contractor=%s project=%s",
 					dep.ContractorPageID, dep.ProjectPageID))
-				result.Error = err
+				result.Error = timesheetErr
 				resultsCh <- result
 				return
 			}
@@ -394,11 +462,12 @@ func (h *handler) processDeploymentsConcurrently(
 				result.AvgHoursPerDay = timesheetResult.TotalHours / float64(daysWorked)
 			}
 
-			// Query leave dates from Notion
-			leaveDates := h.getApprovedLeaveDates(ctx, dep.ContractorPageID, year, month)
-
-			// Calculate missing dates
-			result.MissingDates = calculateMissingDates(workingDays, timesheetResult.DateCounts, leaveDates)
+			if !extraHoursMode {
+				if leaveDates == nil {
+					leaveDates = make(map[string]bool)
+				}
+				result.MissingDates = calculateMissingDates(workingDays, timesheetResult.DateCounts, leaveDates)
+			}
 
 			resultsCh <- result
 		}(dep)
@@ -461,22 +530,6 @@ func buildProgressEmbed(completed, total int, month string, notReviewMode bool) 
 	}
 }
 
-// getApprovedLeaveDates returns a set of date strings (YYYY-MM-DD) for approved leave days
-func (h *handler) getApprovedLeaveDates(ctx context.Context, contractorPageID string, year, month int) map[string]bool {
-	leaveService := notion.NewLeaveService(h.config, h.store, h.repo, h.logger)
-	if leaveService == nil {
-		h.logger.Debug("leave service not available, skipping leave date query")
-		return make(map[string]bool)
-	}
-
-	leaveDates, err := leaveService.QueryAcknowledgedLeaveDatesByContractorMonth(ctx, contractorPageID, year, month)
-	if err != nil {
-		h.logger.Error(err, fmt.Sprintf("failed to query leave dates: contractor=%s", contractorPageID))
-		return make(map[string]bool)
-	}
-
-	return leaveDates
-}
 
 // calculateMissingDates returns the list of working days that have no timesheet entry and no leave
 func calculateMissingDates(workingDays []time.Time, timesheetDates map[string]int, leaveDates map[string]bool) []string {
