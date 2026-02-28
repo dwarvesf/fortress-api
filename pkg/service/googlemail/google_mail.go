@@ -172,7 +172,7 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 				trimmed := strings.TrimSpace(line)
 				if strings.HasPrefix(trimmed, "- ") {
 					if !inList {
-						result.WriteString("<ul style=\"margin:4px 0\">")
+						result.WriteString("<ul style=\"margin:4px 0;padding-left:20px\">")
 						inList = true
 					}
 					result.WriteString("<li>" + strings.TrimPrefix(trimmed, "- ") + "</li>")
