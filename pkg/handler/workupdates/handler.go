@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -59,12 +60,15 @@ type ContractorMissingData struct {
 	MissingCount     int      `json:"missingCount"`
 	MissingDates     []string `json:"missingDates"` // Format: DD/MM
 	NotReviewedCount int      `json:"notReviewedCount"`
+	TotalHours       float64  `json:"totalHours"`
+	AvgHoursPerDay   float64  `json:"avgHoursPerDay"`
 }
 
 // GetWorkUpdatesResponse represents the full response
 type GetWorkUpdatesResponse struct {
-	Month    string               `json:"month"`
-	Projects []ProjectMissingData `json:"projects"`
+	Month       string                  `json:"month"`
+	Projects    []ProjectMissingData    `json:"projects"`
+	Contractors []ContractorMissingData `json:"contractors,omitempty"` // used by --extra mode (cross-project aggregation)
 }
 
 // deploymentResult holds the result of processing a single deployment
@@ -75,6 +79,8 @@ type deploymentResult struct {
 	ProjectName      string
 	MissingDates     []string
 	NotReviewedCount int
+	TotalHours       float64
+	AvgHoursPerDay   float64
 	Error            error
 }
 
@@ -99,6 +105,14 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 
 	includeReviewStatus := c.Query("includeReviewStatus") == "true"
 	channelID := c.Query("channelId")
+
+	// Parse extra hours threshold; 0 means disabled
+	var extraHoursThreshold float64
+	if v := c.Query("extraHoursThreshold"); v != "" {
+		if parsed, err := strconv.ParseFloat(v, 64); err == nil && parsed > 0 {
+			extraHoursThreshold = parsed
+		}
+	}
 
 	month := c.Param("month")
 	if month == "" {
@@ -156,13 +170,13 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 		return workingDays[i].Before(workingDays[j])
 	})
 
-	// For current month, only include working days up to today
+	// For current month, only include working days before today (exclude current date)
 	now := time.Now()
 	if year == now.Year() && monthNum == int(now.Month()) {
 		var filtered []time.Time
 		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 		for _, d := range workingDays {
-			if !d.After(today) {
+			if d.Before(today) {
 				filtered = append(filtered, d)
 			}
 		}
@@ -214,75 +228,97 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	// Process deployments concurrently
 	results := h.processDeploymentsConcurrently(ctx, deployments, workingDays, year, monthNum, pb, includeReviewStatus, month)
 
-	// Group results by project
-	projectMap := make(map[string]*ProjectMissingData)
-	for _, r := range results {
-		if includeReviewStatus {
-			// Not-review mode: only show contractors with not-reviewed entries
-			if r.NotReviewedCount == 0 {
-				continue
-			}
+	var response GetWorkUpdatesResponse
+	response.Month = month
 
-			proj, ok := projectMap[r.ProjectID]
+	if extraHoursThreshold > 0 {
+		// Extra hours mode: aggregate hours per contractor across all projects
+		contractorMap := make(map[string]*ContractorMissingData)
+		for _, r := range results {
+			c, ok := contractorMap[r.ContractorID]
 			if !ok {
-				proj = &ProjectMissingData{
-					ProjectID:   r.ProjectID,
-					ProjectName: r.ProjectName,
+				c = &ContractorMissingData{
+					ContractorID:   r.ContractorID,
+					ContractorName: r.ContractorName,
 				}
-				projectMap[r.ProjectID] = proj
+				contractorMap[r.ContractorID] = c
 			}
-
-			proj.NotReviewedCount += r.NotReviewedCount
-			proj.Contractors = append(proj.Contractors, ContractorMissingData{
-				ContractorID:     r.ContractorID,
-				ContractorName:   r.ContractorName,
-				NotReviewedCount: r.NotReviewedCount,
-			})
-		} else {
-			// Default mode: show contractors with missing timesheets
-			if len(r.MissingDates) == 0 {
-				continue
-			}
-
-			proj, ok := projectMap[r.ProjectID]
-			if !ok {
-				proj = &ProjectMissingData{
-					ProjectID:   r.ProjectID,
-					ProjectName: r.ProjectName,
-				}
-				projectMap[r.ProjectID] = proj
-			}
-
-			proj.Contractors = append(proj.Contractors, ContractorMissingData{
-				ContractorID:   r.ContractorID,
-				ContractorName: r.ContractorName,
-				MissingCount:   len(r.MissingDates),
-				MissingDates:   r.MissingDates,
-			})
+			c.TotalHours += r.TotalHours
 		}
-	}
 
-	// Convert to slice and sort
-	var projects []ProjectMissingData
-	for _, proj := range projectMap {
-		// Sort contractors alphabetically
-		sort.Slice(proj.Contractors, func(i, j int) bool {
-			return proj.Contractors[i].ContractorName < proj.Contractors[j].ContractorName
+		for _, c := range contractorMap {
+			if c.TotalHours >= extraHoursThreshold {
+				response.Contractors = append(response.Contractors, *c)
+			}
+		}
+
+		sort.Slice(response.Contractors, func(i, j int) bool {
+			return response.Contractors[i].TotalHours > response.Contractors[j].TotalHours
 		})
-		projects = append(projects, *proj)
+
+		l.Debugf("work updates response: %d contractors with extra hours (>=%.0f)", len(response.Contractors), extraHoursThreshold)
+	} else {
+		// Group results by project
+		projectMap := make(map[string]*ProjectMissingData)
+		for _, r := range results {
+			if includeReviewStatus {
+				if r.NotReviewedCount == 0 {
+					continue
+				}
+
+				proj, ok := projectMap[r.ProjectID]
+				if !ok {
+					proj = &ProjectMissingData{
+						ProjectID:   r.ProjectID,
+						ProjectName: r.ProjectName,
+					}
+					projectMap[r.ProjectID] = proj
+				}
+
+				proj.NotReviewedCount += r.NotReviewedCount
+				proj.Contractors = append(proj.Contractors, ContractorMissingData{
+					ContractorID:     r.ContractorID,
+					ContractorName:   r.ContractorName,
+					NotReviewedCount: r.NotReviewedCount,
+				})
+			} else {
+				if len(r.MissingDates) == 0 {
+					continue
+				}
+
+				proj, ok := projectMap[r.ProjectID]
+				if !ok {
+					proj = &ProjectMissingData{
+						ProjectID:   r.ProjectID,
+						ProjectName: r.ProjectName,
+					}
+					projectMap[r.ProjectID] = proj
+				}
+
+				proj.Contractors = append(proj.Contractors, ContractorMissingData{
+					ContractorID:   r.ContractorID,
+					ContractorName: r.ContractorName,
+					MissingCount:   len(r.MissingDates),
+					MissingDates:   r.MissingDates,
+					TotalHours:     r.TotalHours,
+					AvgHoursPerDay: r.AvgHoursPerDay,
+				})
+			}
+		}
+
+		for _, proj := range projectMap {
+			sort.Slice(proj.Contractors, func(i, j int) bool {
+				return proj.Contractors[i].ContractorName < proj.Contractors[j].ContractorName
+			})
+			response.Projects = append(response.Projects, *proj)
+		}
+
+		sort.Slice(response.Projects, func(i, j int) bool {
+			return response.Projects[i].ProjectName < response.Projects[j].ProjectName
+		})
+
+		l.Debugf("work updates response: %d projects with missing timesheets", len(response.Projects))
 	}
-
-	// Sort projects alphabetically
-	sort.Slice(projects, func(i, j int) bool {
-		return projects[i].ProjectName < projects[j].ProjectName
-	})
-
-	response := GetWorkUpdatesResponse{
-		Month:    month,
-		Projects: projects,
-	}
-
-	l.Debugf("work updates response: %d projects with missing timesheets", len(projects))
 
 	if pb != nil {
 		pb.Delete()
@@ -353,6 +389,10 @@ func (h *handler) processDeploymentsConcurrently(
 			}
 
 			result.NotReviewedCount = timesheetResult.NotReviewedCount
+			result.TotalHours = timesheetResult.TotalHours
+			if daysWorked := len(timesheetResult.DateCounts); daysWorked > 0 {
+				result.AvgHoursPerDay = timesheetResult.TotalHours / float64(daysWorked)
+			}
 
 			// Query leave dates from Notion
 			leaveDates := h.getApprovedLeaveDates(ctx, dep.ContractorPageID, year, month)

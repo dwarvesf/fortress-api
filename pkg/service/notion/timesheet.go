@@ -277,6 +277,7 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 type TimesheetQueryResult struct {
 	DateCounts       map[string]int // date (YYYY-MM-DD) -> entry count
 	NotReviewedCount int            // entries with status not "Reviewed" or "Completed"
+	TotalHours       float64        // sum of "Appx. effort" across all entries
 }
 
 // QueryTimesheetsByContractorProjectMonth queries timesheet entries for a specific contractor, project, and month.
@@ -367,6 +368,9 @@ func (s *TimesheetService) QueryTimesheetsByContractorProjectMonth(
 			if dateStr != "" {
 				result.DateCounts[dateStr]++
 			}
+
+			effort := ExtractNumber(props, "Appx. effort")
+			result.TotalHours += effort
 
 			status := ExtractStatus(props, "Status")
 			if status != "Reviewed" && status != "Completed" {
