@@ -456,6 +456,58 @@ func (h *handler) HandleNotionInvoiceSend(c *gin.Context) {
 		}
 	}
 
+	// Update line items status to "Sent"
+	if lineItemProp, ok := props["Line Item"]; ok && lineItemProp.Relation != nil {
+		l.Debug(fmt.Sprintf("updating %d line items status to Sent", len(lineItemProp.Relation)))
+
+		lineItemUpdatePayload := map[string]interface{}{
+			"properties": map[string]interface{}{
+				"Status": map[string]interface{}{
+					"status": map[string]string{
+						"name": "Sent",
+					},
+				},
+			},
+		}
+
+		lineItemPayloadBytes, err := json.Marshal(lineItemUpdatePayload)
+		if err != nil {
+			l.Error(err, "failed to marshal line item update payload")
+		} else {
+			for _, rel := range lineItemProp.Relation {
+				lineItemID := rel.ID
+				l.Debug(fmt.Sprintf("updating line item %s status to Sent", lineItemID))
+
+				notionURL := fmt.Sprintf("https://api.notion.com/v1/pages/%s", lineItemID)
+				req, err := http.NewRequest("PATCH", notionURL, bytes.NewReader(lineItemPayloadBytes))
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to create HTTP request for line item %s", lineItemID))
+					continue
+				}
+
+				req.Header.Set("Authorization", "Bearer "+h.config.Notion.Secret)
+				req.Header.Set("Content-Type", "application/json")
+				req.Header.Set("Notion-Version", "2022-06-28")
+
+				client := &http.Client{Timeout: 30 * time.Second}
+				resp, err := client.Do(req)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to update line item %s status", lineItemID))
+					continue
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != http.StatusOK {
+					respBody, _ := io.ReadAll(resp.Body)
+					l.Error(fmt.Errorf("notion update failed with status %d", resp.StatusCode),
+						fmt.Sprintf("failed to update line item %s: %s", lineItemID, string(respBody)))
+				} else {
+					l.Debug(fmt.Sprintf("updated line item %s status to Sent", lineItemID))
+				}
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, view.CreateResponse[any](gin.H{
 		"status":         "success",
 		"message":        "Invoice sent successfully",
