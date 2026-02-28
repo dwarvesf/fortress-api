@@ -21,17 +21,16 @@ Content-Transfer-Encoding: quoted-printable
 				<div><br></div>
 			</div>
 			<blockquote style=3D"margin:0px 0px 0px 40px;border:none;padding:0px">
-				<div>Invoice number: #{{.Number}}
-				</div>
-				<div>
-					<div>Project: {{.Project.Name}}.</div>
-					<div>{{description}}</div>
-				</div>
-				<div>
-					Invoice Date: {{formatDate .InvoicedAt}}.</div>
-				<div>Due Date: {{formatDate .DueAt}}.
-				</div>
-				<div><br></div>
+				<div>Invoice number: #{{.Number}}</div>
+				<div>Project: {{.Project.Name}}.</div>
+				{{if eq (description) "single"}}
+				<div>Description: {{descriptionContent}}</div>
+				{{else if eq (description) "multiline"}}
+				<div>Description:</div>
+				<div style=3D"margin:4px 0px 8px 20px">{{descriptionContent}}</div>
+				{{end}}
+				<div>Invoice Date: {{formatDate .InvoicedAt}}.</div>
+				<div>Due Date: {{formatDate .DueAt}}.</div>
 				<div><br></div>
 			</blockquote>
 			<div dir=3D"ltr">

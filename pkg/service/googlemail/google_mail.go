@@ -156,7 +156,42 @@ func (g *googleService) SendInvoiceMail(invoice *model.Invoice) (msgID string, e
 			if invoice.Description == "" {
 				return ""
 			}
-			return "Description: " + invoice.Description
+			if strings.Contains(invoice.Description, "\n") {
+				return "multiline"
+			}
+			return "single"
+		},
+		"descriptionContent": func() string {
+			if invoice.Description == "" {
+				return ""
+			}
+			lines := strings.Split(invoice.Description, "\n")
+			var result strings.Builder
+			inList := false
+			for _, line := range lines {
+				trimmed := strings.TrimSpace(line)
+				if strings.HasPrefix(trimmed, "- ") {
+					if !inList {
+						result.WriteString("<ul style=\"margin:4px 0\">")
+						inList = true
+					}
+					result.WriteString("<li>" + strings.TrimPrefix(trimmed, "- ") + "</li>")
+				} else {
+					if inList {
+						result.WriteString("</ul>")
+						inList = false
+					}
+					if trimmed == "" {
+						result.WriteString("<br>")
+					} else {
+						result.WriteString("<div>" + trimmed + "</div>")
+					}
+				}
+			}
+			if inList {
+				result.WriteString("</ul>")
+			}
+			return result.String()
 		},
 		"gatherAddress": func() string {
 			return addresses
