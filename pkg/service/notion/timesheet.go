@@ -200,77 +200,38 @@ func (s *TimesheetService) FindContractorByPersonID(ctx context.Context, personI
 
 	s.logger.Debug(fmt.Sprintf("looking up contractor by person ID: person_id=%s db_id=%s", personID, contractorDBID))
 
-	// Query contractor database for matching person ID
-	// Note: Notion doesn't support filtering by People property directly via API
-	// We need to fetch all contractors and filter in-memory
+	// Query contractor database filtering by Person people property
 	resp, err := s.client.QueryDatabase(ctx, contractorDBID, &nt.DatabaseQuery{
-		PageSize: 100,
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Person",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				People: &nt.PeopleDatabaseQueryFilter{
+					Contains: personID,
+				},
+			},
+		},
+		PageSize: 1,
 	})
 	if err != nil {
 		s.logger.Error(err, fmt.Sprintf("failed to query contractor database: person_id=%s", personID))
 		return "", "", fmt.Errorf("failed to query contractor database: %w", err)
 	}
 
-	// Search through results for matching person ID
-	for _, page := range resp.Results {
-		props, ok := page.Properties.(nt.DatabasePageProperties)
-		if !ok {
-			continue
-		}
-
-		// Check if Person field contains the target person ID
-		if personProp, ok := props["Person"]; ok && len(personProp.People) > 0 {
-			for _, person := range personProp.People {
-				if person.ID == personID {
-					// Found a match! Extract Discord username
-					discordUsername := ExtractRichText(props, "Discord")
-					s.logger.Debug(fmt.Sprintf("found contractor: person_id=%s contractor_id=%s discord=%s",
-						personID, page.ID, discordUsername))
-					return page.ID, discordUsername, nil
-				}
-			}
-		}
+	if len(resp.Results) == 0 {
+		s.logger.Debug(fmt.Sprintf("no contractor found for person ID: %s", personID))
+		return "", "", fmt.Errorf("contractor not found for person ID: %s", personID)
 	}
 
-	// Handle pagination if needed
-	if resp.HasMore && resp.NextCursor != nil {
-		cursor := *resp.NextCursor
-		for cursor != "" {
-			resp, err = s.client.QueryDatabase(ctx, contractorDBID, &nt.DatabaseQuery{
-				StartCursor: cursor,
-				PageSize:    100,
-			})
-			if err != nil {
-				break
-			}
-
-			for _, page := range resp.Results {
-				props, ok := page.Properties.(nt.DatabasePageProperties)
-				if !ok {
-					continue
-				}
-
-				if personProp, ok := props["Person"]; ok && len(personProp.People) > 0 {
-					for _, person := range personProp.People {
-						if person.ID == personID {
-							discordUsername := ExtractRichText(props, "Discord")
-							s.logger.Debug(fmt.Sprintf("found contractor: person_id=%s contractor_id=%s discord=%s",
-								personID, page.ID, discordUsername))
-							return page.ID, discordUsername, nil
-						}
-					}
-				}
-			}
-
-			if !resp.HasMore || resp.NextCursor == nil {
-				break
-			}
-			cursor = *resp.NextCursor
-		}
+	page := resp.Results[0]
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return "", "", fmt.Errorf("failed to cast contractor page properties: person_id=%s", personID)
 	}
 
-	s.logger.Debug(fmt.Sprintf("no contractor found for person ID: %s", personID))
-	return "", "", fmt.Errorf("contractor not found for person ID: %s", personID)
+	discordUsername := ExtractRichText(props, "Discord")
+	s.logger.Debug(fmt.Sprintf("found contractor: person_id=%s contractor_id=%s discord=%s",
+		personID, page.ID, discordUsername))
+	return page.ID, discordUsername, nil
 }
 
 // TimesheetQueryResult holds the result of querying timesheets for a contractor/project/month
