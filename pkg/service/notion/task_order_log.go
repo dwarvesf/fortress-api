@@ -1073,11 +1073,12 @@ type ApprovedOrderData struct {
 
 // DeploymentData represents an active deployment from Deployment Tracker
 type DeploymentData struct {
-	PageID           string   // Deployment page ID
-	ContractorPageID string   // From Contractor relation
-	ProjectPageID    string   // From Project relation
-	Status           string   // Deployment status
-	Type             []string // Deployment types from Type multi-select (Official, Part-time, Shadow, Not started)
+	PageID           string     // Deployment page ID
+	ContractorPageID string     // From Contractor relation
+	ProjectPageID    string     // From Project relation
+	Status           string     // Deployment status
+	Type             []string   // Deployment types from Type multi-select (Official, Part-time, Shadow, Not started)
+	StartDate        *time.Time // Deployment start date
 }
 
 // ClientInfo represents client information from Project relation
@@ -1638,6 +1639,7 @@ func (s *TaskOrderLogService) QueryActiveDeploymentsByMonth(ctx context.Context,
 				ProjectPageID:    ExtractFirstRelationID(props, "Project"),
 				Status:           ExtractStatus(props, "Deployment Status"),
 				Type:             ExtractMultiSelectNames(props, "Type"),
+				StartDate:        ExtractDate(props, "Start Date"),
 			}
 
 			deployments = append(deployments, deployment)

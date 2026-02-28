@@ -466,7 +466,21 @@ func (h *handler) processDeploymentsConcurrently(
 				if leaveDates == nil {
 					leaveDates = make(map[string]bool)
 				}
-				result.MissingDates = calculateMissingDates(workingDays, timesheetResult.DateCounts, leaveDates)
+
+				// Filter working days to only include days from the deployment start date
+				depWorkingDays := workingDays
+				if dep.StartDate != nil {
+					startDate := time.Date(dep.StartDate.Year(), dep.StartDate.Month(), dep.StartDate.Day(), 0, 0, 0, 0, time.UTC)
+					var filtered []time.Time
+					for _, d := range workingDays {
+						if !d.Before(startDate) {
+							filtered = append(filtered, d)
+						}
+					}
+					depWorkingDays = filtered
+				}
+
+				result.MissingDates = calculateMissingDates(depWorkingDays, timesheetResult.DateCounts, leaveDates)
 			}
 
 			resultsCh <- result
