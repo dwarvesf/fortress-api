@@ -857,14 +857,11 @@ func (h *handler) generateAndCreatePayable(
 	// Update DM with generating status
 	h.updateDMWithGenerating(l, req.DMChannelID, req.DMMessageID, req.Month)
 
-	// Default invoice type to service_and_refund
+	// Empty InvoiceType means "full invoice" — fetch all pending payouts (service + extra payment)
 	invoiceType := req.InvoiceType
-	if invoiceType == "" {
-		invoiceType = "service_and_refund"
-	}
 
 	// Step 1: Generate invoice data
-	l.Debug(fmt.Sprintf("step 1: generating contractor invoice data with invoiceType=%s", invoiceType))
+	l.Debug(fmt.Sprintf("step 1: generating contractor invoice data with invoiceType=%q", invoiceType))
 	opts := &invoice.ContractorInvoiceOptions{
 		GroupFeeByProject: false,
 		InvoiceType:       invoiceType,
@@ -891,7 +888,7 @@ func (h *handler) generateAndCreatePayable(
 		l.Errorf(err, "failed to generate invoice PDF")
 		// Check if it's a "no payouts found" error from section filtering
 		if strings.Contains(err.Error(), "payouts found for this month") {
-			h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, fmt.Sprintf("No %s payouts found for %s.", invoiceType, req.Month))
+			h.updateDMWithNoPayouts(l, req.DMChannelID, req.DMMessageID, req.Month)
 		} else {
 			h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to generate PDF. Please try again later.")
 		}
