@@ -1149,10 +1149,10 @@ func (s *ContractorPayoutsService) CreateCommissionPayout(ctx context.Context, i
 		"Amount": nt.DatabasePageProperty{
 			Number: &input.Amount,
 		},
-		// Status: Pending
+		// Status: New
 		"Status": nt.DatabasePageProperty{
 			Status: &nt.SelectOptions{
-				Name: "Pending",
+				Name: "New",
 			},
 		},
 		// Person relation (Contractor)
