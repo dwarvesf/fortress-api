@@ -24,10 +24,6 @@ setup:
 	docker pull ${TOOLS_IMAGE}
 
 init:
-	@if [[ "$(docker images -q dwarvesv/fortress-tools:latest 2> /dev/null)" == "" ]]; then \
-		docker pull ${TOOLS_IMAGE}; \
-	fi
-
 	make remove-infras
 	docker compose up -d
 	@echo "Waiting for database connection..."
@@ -38,9 +34,7 @@ init:
 		sleep 1; \
 	done
 	make migrate-up
-	make migrate-test
 	make seed
-	make seed-test
 
 seed:
 	@docker exec -t $(POSTGRES_CONTAINER) sh -c "mkdir -p /seed"
@@ -93,13 +87,13 @@ setup-test:
 	make migrate-test
 	make seed-test
 migrate-test:
-	${APP_ENVIRONMENT} sql-migrate up -env=test
+	sql-migrate up -env=test
 
 migrate-new:
 	${APP_ENVIRONMENT} sql-migrate new -env=local ${name}
 
 migrate-up:
-	${APP_ENVIRONMENT} sql-migrate up -env=local
+	sql-migrate up -env=local
 
 migrate-down:
 	${APP_ENVIRONMENT} sql-migrate down -env=local

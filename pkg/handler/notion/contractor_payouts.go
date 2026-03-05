@@ -2,6 +2,7 @@ package notion
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -821,6 +822,117 @@ func (h *handler) processRefundPayouts(c *gin.Context, l logger.Logger, payoutTy
 	}, nil, nil, nil, "ok"))
 }
 
+// generateInvoiceSplitsForInvoice generates invoice splits from line items for an invoice
+// that has not yet had splits generated. Returns the number of splits created.
+func (h *handler) generateInvoiceSplitsForInvoice(ctx context.Context, l logger.Logger, invoicePageID string) (int, error) {
+	l = l.Fields(logger.Fields{
+		"method":        "generateInvoiceSplitsForInvoice",
+		"invoicePageID": invoicePageID,
+	})
+
+	l.Info("starting invoice splits generation")
+
+	// Check if splits already generated (idempotency)
+	splitsGenerated, err := h.service.Notion.IsSplitsGenerated(invoicePageID)
+	if err != nil {
+		l.Error(err, "failed to check if splits generated")
+		return 0, fmt.Errorf("failed to check splits generated: %w", err)
+	}
+	if splitsGenerated {
+		l.Info("splits already generated for this invoice, skipping generation")
+		return 0, nil
+	}
+
+	// Query line items with commission data
+	lineItems, err := h.service.Notion.QueryLineItemsWithCommissions(invoicePageID)
+	if err != nil {
+		l.Error(err, "failed to query line items with commissions")
+		return 0, fmt.Errorf("failed to query line items: %w", err)
+	}
+
+	if len(lineItems) == 0 {
+		l.Info("no line items found for invoice, marking as generated")
+		if markErr := h.service.Notion.MarkSplitsGenerated(invoicePageID); markErr != nil {
+			l.Error(markErr, "failed to mark splits generated")
+			return 0, markErr
+		}
+		if markErr := h.service.Notion.MarkLineItemsSplitsGenerated(invoicePageID); markErr != nil {
+			l.Error(markErr, "failed to mark line items splits generated")
+		}
+		return 0, nil
+	}
+
+	l.Info(fmt.Sprintf("found %d line items with commissions", len(lineItems)))
+
+	invoiceSplitService := h.service.Notion.InvoiceSplit
+	if invoiceSplitService == nil {
+		return 0, errors.New("invoice split service not configured")
+	}
+
+	var createdCount int
+	for _, item := range lineItems {
+		roles := []struct {
+			name      string
+			amount    float64
+			personIDs []string
+		}{
+			{"Sales", item.SalesAmount, item.SalesPersonIDs},
+			{"Account Manager", item.AccountMgrAmount, item.AccountMgrIDs},
+			{"Delivery Lead", item.DeliveryLeadAmount, item.DeliveryLeadIDs},
+			{"Hiring Referral", item.HiringRefAmount, item.HiringRefIDs},
+		}
+
+		for _, role := range roles {
+			if role.amount <= 0 {
+				continue
+			}
+
+			for _, personID := range role.personIDs {
+				splitName := notionsvc.BuildSplitName(role.name, item.ProjectCode, item.Month)
+
+				input := notionsvc.CreateCommissionSplitInput{
+					Name:              splitName,
+					Amount:            role.amount / float64(len(role.personIDs)),
+					Currency:          item.Currency,
+					Month:             item.Month,
+					Role:              role.name,
+					Type:              "Commission",
+					Status:            "Pending",
+					ContractorPageID:  personID,
+					DeploymentPageID:  item.DeploymentPageID,
+					InvoiceItemPageID: item.PageID,
+					InvoicePageID:     invoicePageID,
+					Description:       item.Description,
+				}
+
+				_, err := invoiceSplitService.CreateCommissionSplit(ctx, input)
+				if err != nil {
+					l.Error(err, fmt.Sprintf("failed to create commission split for role=%s person=%s", role.name, personID))
+					continue
+				}
+				createdCount++
+			}
+		}
+	}
+
+	l.Info(fmt.Sprintf("created %d commission splits", createdCount))
+
+	// Mark splits as generated on invoice
+	if err := h.service.Notion.MarkSplitsGenerated(invoicePageID); err != nil {
+		l.Error(err, "failed to mark splits generated")
+		return createdCount, err
+	}
+
+	// Mark splits as generated on line items
+	if err := h.service.Notion.MarkLineItemsSplitsGenerated(invoicePageID); err != nil {
+		l.Error(err, "failed to mark line items splits generated")
+		// Non-critical - invoice already marked
+	}
+
+	l.Info("invoice splits generation completed successfully")
+	return createdCount, nil
+}
+
 // processInvoiceSplitPayouts processes pending invoice splits (Commission, Bonus, Fee)
 // and creates payout entries of type "Commission"
 // idFilter: optional filter by split Name (Auto Name formula, case-insensitive contains match)
@@ -877,16 +989,62 @@ func (h *handler) processInvoiceSplitPayouts(c *gin.Context, l logger.Logger, id
 	}
 
 	if len(pendingSplits) == 0 {
-		l.Info("no pending invoice splits found, returning success with zero counts")
-		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
-			"payouts_created":  0,
-			"splits_processed": 0,
-			"splits_skipped":   0,
-			"errors":           0,
-			"details":          []any{},
-			"type":             "Commission",
-		}, nil, nil, nil, "ok"))
-		return
+		// If an invoice ID filter is specified, try to auto-generate splits first
+		if idFilter != "" {
+			l.Info(fmt.Sprintf("no pending splits found for filter=%s, attempting auto-generation", idFilter))
+
+			invoicePage, lookupErr := h.service.Notion.QueryClientInvoiceByNumber(idFilter)
+			if lookupErr != nil {
+				l.Error(lookupErr, "failed to look up invoice by number")
+			}
+
+			if invoicePage != nil {
+				l.Info(fmt.Sprintf("found invoice page=%s for filter=%s, generating splits", invoicePage.ID, idFilter))
+
+				splitsCreated, genErr := h.generateInvoiceSplitsForInvoice(ctx, l, invoicePage.ID)
+				if genErr != nil {
+					l.Error(genErr, "failed to auto-generate invoice splits")
+					c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, genErr, nil, ""))
+					return
+				}
+
+				if splitsCreated > 0 {
+					l.Info(fmt.Sprintf("auto-generated %d splits, re-querying pending splits", splitsCreated))
+
+					pendingSplits, err = invoiceSplitService.QueryPendingInvoiceSplits(ctx)
+					if err != nil {
+						l.Error(err, "failed to re-query pending invoice splits")
+						c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+						return
+					}
+
+					// Re-apply the ID filter
+					idFilterLower := strings.ToLower(idFilter)
+					var filteredSplits []notionsvc.PendingCommissionSplit
+					for _, split := range pendingSplits {
+						if strings.Contains(strings.ToLower(split.AutoName), idFilterLower) {
+							filteredSplits = append(filteredSplits, split)
+						}
+					}
+					pendingSplits = filteredSplits
+					l.Info(fmt.Sprintf("after re-filter: %d pending splits", len(pendingSplits)))
+				}
+			}
+		}
+
+		// If still no splits after auto-generation attempt, return zero counts
+		if len(pendingSplits) == 0 {
+			l.Info("no pending invoice splits found, returning success with zero counts")
+			c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+				"payouts_created":  0,
+				"splits_processed": 0,
+				"splits_skipped":   0,
+				"errors":           0,
+				"details":          []any{},
+				"type":             "Commission",
+			}, nil, nil, nil, "ok"))
+			return
+		}
 	}
 
 	// ============================================================

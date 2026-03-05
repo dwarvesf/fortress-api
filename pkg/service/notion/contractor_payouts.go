@@ -543,7 +543,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByContractorFees(ctx context
 	}
 
 	// Query payouts that have "00 Task Order" relation set (non-empty)
-	// AND Status is not "Cancelled" (cancelled payouts should be ignored)
+	// AND Status is not canceled (Notion uses British spelling in the database)
 	// We'll filter by our target IDs in memory
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
@@ -560,7 +560,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByContractorFees(ctx context
 					Property: "Status",
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Status: &nt.StatusDatabaseQueryFilter{
-							DoesNotEqual: "Cancelled",
+							DoesNotEqual: "Cancelled", //nolint:misspell
 						},
 					},
 				},
@@ -809,7 +809,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByRefundRequests(ctx context
 	}
 
 	// Query payouts that have "01 Refund" relation set (non-empty)
-	// AND Status is not "Cancelled" (cancelled payouts should be ignored)
+	// AND Status is not canceled (Notion uses British spelling in the database)
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
 			And: []nt.DatabaseQueryFilter{
@@ -825,7 +825,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByRefundRequests(ctx context
 					Property: "Status",
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Status: &nt.StatusDatabaseQueryFilter{
-							DoesNotEqual: "Cancelled",
+							DoesNotEqual: "Cancelled", //nolint:misspell
 						},
 					},
 				},
@@ -1041,7 +1041,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByInvoiceSplits(ctx context.
 	}
 
 	// Query payouts that have "02 Invoice Split" relation set (non-empty)
-	// AND Status is not "Cancelled" (cancelled payouts should be ignored)
+	// AND Status is not canceled (Notion uses British spelling in the database)
 	query := &nt.DatabaseQuery{
 		Filter: &nt.DatabaseQueryFilter{
 			And: []nt.DatabaseQueryFilter{
@@ -1057,7 +1057,7 @@ func (s *ContractorPayoutsService) CheckPayoutsExistByInvoiceSplits(ctx context.
 					Property: "Status",
 					DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 						Status: &nt.StatusDatabaseQueryFilter{
-							DoesNotEqual: "Cancelled",
+							DoesNotEqual: "Cancelled", //nolint:misspell
 						},
 					},
 				},

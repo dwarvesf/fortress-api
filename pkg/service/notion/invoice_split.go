@@ -12,6 +12,15 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
 
+// BuildSplitName creates a descriptive name for a commission split
+func BuildSplitName(role, projectCode string, month time.Time) string {
+	monthStr := month.Format("Jan 2006")
+	if projectCode != "" {
+		return role + " Commission - " + projectCode + " " + monthStr
+	}
+	return role + " Commission - " + monthStr
+}
+
 // InvoiceSplitsDBID is the Notion database ID for Invoice Splits
 const InvoiceSplitsDBID = "2c364b29b84c80498a8df7befd22f7fc"
 

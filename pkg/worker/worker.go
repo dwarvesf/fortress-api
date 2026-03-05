@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -188,7 +187,7 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 			// Create a split for each person in this role
 			for _, personID := range role.personIDs {
 				// Build split name: "Sales Commission - ProjectCode Dec 2025"
-				splitName := buildSplitName(role.name, item.ProjectCode, item.Month)
+				splitName := notion.BuildSplitName(role.name, item.ProjectCode, item.Month)
 
 				input := notion.CreateCommissionSplitInput{
 					Name:              splitName,
@@ -266,11 +265,3 @@ func (w *Worker) handleGenerateInvoiceSplits(l logger.Logger, payload interface{
 	return nil
 }
 
-// buildSplitName creates a descriptive name for the split
-func buildSplitName(role, projectCode string, month time.Time) string {
-	monthStr := month.Format("Jan 2006")
-	if projectCode != "" {
-		return role + " Commission - " + projectCode + " " + monthStr
-	}
-	return role + " Commission - " + monthStr
-}
