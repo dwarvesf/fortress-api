@@ -92,6 +92,7 @@ type deploymentResult struct {
 // @Produce json
 // @Param month path string true "Month in YYYY-MM format"
 // @Param includeReviewStatus query bool false "When true, show only not-reviewed timesheets instead of missing timesheets"
+// @Param includeComplete query bool false "When true, include contractors with zero missing working days in the default report"
 // @Param channelId query string false "Discord channel ID for live progress updates"
 // @Success 200 {object} view.Response{data=GetWorkUpdatesResponse}
 // @Failure 400 {object} view.ErrorResponse
@@ -104,6 +105,7 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	})
 
 	includeReviewStatus := c.Query("includeReviewStatus") == "true"
+	includeComplete := c.Query("includeComplete") == "true"
 	channelID := c.Query("channelId")
 
 	// Parse extra hours threshold; 0 means disabled
@@ -132,7 +134,8 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 	year := monthTime.Year()
 	monthNum := int(monthTime.Month())
 
-	l.Debugf("fetching work updates for month=%s year=%d monthNum=%d", month, year, monthNum)
+	l.Debugf("fetching work updates for month=%s year=%d monthNum=%d includeReviewStatus=%v includeComplete=%v",
+		month, year, monthNum, includeReviewStatus, includeComplete)
 
 	// Get working days for the month (weekdays only)
 	workingDays := timeutil.GetWorkingDaysInMonth(year, monthNum)
@@ -283,7 +286,7 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 					NotReviewedCount: r.NotReviewedCount,
 				})
 			} else {
-				if len(r.MissingDates) == 0 {
+				if !shouldIncludeContractorInMissingReport(r, includeComplete) {
 					continue
 				}
 
@@ -318,7 +321,7 @@ func (h *handler) GetWorkUpdates(c *gin.Context) {
 			return response.Projects[i].ProjectName < response.Projects[j].ProjectName
 		})
 
-		l.Debugf("work updates response: %d projects with missing timesheets", len(response.Projects))
+		l.Debugf("work updates response: %d projects in default mode includeComplete=%v", len(response.Projects), includeComplete)
 	}
 
 	if pb != nil {
@@ -544,6 +547,13 @@ func buildProgressEmbed(completed, total int, month string, notReviewMode bool) 
 	}
 }
 
+func shouldIncludeContractorInMissingReport(result deploymentResult, includeComplete bool) bool {
+	if len(result.MissingDates) > 0 {
+		return true
+	}
+
+	return includeComplete
+}
 
 // calculateMissingDates returns the list of working days that have no timesheet entry and no leave
 func calculateMissingDates(workingDays []time.Time, timesheetDates map[string]int, leaveDates map[string]bool) []string {
