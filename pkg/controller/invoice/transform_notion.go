@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	nt "github.com/dstotijn/go-notion"
 	"github.com/Rhymond/go-money"
+	nt "github.com/dstotijn/go-notion"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
@@ -323,6 +323,10 @@ func mapNotionStatusToAPI(notionStatus string) model.InvoiceStatus {
 		return model.InvoiceStatusOverdue
 	case "Paid":
 		return model.InvoiceStatusPaid
+	case "Credited":
+		return model.InvoiceStatusCredited
+	case "Cancelled":
+		return model.InvoiceStatusUncollectible
 	case "Uncollectible":
 		return model.InvoiceStatusUncollectible
 	case "Canceled":

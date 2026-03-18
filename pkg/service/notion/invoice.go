@@ -78,11 +78,15 @@ func (n *notionService) QueryInvoices(filter *InvoiceFilter, pagination model.Pa
 		l.Debugf("adding status filter: %d statuses", len(filter.Statuses))
 		statusFilters := []nt.DatabaseQueryFilter{}
 		for _, status := range filter.Statuses {
+			notionStatus := normalizeInvoiceStatusForNotion(status)
+			if notionStatus != status {
+				l.Debugf("normalized invoice status for Notion filter: %q -> %q", status, notionStatus)
+			}
 			statusFilters = append(statusFilters, nt.DatabaseQueryFilter{
 				Property: "Status", // Property ID: nsb@
 				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
 					Status: &nt.StatusDatabaseQueryFilter{
-						Equals: status,
+						Equals: notionStatus,
 					},
 				},
 			})
@@ -142,6 +146,37 @@ func (n *notionService) QueryInvoices(filter *InvoiceFilter, pagination model.Pa
 	total := int64(len(response.Results))
 
 	return response.Results, total, nil
+}
+
+func normalizeInvoiceStatusForNotion(status string) string {
+	trimmedStatus := strings.TrimSpace(status)
+
+	switch strings.ToLower(trimmedStatus) {
+	case "draft":
+		return "Draft"
+	case "sent":
+		return "Sent"
+	case "overdue":
+		return "Overdue"
+	case "paid":
+		return "Paid"
+	case "credited":
+		return "Credited"
+	case "cancelled":
+		return "Cancelled"
+	case "canceled":
+		return "Cancelled"
+	case "uncollectible":
+		return "Uncollectible"
+	case "to-do":
+		return "To-do"
+	case "in progress":
+		return "In progress"
+	case "complete":
+		return "Complete"
+	default:
+		return trimmedStatus
+	}
 }
 
 // GetInvoiceLineItems fetches line items for a specific invoice from Notion
@@ -693,10 +728,10 @@ type LineItemCommissionData struct {
 	HiringRefAmount    float64
 
 	// Person page IDs (from rollups - these are Contractor page IDs)
-	SalesPersonIDs    []string
-	AccountMgrIDs     []string
-	DeliveryLeadIDs   []string
-	HiringRefIDs      []string
+	SalesPersonIDs  []string
+	AccountMgrIDs   []string
+	DeliveryLeadIDs []string
+	HiringRefIDs    []string
 
 	// Metadata
 	Currency    string

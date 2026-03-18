@@ -21,8 +21,11 @@ func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, erro
 	l := c.logger.Fields(logger.Fields{
 		"controller": "invoice",
 		"method":     "List",
-		"input":      in,
 	})
+
+	for key, value := range sanitizeListInputForLog(in) {
+		l = l.AddField(key, value)
+	}
 
 	l.Debug("fetching invoices from Notion only (PostgreSQL temporarily disabled)")
 
@@ -141,4 +144,16 @@ func (c *controller) List(in GetListInvoiceInput) ([]*model.Invoice, int64, erro
 		offset, end, len(paginatedInvoices), total)
 
 	return paginatedInvoices, total, nil
+}
+
+func sanitizeListInputForLog(in GetListInvoiceInput) logger.Fields {
+	return logger.Fields{
+		"page":                in.Pagination.Page,
+		"size":                in.Pagination.Size,
+		"sort":                in.Pagination.Sort,
+		"projectIDs":          in.ProjectIDs,
+		"statuses":            in.Statuses,
+		"invoiceNumber":       in.InvoiceNumber,
+		"hasProgressCallback": in.OnProgress != nil,
+	}
 }

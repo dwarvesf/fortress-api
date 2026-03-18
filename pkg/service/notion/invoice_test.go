@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	nt "github.com/dstotijn/go-notion"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestExtractFormulaString(t *testing.T) {
@@ -233,6 +234,27 @@ func TestExtractNumberProp(t *testing.T) {
 			if result != tt.expected {
 				t.Errorf("extractNumberProp() = %f, want %f", result, tt.expected)
 			}
+		})
+	}
+}
+
+func TestNormalizeInvoiceStatusForNotion(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{name: "lowercase sent", input: "sent", expected: "Sent"},
+		{name: "lowercase overdue", input: "overdue", expected: "Overdue"},
+		{name: "lowercase credited", input: "credited", expected: "Credited"},
+		{name: "already normalized", input: "Paid", expected: "Paid"},
+		{name: "trim whitespace", input: "  uncollectible  ", expected: "Uncollectible"},
+		{name: "unknown passthrough", input: "Custom Status", expected: "Custom Status"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, normalizeInvoiceStatusForNotion(tt.input))
 		})
 	}
 }
