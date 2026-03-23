@@ -75,4 +75,32 @@ func TestResolveAmountUSD(t *testing.T) {
 			t.Fatal("expected error, got nil")
 		}
 	})
+
+	t.Run("caches wise conversion result and returns it on subsequent calls", func(t *testing.T) {
+		wiseSvc := &mockWiseService{convertedAmount: 400.00, rate: 0.00004}
+
+		// First call should hit the mock Wise service
+		amountUSD1, err1 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
+		if err1 != nil {
+			t.Fatalf("expected no error, got %v", err1)
+		}
+		if amountUSD1 != 400.00 {
+			t.Fatalf("expected 400.00 USD, got %v", amountUSD1)
+		}
+		if wiseSvc.convertCalls != 1 {
+			t.Fatalf("expected wise convert to be called once, got %d calls", wiseSvc.convertCalls)
+		}
+
+		// Second call should return the cached value and NOT hit the mock Wise service
+		amountUSD2, err2 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
+		if err2 != nil {
+			t.Fatalf("expected no error, got %v", err2)
+		}
+		if amountUSD2 != 400.00 {
+			t.Fatalf("expected 400.00 USD, got %v", amountUSD2)
+		}
+		if wiseSvc.convertCalls != 1 {
+			t.Fatalf("expected wise convert to STILL be called once, got %d calls", wiseSvc.convertCalls)
+		}
+	})
 }

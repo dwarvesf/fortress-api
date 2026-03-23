@@ -17,6 +17,7 @@ import (
 	"github.com/Rhymond/go-money"
 	toPdf "github.com/SebastiaanKlippert/go-wkhtmltopdf"
 
+	"github.com/dwarvesf/fortress-api/pkg/extrapayment"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/utils/timeutil"
@@ -425,15 +426,15 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		go func(idx int, p notion.PayoutEntry) {
 			defer convWg.Done()
 
-			amountUSD, _, err := c.service.Wise.Convert(p.Amount, p.Currency, "USD")
+			amountUSD, err := extrapayment.ResolveAmountUSD(l, c.service.Wise, p.PageID, p.Amount, p.Currency)
 			if err != nil {
 				convMu.Lock()
-				l.Error(err, fmt.Sprintf("failed to convert payout amount to USD: pageID=%s", p.PageID))
+				l.Error(err, fmt.Sprintf("failed to resolve payout amount to USD: pageID=%s", p.PageID))
 				convMu.Unlock()
 				amountUSD = p.Amount // Fallback to original amount if conversion fails
 			}
-			// Round to 2 decimal places
-			amountsUSD[idx] = math.Round(amountUSD*100) / 100
+			// ResolveAmountUSD already rounds to 2 decimal places, but we ensure it's assigned correctly
+			amountsUSD[idx] = amountUSD
 
 			convMu.Lock()
 			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: converted %.2f %s = %.2f USD (idx=%d)", p.Amount, p.Currency, amountsUSD[idx], idx))
