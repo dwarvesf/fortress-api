@@ -130,7 +130,7 @@ func (h *handler) PreviewExtraPaymentNotification(c *gin.Context) {
 	var totalAmount float64
 
 	for _, entry := range entries {
-		amountUSD, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		amountUSD, _, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
@@ -505,7 +505,7 @@ func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
 		reasons = []string{entry.Description}
 	}
 
-	amountUSD, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+	amountUSD, _, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

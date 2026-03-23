@@ -420,13 +420,14 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	amountsUSD := make([]float64, len(payouts))
 	var convWg sync.WaitGroup
 	var convMu sync.Mutex
+	var capturedDisplayRate float64
 
 	for i, payout := range payouts {
 		convWg.Add(1)
 		go func(idx int, p notion.PayoutEntry) {
 			defer convWg.Done()
 
-			amountUSD, err := extrapayment.ResolveAmountUSD(l, c.service.Wise, p.PageID, p.Amount, p.Currency)
+			amountUSD, rate, err := extrapayment.ResolveAmountUSD(l, c.service.Wise, p.PageID, p.Amount, p.Currency)
 			if err != nil {
 				convMu.Lock()
 				l.Error(err, fmt.Sprintf("failed to resolve payout amount to USD: pageID=%s", p.PageID))
@@ -437,7 +438,10 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			amountsUSD[idx] = amountUSD
 
 			convMu.Lock()
-			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: converted %.2f %s = %.2f USD (idx=%d)", p.Amount, p.Currency, amountsUSD[idx], idx))
+			if rate > 0 && rate != 1.0 && capturedDisplayRate == 0 {
+				capturedDisplayRate = 1 / rate
+			}
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: converted %.2f %s = %.2f USD (idx=%d, rate=%.8f)", p.Amount, p.Currency, amountsUSD[idx], idx, rate))
 			convMu.Unlock()
 		}(i, payout)
 	}
@@ -736,12 +740,17 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	}
 	if hasVNDItems {
 		l.Debug("[DEBUG] contractor_invoice: fetching exchange rate for display (USD → VND)")
-		quote, err := c.service.Wise.GetPayrollQuotes("USD", "VND", 1) // Get rate for $1
-		if err != nil {
-			l.Warn(fmt.Sprintf("contractor_invoice: failed to get exchange rate: %v, will not show FX rate in invoice", err))
+		if capturedDisplayRate > 0 {
+			exchangeRate = capturedDisplayRate
+			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using cached exchange rate for display: %.4f", exchangeRate))
 		} else {
-			exchangeRate = quote.Rate
-			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: exchange rate for display: %.4f", exchangeRate))
+			quote, err := c.service.Wise.GetPayrollQuotes("USD", "VND", 1) // Get rate for $1
+			if err != nil {
+				l.Warn(fmt.Sprintf("contractor_invoice: failed to get exchange rate: %v, will not show FX rate in invoice", err))
+			} else {
+				exchangeRate = quote.Rate
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: fetched live exchange rate for display: %.4f", exchangeRate))
+			}
 		}
 	}
 

@@ -33,12 +33,15 @@ func TestResolveAmountUSD(t *testing.T) {
 	t.Run("returns USD amount without wise conversion", func(t *testing.T) {
 		wiseSvc := &mockWiseService{}
 
-		amountUSD, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-1", 125.5, "USD")
+		amountUSD, rate, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-1", 125.5, "USD")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 		if amountUSD != 125.5 {
 			t.Fatalf("expected 125.5 USD, got %v", amountUSD)
+		}
+		if rate != 1.0 {
+			t.Fatalf("expected rate 1.0, got %v", rate)
 		}
 		if wiseSvc.convertCalls != 0 {
 			t.Fatalf("expected wise convert not to be called, got %d calls", wiseSvc.convertCalls)
@@ -48,12 +51,15 @@ func TestResolveAmountUSD(t *testing.T) {
 	t.Run("converts non USD amount using wise and rounds to 2 decimals", func(t *testing.T) {
 		wiseSvc := &mockWiseService{convertedAmount: 379.694, rate: 0.0000379694}
 
-		amountUSD, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-2", 10000000, "VND")
+		amountUSD, rate, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-2", 10000000, "VND")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 		if amountUSD != 379.69 {
 			t.Fatalf("expected 379.69 USD, got %v", amountUSD)
+		}
+		if rate != 0.0000379694 {
+			t.Fatalf("expected rate 0.0000379694, got %v", rate)
 		}
 		if wiseSvc.convertCalls != 1 {
 			t.Fatalf("expected wise convert to be called once, got %d calls", wiseSvc.convertCalls)
@@ -61,7 +67,7 @@ func TestResolveAmountUSD(t *testing.T) {
 	})
 
 	t.Run("returns error when wise service is missing for non USD amount", func(t *testing.T) {
-		_, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), nil, "page-3", 10000000, "VND")
+		_, _, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), nil, "page-3", 10000000, "VND")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -70,7 +76,7 @@ func TestResolveAmountUSD(t *testing.T) {
 	t.Run("returns error when wise conversion fails", func(t *testing.T) {
 		wiseSvc := &mockWiseService{err: errors.New("wise unavailable")}
 
-		_, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-4", 10000000, "VND")
+		_, _, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-4", 10000000, "VND")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -80,27 +86,34 @@ func TestResolveAmountUSD(t *testing.T) {
 		wiseSvc := &mockWiseService{convertedAmount: 400.00, rate: 0.00004}
 
 		// First call should hit the mock Wise service
-		amountUSD1, err1 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
+		amountUSD1, rate1, err1 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
 		if err1 != nil {
 			t.Fatalf("expected no error, got %v", err1)
 		}
 		if amountUSD1 != 400.00 {
 			t.Fatalf("expected 400.00 USD, got %v", amountUSD1)
 		}
+		if rate1 != 0.00004 {
+			t.Fatalf("expected rate 0.00004, got %v", rate1)
+		}
 		if wiseSvc.convertCalls != 1 {
 			t.Fatalf("expected wise convert to be called once, got %d calls", wiseSvc.convertCalls)
 		}
 
 		// Second call should return the cached value and NOT hit the mock Wise service
-		amountUSD2, err2 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
+		amountUSD2, rate2, err2 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
 		if err2 != nil {
 			t.Fatalf("expected no error, got %v", err2)
 		}
 		if amountUSD2 != 400.00 {
 			t.Fatalf("expected 400.00 USD, got %v", amountUSD2)
 		}
+		if rate2 != 0.00004 {
+			t.Fatalf("expected rate 0.00004, got %v", rate2)
+		}
 		if wiseSvc.convertCalls != 1 {
 			t.Fatalf("expected wise convert to STILL be called once, got %d calls", wiseSvc.convertCalls)
 		}
 	})
 }
+
