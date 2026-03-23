@@ -741,14 +741,14 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	if hasVNDItems {
 		l.Debug("[DEBUG] contractor_invoice: fetching exchange rate for display (USD → VND)")
 		if capturedDisplayRate > 0 {
-			exchangeRate = capturedDisplayRate
+			exchangeRate = math.Round(capturedDisplayRate)
 			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: using cached exchange rate for display: %.4f", exchangeRate))
 		} else {
 			quote, err := c.service.Wise.GetPayrollQuotes("USD", "VND", 1) // Get rate for $1
 			if err != nil {
 				l.Warn(fmt.Sprintf("contractor_invoice: failed to get exchange rate: %v, will not show FX rate in invoice", err))
 			} else {
-				exchangeRate = quote.Rate
+				exchangeRate = math.Round(quote.Rate)
 				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: fetched live exchange rate for display: %.4f", exchangeRate))
 			}
 		}

@@ -265,7 +265,7 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 
 	amountsByPageID := make(map[string]float64, len(entries))
 	for _, entry := range entries {
-		amountUSD, amountErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		amountUSD, _, amountErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
 		if amountErr != nil {
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, amountErr, nil, ""))
 			return
