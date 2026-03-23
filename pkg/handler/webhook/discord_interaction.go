@@ -1586,7 +1586,7 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 		if displayCount >= 10 {
 			break
 		}
-		line := fmt.Sprintf("• **%s** (%s): $%.0f", g.Name, g.Discord, g.Total)
+		line := fmt.Sprintf("• **%s** (%s): $%.2f", g.Name, g.Discord, g.Total)
 		if g.Count > 1 {
 			line += fmt.Sprintf(" (%d items)", g.Count)
 		}
