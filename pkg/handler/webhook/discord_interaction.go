@@ -21,6 +21,7 @@ import (
 
 	ctrlcontractorpayables "github.com/dwarvesf/fortress-api/pkg/controller/contractorpayables"
 	invoiceCtrl "github.com/dwarvesf/fortress-api/pkg/controller/invoice"
+	"github.com/dwarvesf/fortress-api/pkg/extrapayment"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	discordsvc "github.com/dwarvesf/fortress-api/pkg/service/discord"
@@ -1552,22 +1553,30 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 	groups := make(map[string]*contractorGroup)
 	var totalAmount float64
 	for _, entry := range entries {
+		amountUSD, convErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		if convErr != nil {
+			_ = h.service.Discord.EditInteractionResponse(appID, interactionToken, []*discordgo.MessageEmbed{
+				{Title: "Error", Description: convErr.Error(), Color: 15158332},
+			})
+			return
+		}
+
 		key := entry.Discord
 		if key == "" {
 			key = entry.ContractorName
 		}
 		if g, exists := groups[key]; exists {
-			g.Total += entry.AmountUSD
+			g.Total += amountUSD
 			g.Count++
 		} else {
 			groups[key] = &contractorGroup{
 				Name:    entry.ContractorName,
 				Discord: entry.Discord,
-				Total:   entry.AmountUSD,
+				Total:   amountUSD,
 				Count:   1,
 			}
 		}
-		totalAmount += entry.AmountUSD
+		totalAmount += amountUSD
 	}
 
 	// Build contractor list (limit to 10)
@@ -1734,6 +1743,13 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 	contractors := make(map[string]*contractorAggregate)
 
 	for _, entry := range entries {
+		amountUSD, convErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		if convErr != nil {
+			l.Error(convErr, "failed to resolve extra payment amount before sending Discord notification")
+			h.updateExtraPaymentInteractionResponse(pb, 0, 0, nil, convErr.Error())
+			return
+		}
+
 		key := entry.ContractorEmail
 		if key == "" {
 			key = entry.Discord // fallback to discord if no email
@@ -1743,7 +1759,7 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 		}
 
 		if agg, exists := contractors[key]; exists {
-			agg.Total += entry.AmountUSD
+			agg.Total += amountUSD
 			if entry.Description != "" {
 				agg.Reasons = append(agg.Reasons, stripInvoiceIDFromReason(entry.Description))
 			}
@@ -1755,7 +1771,7 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 			contractors[key] = &contractorAggregate{
 				Name:    entry.ContractorName,
 				Email:   entry.ContractorEmail,
-				Total:   entry.AmountUSD,
+				Total:   amountUSD,
 				Reasons: entryReasons,
 			}
 		}

@@ -2,7 +2,6 @@ package notify
 
 import (
 	"fmt"
-	"math"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/dwarvesf/fortress-api/pkg/config"
+	"github.com/dwarvesf/fortress-api/pkg/extrapayment"
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
 	"github.com/dwarvesf/fortress-api/pkg/service"
@@ -130,19 +130,10 @@ func (h *handler) PreviewExtraPaymentNotification(c *gin.Context) {
 	var totalAmount float64
 
 	for _, entry := range entries {
-		// Convert to USD using Wise service (same as invoice generation)
-		amountUSD := entry.Amount
-		if strings.ToUpper(entry.Currency) != "USD" && h.service.Wise != nil {
-			convertedAmount, _, convErr := h.service.Wise.Convert(entry.Amount, entry.Currency, "USD")
-			if convErr != nil {
-				l.Error(convErr, fmt.Sprintf("failed to convert %s to USD for entry %s, using fallback", entry.Currency, entry.PageID))
-				// Fallback to the pre-calculated AmountUSD (uses hardcoded rate)
-				amountUSD = entry.AmountUSD
-			} else {
-				// Round to 2 decimal places
-				amountUSD = math.Round(convertedAmount*100) / 100
-				l.Debugf("converted %.2f %s to %.2f USD for entry %s", entry.Amount, entry.Currency, amountUSD, entry.PageID)
-			}
+		amountUSD, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
 		}
 
 		contractors = append(contractors, ExtraPaymentContractor{
@@ -272,6 +263,16 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 		return
 	}
 
+	amountsByPageID := make(map[string]float64, len(entries))
+	for _, entry := range entries {
+		amountUSD, amountErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		if amountErr != nil {
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, amountErr, nil, ""))
+			return
+		}
+		amountsByPageID[entry.PageID] = amountUSD
+	}
+
 	// Use concurrency to send emails faster
 	const maxConcurrent = 5 // Limit concurrent email sends to avoid rate limiting
 	semaphore := make(chan struct{}, maxConcurrent)
@@ -328,20 +329,7 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 				reasons = []string{entry.Description}
 			}
 
-			// Convert to USD using Wise service for accurate exchange rates
-			amountUSD := entry.Amount
-			if strings.ToUpper(entry.Currency) != "USD" && h.service.Wise != nil {
-				convertedAmount, _, convErr := h.service.Wise.Convert(entry.Amount, entry.Currency, "USD")
-				if convErr != nil {
-					l.Error(convErr, fmt.Sprintf("failed to convert %s to USD for entry %s, using fallback", entry.Currency, entry.PageID))
-					// Fallback to the pre-calculated AmountUSD (uses hardcoded rate)
-					amountUSD = entry.AmountUSD
-				} else {
-					// Round to 2 decimal places
-					amountUSD = math.Round(convertedAmount*100) / 100
-					l.Debugf("converted %.2f %s to %.2f USD for entry %s", entry.Amount, entry.Currency, amountUSD, entry.PageID)
-				}
-			}
+			amountUSD := amountsByPageID[entry.PageID]
 
 			// Format amount (use USD)
 			amountFormatted := fmt.Sprintf("$%.0f", amountUSD)
@@ -517,19 +505,10 @@ func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
 		reasons = []string{entry.Description}
 	}
 
-	// Convert to USD using Wise service for accurate exchange rates
-	amountUSD := entry.Amount
-	if strings.ToUpper(entry.Currency) != "USD" && h.service.Wise != nil {
-		convertedAmount, _, convErr := h.service.Wise.Convert(entry.Amount, entry.Currency, "USD")
-		if convErr != nil {
-			l.Error(convErr, fmt.Sprintf("failed to convert %s to USD for entry %s, using fallback", entry.Currency, entry.PageID))
-			// Fallback to the pre-calculated AmountUSD (uses hardcoded rate)
-			amountUSD = entry.AmountUSD
-		} else {
-			// Round to 2 decimal places
-			amountUSD = math.Round(convertedAmount*100) / 100
-			l.Debugf("converted %.2f %s to %.2f USD for entry %s", entry.Amount, entry.Currency, amountUSD, entry.PageID)
-		}
+	amountUSD, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+		return
 	}
 
 	// Format amount (use USD)

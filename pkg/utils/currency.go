@@ -1,8 +1,6 @@
 package utils
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func FormatCurrencyAmount(n int) string {
 	milPart := n / 1000000
