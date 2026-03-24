@@ -29,6 +29,7 @@ fortress-api
 # agent
 .locus
 .gemini-clipboard
+.gemini
 
 #claude
 .mcp.json

@@ -297,7 +297,7 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 		},
 		"formatMoney": func(money float64) string {
 			var result string
-			tmpValue := money * math.Pow(10, float64(pound.Currency().Fraction))
+			tmpValue := math.Round(money * math.Pow(10, float64(pound.Currency().Fraction)))
 			result = pound.Multiply(int64(tmpValue)).Display()
 
 			return result
@@ -313,6 +313,9 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 		},
 		"float": func(n float64) string {
 			return fmt.Sprintf("%.2f", n)
+		},
+		"round": func(v float64) float64 {
+			return math.Round(v*100) / 100
 		},
 		"debugValue": func(label string, value interface{}) string {
 			l.Debug(fmt.Sprintf("[TEMPLATE DEBUG] %s = %v", label, value))
@@ -330,7 +333,7 @@ func (c *controller) generateInvoicePDF(l logger.Logger, invoice *model.Invoice,
 			}
 
 			// For Fixed Amount and all other types, format as money
-			tmpValue := discountValue * math.Pow(10, float64(pound.Currency().Fraction))
+			tmpValue := math.Round(discountValue * math.Pow(10, float64(pound.Currency().Fraction)))
 			return pound.Multiply(int64(tmpValue)).Display()
 		},
 		"subtract": func(a, b float64) float64 {
