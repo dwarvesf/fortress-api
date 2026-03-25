@@ -58,6 +58,8 @@ type Config struct {
 	InvoiceListener InvoiceListener
 
 	OpenRouter OpenRouter
+	Redis      Redis
+
 
 	APIKey                     string
 	Debug                      bool
@@ -268,6 +270,13 @@ type Github struct {
 type OpenRouter struct {
 	APIKey string
 	Model  string
+}
+
+type Redis struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
 }
 
 type NotionDatabase struct {
@@ -727,6 +736,12 @@ func Generate(v ENV) *Config {
 				DataSourceID:      v.GetString("NOTION_LEAVE_DATA_SOURCE_ID"),
 				VerificationToken: v.GetString("NOTION_VERIFICATION_TOKEN"),
 			},
+		},
+		Redis: Redis{
+			Host:     getStringWithDefault(v, "REDIS_HOST", "localhost"),
+			Port:     getStringWithDefault(v, "REDIS_PORT", "6379"),
+			Password: v.GetString("REDIS_PASSWORD"),
+			DB:       getIntWithDefault(v, "REDIS_DB", 0),
 		},
 	}
 }

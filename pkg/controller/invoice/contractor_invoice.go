@@ -427,7 +427,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		go func(idx int, p notion.PayoutEntry) {
 			defer convWg.Done()
 
-			amountUSD, rate, err := extrapayment.ResolveAmountUSD(l, c.service.Wise, p.PageID, p.Amount, p.Currency)
+			amountUSD, rate, err := extrapayment.ResolveAmountUSD(ctx, l, c.service.Wise, c.service.Redis, p.PageID, p.Amount, p.Currency)
 			if err != nil {
 				convMu.Lock()
 				l.Error(err, fmt.Sprintf("failed to resolve payout amount to USD: pageID=%s", p.PageID))

@@ -1,6 +1,7 @@
 package extrapayment_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -30,10 +31,12 @@ func (m *mockWiseService) GetRate(source, target string) (float64, error) {
 }
 
 func TestResolveAmountUSD(t *testing.T) {
+	ctx := context.Background()
+
 	t.Run("returns USD amount without wise conversion", func(t *testing.T) {
 		wiseSvc := &mockWiseService{}
 
-		amountUSD, rate, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-1", 125.5, "USD")
+		amountUSD, rate, err := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-1", 125.5, "USD")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -51,7 +54,7 @@ func TestResolveAmountUSD(t *testing.T) {
 	t.Run("converts non USD amount using wise and rounds to 2 decimals", func(t *testing.T) {
 		wiseSvc := &mockWiseService{convertedAmount: 379.694, rate: 0.0000379694}
 
-		amountUSD, rate, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-2", 10000000, "VND")
+		amountUSD, rate, err := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-2", 10000000, "VND")
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -67,7 +70,7 @@ func TestResolveAmountUSD(t *testing.T) {
 	})
 
 	t.Run("returns error when wise service is missing for non USD amount", func(t *testing.T) {
-		_, _, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), nil, "page-3", 10000000, "VND")
+		_, _, err := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), nil, nil, "page-3", 10000000, "VND")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
@@ -76,17 +79,17 @@ func TestResolveAmountUSD(t *testing.T) {
 	t.Run("returns error when wise conversion fails", func(t *testing.T) {
 		wiseSvc := &mockWiseService{err: errors.New("wise unavailable")}
 
-		_, _, err := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-4", 10000000, "VND")
+		_, _, err := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-4", 10000000, "VND")
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
 	})
 
-	t.Run("caches wise conversion result and returns it on subsequent calls", func(t *testing.T) {
+	t.Run("skips cache when redis is nil", func(t *testing.T) {
 		wiseSvc := &mockWiseService{convertedAmount: 400.00, rate: 0.00004}
 
 		// First call should hit the mock Wise service
-		amountUSD1, rate1, err1 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
+		amountUSD1, rate1, err1 := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-5-cache-test", 10000000, "VND")
 		if err1 != nil {
 			t.Fatalf("expected no error, got %v", err1)
 		}
@@ -100,8 +103,8 @@ func TestResolveAmountUSD(t *testing.T) {
 			t.Fatalf("expected wise convert to be called once, got %d calls", wiseSvc.convertCalls)
 		}
 
-		// Second call should return the cached value and NOT hit the mock Wise service
-		amountUSD2, rate2, err2 := extrapayment.ResolveAmountUSD(logger.NewLogrusLogger("debug"), wiseSvc, "page-5-cache-test", 10000000, "VND")
+		// Second call should ALSO call Wise since redis is nil (no caching)
+		amountUSD2, rate2, err2 := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-5-cache-test", 10000000, "VND")
 		if err2 != nil {
 			t.Fatalf("expected no error, got %v", err2)
 		}
@@ -111,9 +114,8 @@ func TestResolveAmountUSD(t *testing.T) {
 		if rate2 != 0.00004 {
 			t.Fatalf("expected rate 0.00004, got %v", rate2)
 		}
-		if wiseSvc.convertCalls != 1 {
-			t.Fatalf("expected wise convert to STILL be called once, got %d calls", wiseSvc.convertCalls)
+		if wiseSvc.convertCalls != 2 {
+			t.Fatalf("expected wise convert to be called twice (no cache), got %d calls", wiseSvc.convertCalls)
 		}
 	})
 }
-

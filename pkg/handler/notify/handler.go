@@ -130,7 +130,7 @@ func (h *handler) PreviewExtraPaymentNotification(c *gin.Context) {
 	var totalAmount float64
 
 	for _, entry := range entries {
-		amountUSD, _, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		amountUSD, _, err := extrapayment.ResolveAmountUSD(c.Request.Context(), l, h.service.Wise, h.service.Redis, entry.PageID, entry.Amount, entry.Currency)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 			return
@@ -265,7 +265,7 @@ func (h *handler) SendExtraPaymentNotification(c *gin.Context) {
 
 	amountsByPageID := make(map[string]float64, len(entries))
 	for _, entry := range entries {
-		amountUSD, _, amountErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		amountUSD, _, amountErr := extrapayment.ResolveAmountUSD(c.Request.Context(), l, h.service.Wise, h.service.Redis, entry.PageID, entry.Amount, entry.Currency)
 		if amountErr != nil {
 			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, amountErr, nil, ""))
 			return
@@ -505,7 +505,7 @@ func (h *handler) SendOneExtraPaymentNotification(c *gin.Context) {
 		reasons = []string{entry.Description}
 	}
 
-	amountUSD, _, err := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+	amountUSD, _, err := extrapayment.ResolveAmountUSD(c.Request.Context(), l, h.service.Wise, h.service.Redis, entry.PageID, entry.Amount, entry.Currency)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
 		return

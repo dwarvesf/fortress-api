@@ -78,7 +78,7 @@ func (h *handler) processExtraPaymentPreview(l logger.Logger, appID, interaction
 	groups := make(map[string]*contractorGroup)
 	var totalAmount float64
 	for _, entry := range entries {
-		amountUSD, _, convErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		amountUSD, _, convErr := extrapayment.ResolveAmountUSD(ctx, l, h.service.Wise, h.service.Redis, entry.PageID, entry.Amount, entry.Currency)
 		if convErr != nil {
 			_ = h.service.Discord.EditInteractionResponse(appID, interactionToken, []*discordgo.MessageEmbed{
 				{Title: "Error", Description: convErr.Error(), Color: 15158332},
@@ -268,7 +268,7 @@ func (h *handler) processExtraPaymentSend(l logger.Logger, appID, interactionTok
 	contractors := make(map[string]*contractorAggregate)
 
 	for _, entry := range entries {
-		amountUSD, _, convErr := extrapayment.ResolveAmountUSD(l, h.service.Wise, entry.PageID, entry.Amount, entry.Currency)
+		amountUSD, _, convErr := extrapayment.ResolveAmountUSD(ctx, l, h.service.Wise, h.service.Redis, entry.PageID, entry.Amount, entry.Currency)
 		if convErr != nil {
 			l.Error(convErr, "failed to resolve extra payment amount before sending Discord notification")
 			h.updateExtraPaymentInteractionResponse(pb, 0, 0, nil, convErr.Error())

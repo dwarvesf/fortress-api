@@ -1,25 +1,26 @@
 package extrapayment
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strings"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
-	"github.com/patrickmn/go-cache"
 )
 
 type CachedConversion struct {
-	AmountUSD float64
-	Rate      float64
+	AmountUSD float64 `json:"amount_usd"`
+	Rate      float64 `json:"rate"`
 }
 
-var amountCache = cache.New(30*24*time.Hour, 24*time.Hour)
-
 // ResolveAmountUSD returns the converted USD amount and the exchange rate used (target per source)
-func ResolveAmountUSD(l logger.Logger, wiseSvc wise.IService, pageID string, amount float64, currency string) (float64, float64, error) {
+func ResolveAmountUSD(ctx context.Context, l logger.Logger, wiseSvc wise.IService, rdb *redis.Client, pageID string, amount float64, currency string) (float64, float64, error) {
 	conversionLogger := l.Fields(logger.Fields{
 		"component":       "extra_payment_amount_resolver",
 		"page_id":         pageID,
@@ -35,10 +36,16 @@ func ResolveAmountUSD(l logger.Logger, wiseSvc wise.IService, pageID string, amo
 		return amount, 1.0, nil
 	}
 
-	if cachedValue, found := amountCache.Get(pageID); found {
-		conversion := cachedValue.(CachedConversion)
-		conversionLogger.Debug("extra payment USD amount and rate found in cache")
-		return conversion.AmountUSD, conversion.Rate, nil
+	cacheKey := fmt.Sprintf("extra_payment_conversion:%s", pageID)
+	if rdb != nil {
+		cachedValue, err := rdb.Get(ctx, cacheKey).Result()
+		if err == nil {
+			var conversion CachedConversion
+			if err := json.Unmarshal([]byte(cachedValue), &conversion); err == nil {
+				conversionLogger.Debug("extra payment USD amount and rate found in Redis")
+				return conversion.AmountUSD, conversion.Rate, nil
+			}
+		}
 	}
 
 	if wiseSvc == nil {
@@ -54,10 +61,13 @@ func ResolveAmountUSD(l logger.Logger, wiseSvc wise.IService, pageID string, amo
 	}
 
 	roundedAmount := math.Round(convertedAmount*100) / 100
-	amountCache.Set(pageID, CachedConversion{
-		AmountUSD: roundedAmount,
-		Rate:      rate,
-	}, cache.DefaultExpiration)
+	if rdb != nil {
+		val, _ := json.Marshal(CachedConversion{
+			AmountUSD: roundedAmount,
+			Rate:      rate,
+		})
+		rdb.Set(ctx, cacheKey, val, 30*24*time.Hour)
+	}
 	
 	conversionLogger.Fields(logger.Fields{
 		"wise_rate":        rate,

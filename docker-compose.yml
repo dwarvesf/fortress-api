@@ -13,6 +13,15 @@ services:
     expose:
       - 25432
 
+  redis:
+    image: redis:7-alpine
+    restart: always
+    container_name: fortress_redis
+    ports:
+      - "6379:6379"
+    expose:
+      - 6379
+
   postgres_test:
     image: postgres:16-alpine
     restart: always

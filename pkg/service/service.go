@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -51,6 +53,7 @@ import (
 	"github.com/dwarvesf/fortress-api/pkg/service/wise"
 	yt "github.com/dwarvesf/fortress-api/pkg/service/youtube"
 	"github.com/dwarvesf/fortress-api/pkg/store"
+	"github.com/redis/go-redis/v9"
 )
 
 type Service struct {
@@ -62,6 +65,7 @@ type Service struct {
 	PayrollAccountingTodoProvider basecamp.ExpenseProvider     // Payroll accounting todo fetcher (NocoDB accounting_todos)
 	NocoDB                        *nocodb.Service
 	Cache                         *cache.Cache
+	Redis                         *redis.Client
 	Currency                      currency.IService
 	Discord                       discord.IService
 	DuckDB                        duckdb.IService
@@ -278,6 +282,18 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		payrollAccountingTodoProvider = basecamp.NewExpenseAdapter(basecampSvc)
 	}
 	// For Notion provider, payrollAccountingTodoProvider remains nil (all expenses fetched via PayrollExpenseProvider)
+    
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", cfg.Redis.Host, cfg.Redis.Port),
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	if pingErr := rdb.Ping(context.Background()).Err(); pingErr != nil {
+		logger.L.Errorf(pingErr, "redis connection failed: %s:%s", cfg.Redis.Host, cfg.Redis.Port)
+	} else {
+		logger.L.Infof("redis connected: %s:%s db=%d", cfg.Redis.Host, cfg.Redis.Port, cfg.Redis.DB)
+	}
 
 	return &Service{
 		Basecamp:                      basecampSvc,
@@ -288,6 +304,7 @@ func New(cfg *config.Config, store *store.Store, repo store.DBRepo) (*Service, e
 		PayrollAccountingTodoProvider: payrollAccountingTodoProvider,
 		NocoDB:                        nocoSvc,
 		Cache:                         cch,
+		Redis:                         rdb,
 		Currency:                      Currency,
 		Discord:                       discord.New(cfg),
 		DuckDB:                        duckDBSvc,
