@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
+	"github.com/dwarvesf/fortress-api/pkg/model"
 	googleSvc "github.com/dwarvesf/fortress-api/pkg/service/google"
 	notionSvc "github.com/dwarvesf/fortress-api/pkg/service/notion"
 )
@@ -90,21 +91,33 @@ func (h *handler) handleNotionLeaveApproveButton(c *gin.Context, l logger.Logger
 			}
 		}
 
-		// Update Notion status
-		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Acknowledged", approverPageID)
-		if err != nil {
-			l.Errorf(err, "failed to update leave status in Notion")
-			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to approve: %v", err))
-			return
+		// Execute side effects independently — neither blocks the other
+		notionUpdated := true
+		calendarCreated := true
+
+		// Side effect 1: Update Notion status
+		var notionErr error
+		notionErr = leaveService.UpdateLeaveStatus(ctx, pageID, "Acknowledged", approverPageID)
+		if notionErr != nil {
+			l.Errorf(notionErr, "failed to update leave status in Notion (will still create calendar): page_id=%s", pageID)
+			notionUpdated = false
+		} else {
+			l.Infof("notion_updated=true: page_id=%s approver=%s", pageID, approverEmail)
 		}
 
-		l.Infof("Notion leave request approved via button: page_id=%s approver=%s", pageID, approverEmail)
-
-		// Create Google Calendar event
+		// Side effect 2: Create Google Calendar event (independent of Notion result)
 		l.Debug("fetching leave details for calendar event creation")
-		if err := h.createCalendarEventForLeave(ctx, l, leaveService, pageID); err != nil {
-			l.Error(err, "failed to create calendar event (non-fatal, continuing)")
-			// Non-fatal - continue even if calendar creation fails
+		var calendarErr error
+		if calendarErr = h.createCalendarEventForLeave(ctx, l, leaveService, pageID); calendarErr != nil {
+			l.Errorf(calendarErr, "calendar_created=false: page_id=%s", pageID)
+			calendarCreated = false
+		} else {
+			l.Infof("calendar_created=true: page_id=%s", pageID)
+		}
+
+		// Send failure summary to audit log channel
+		if !notionUpdated || !calendarCreated {
+			h.sendLeaveOperationLogToAuditLog(l, pageID, "Approved", approverUsername, notionUpdated, calendarCreated, notionErr, calendarErr)
 		}
 
 		// Update the original message to show it's been approved
@@ -167,14 +180,20 @@ func (h *handler) handleNotionLeaveRejectButton(c *gin.Context, l logger.Logger,
 		}
 
 		// Update Notion status with rejector page ID
-		err := leaveService.UpdateLeaveStatus(ctx, pageID, "Not Applicable", rejectorPageID)
-		if err != nil {
-			l.Errorf(err, "failed to update leave status in Notion")
-			h.updateNotionLeaveMessageWithError(l, channelID, messageID, originalEmbed, fmt.Sprintf("Failed to reject: %v", err))
-			return
+		notionUpdated := true
+		var notionErr error
+		notionErr = leaveService.UpdateLeaveStatus(ctx, pageID, "Not Applicable", rejectorPageID)
+		if notionErr != nil {
+			l.Errorf(notionErr, "notion_updated=false: failed to update leave status: page_id=%s", pageID)
+			notionUpdated = false
+		} else {
+			l.Infof("notion_updated=true: page_id=%s rejector=%s", pageID, rejectorUsername)
 		}
 
-		l.Infof("Notion leave request rejected via button: page_id=%s rejector=%s", pageID, rejectorUsername)
+		// Send failure summary to audit log channel
+		if !notionUpdated {
+			h.sendLeaveOperationLogToAuditLog(l, pageID, "Rejected", rejectorUsername, notionUpdated, false, notionErr, nil)
+		}
 
 		// Update the original message to show it's been rejected
 		h.updateNotionLeaveMessageWithStatus(l, channelID, messageID, originalEmbed, "Rejected", rejectorUsername)
@@ -620,4 +639,44 @@ func (h *handler) getContractorEmailFromNotion(ctx context.Context, l logger.Log
 
 	l.Debug(fmt.Sprintf("no email found for contractor: contractor_page_id=%s", contractorPageID))
 	return "", nil
+}
+
+// sendLeaveOperationLogToAuditLog sends a plain text failure summary to the audit log webhook.
+// Only called when at least one operation failed.
+func (h *handler) sendLeaveOperationLogToAuditLog(
+	l logger.Logger,
+	pageID, action, actionBy string,
+	notionUpdated, calendarCreated bool,
+	notionErr, calendarErr error,
+) {
+	auditLogURL := h.config.Discord.Webhooks.AuditLog
+	if auditLogURL == "" {
+		l.Debug("audit log webhook not configured, skipping operation log")
+		return
+	}
+
+	if h.service.Discord == nil {
+		l.Debug("discord service not configured, skipping operation log")
+		return
+	}
+
+	l.Debugf("sending leave operation log to audit log: page_id=%s action=%s", pageID, action)
+
+	// Build a simple plain text message listing what failed
+	msg := fmt.Sprintf("⚠️ Leave %s by %s (page_id: %s)", action, actionBy, pageID)
+	if !notionUpdated {
+		msg += fmt.Sprintf("\n❌ notion_updated: %v", notionErr)
+	}
+	if action == "Approved" && !calendarCreated {
+		msg += fmt.Sprintf("\n❌ calendar_created: %v", calendarErr)
+	}
+
+	_, err := h.service.Discord.SendMessage(model.DiscordMessage{
+		Content: msg,
+	}, auditLogURL)
+	if err != nil {
+		l.Errorf(err, "failed to send leave operation log to audit log: page_id=%s", pageID)
+	} else {
+		l.Debugf("sent leave operation log to audit log: page_id=%s", pageID)
+	}
 }
