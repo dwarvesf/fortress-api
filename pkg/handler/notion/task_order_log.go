@@ -9,10 +9,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dwarvesf/fortress-api/pkg/logger"
 	"github.com/dwarvesf/fortress-api/pkg/model"
+	discordsvc "github.com/dwarvesf/fortress-api/pkg/service/discord"
 	"github.com/dwarvesf/fortress-api/pkg/service/notion"
 	"github.com/dwarvesf/fortress-api/pkg/service/openrouter"
 	"github.com/dwarvesf/fortress-api/pkg/view"
@@ -31,6 +33,7 @@ import (
 // @Param force query bool false "Fetch all timesheets regardless of approval status (default: false)"
 // @Param batch query int false "Payday batch filter (1 or 15). Only processes contractors with matching payday"
 // @Param update_hours_only query bool false "When true, only updates Hours and Timesheet columns for existing line items. Skips order/line item creation and proof of works summarization. Default: false"
+// @Param channelId query string false "Discord channel ID for live progress updates"
 // @Success 200 {object} view.Response
 // @Failure 400 {object} view.Response
 // @Failure 500 {object} view.Response
@@ -84,8 +87,9 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	// Parse update_hours_only parameter (optional, defaults to false)
 	updateHoursOnlyParam := strings.TrimSpace(c.Query("update_hours_only"))
 	updateHoursOnly := updateHoursOnlyParam == "true"
+	channelID := strings.TrimSpace(c.Query("channelId"))
 
-	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v batch=%d update_hours_only=%v", month, contractorDiscord, projectID, skipStatusCheck, batchFilter, updateHoursOnly))
+	l.Info(fmt.Sprintf("syncing task order logs: month=%s contractor=%s project=%s force=%v batch=%d update_hours_only=%v channel_id_present=%v", month, contractorDiscord, projectID, skipStatusCheck, batchFilter, updateHoursOnly, channelID != ""))
 
 	// Get services
 	taskOrderLogService := h.service.Notion.TaskOrderLog
@@ -124,18 +128,20 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 	}
 
 	if len(timesheets) == 0 {
-		if skipStatusCheck {
-			l.Info("no timesheets found (all statuses checked), returning success with zero counts")
-		} else {
-			l.Info("no approved timesheets found, returning success with zero counts")
-		}
-		c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
+		responseData := map[string]any{
 			"month":                 month,
 			"orders_created":        0,
 			"line_items_created":    0,
 			"contractors_processed": 0,
 			"details":               []any{},
-		}, nil, nil, nil, "ok"))
+		}
+		h.reportSyncTaskOrderFinalProgress(l, channelID, month, 0, 0, 0, 0, 0, updateHoursOnly)
+		if skipStatusCheck {
+			l.Info("no timesheets found (all statuses checked), returning success with zero counts")
+		} else {
+			l.Info("no approved timesheets found, returning success with zero counts")
+		}
+		c.JSON(http.StatusOK, view.CreateResponse[any](responseData, nil, nil, nil, "ok"))
 		return
 	}
 
@@ -189,6 +195,19 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 
 	l.Info(fmt.Sprintf("processing %d contractors with %d workers (concurrent)", len(contractorGroups), numWorkers))
 
+	var pb *discordsvc.ProgressBar
+	if channelID != "" && h.service.Discord != nil {
+		initEmbed := h.buildSyncTaskOrderProgressEmbed(month, 0, len(contractorGroups), 0, 0, 0, updateHoursOnly)
+		msg, sendErr := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{initEmbed}, nil)
+		if sendErr != nil {
+			l.Error(sendErr, "failed to send initial sync task order progress message")
+		} else if msg != nil {
+			reporter := discordsvc.NewChannelMessageReporter(h.service.Discord, channelID, msg.ID)
+			pb = discordsvc.NewProgressBar(reporter, l)
+			l.Debug(fmt.Sprintf("created sync task order progress message: channelID=%s messageID=%s", channelID, msg.ID))
+		}
+	}
+
 	// Create channels
 	jobs := make(chan contractorJob, len(contractorGroups))
 	results := make(chan contractorSyncResult, len(contractorGroups))
@@ -227,10 +246,17 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		close(results)
 	}()
 
+	totalContractors := len(contractorGroups)
+	completedContractors := 0
+
 	// Collect results
 	for result := range results {
+		completedContractors++
 		if result.err != nil {
 			l.Error(result.err, fmt.Sprintf("error processing contractor: %s", result.contractorID))
+			if pb != nil && (completedContractors%3 == 0 || completedContractors == totalContractors) {
+				pb.Report(h.buildSyncTaskOrderProgressEmbed(month, completedContractors, totalContractors, contractorsProcessed, ordersCreated, lineItemsCreated+lineItemsUpdated, updateHoursOnly))
+			}
 			continue
 		}
 
@@ -239,9 +265,14 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		lineItemsUpdated += result.lineItemsUpdated
 		contractorsProcessed++
 		details = append(details, result.detail)
+
+		if pb != nil && (completedContractors%3 == 0 || completedContractors == totalContractors) {
+			pb.Report(h.buildSyncTaskOrderProgressEmbed(month, completedContractors, totalContractors, contractorsProcessed, ordersCreated, lineItemsCreated+lineItemsUpdated, updateHoursOnly))
+		}
 	}
 
 	l.Info(fmt.Sprintf("sync complete: orders_created=%d line_items_created=%d line_items_updated=%d contractors_processed=%d", ordersCreated, lineItemsCreated, lineItemsUpdated, contractorsProcessed))
+	h.reportSyncTaskOrderCompletion(pb, month, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated, lineItemsUpdated, updateHoursOnly)
 
 	// Return response
 	c.JSON(http.StatusOK, view.CreateResponse[any](map[string]any{
@@ -253,6 +284,74 @@ func (h *handler) SyncTaskOrderLogs(c *gin.Context) {
 		"contractors_processed": contractorsProcessed,
 		"details":               details,
 	}, nil, nil, nil, "ok"))
+}
+
+func (h *handler) buildSyncTaskOrderProgressEmbed(month string, completed, total, contractorsProcessed, ordersCreated, lineItemsProcessed int, updateHoursOnly bool) *discordgo.MessageEmbed {
+	title := "Syncing Task Order Logs"
+	action := "Creating orders and line items"
+	if updateHoursOnly {
+		title = "Updating Task Order Log Hours"
+		action = "Updating existing line items"
+	}
+
+	return &discordgo.MessageEmbed{
+		Title: title,
+		Description: fmt.Sprintf("%s for **%s**...\n\n%s\n**Contractors completed:** %d/%d\n**Successful contractors:** %d\n**Orders created:** %d\n**Line items processed:** %d",
+			action,
+			month,
+			discordsvc.BuildBar(completed, total),
+			completed,
+			total,
+			contractorsProcessed,
+			ordersCreated,
+			lineItemsProcessed,
+		),
+		Color: 5793266,
+	}
+}
+
+func (h *handler) buildSyncTaskOrderFinalEmbed(month string, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated, lineItemsUpdated int, updateHoursOnly bool) *discordgo.MessageEmbed {
+	title := "Task Order Log Sync Complete"
+	description := fmt.Sprintf("Completed sync for **%s**.\n\n**Successful contractors:** %d/%d\n**Orders created:** %d\n**Line items created:** %d",
+		month, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated)
+	if updateHoursOnly {
+		title = "Task Order Log Hours Update Complete"
+		description = fmt.Sprintf("Completed hours-only sync for **%s**.\n\n**Successful contractors:** %d/%d\n**Line items updated:** %d",
+			month, contractorsProcessed, totalContractors, lineItemsUpdated)
+	} else if lineItemsUpdated > 0 {
+		description += fmt.Sprintf("\n**Line items updated:** %d", lineItemsUpdated)
+	}
+
+	color := 5763719
+	if totalContractors > 0 && contractorsProcessed < totalContractors {
+		color = 16776960
+		description += "\n**Status:** Partial completion. Check logs for failed contractors."
+	}
+
+	return &discordgo.MessageEmbed{
+		Title:       title,
+		Description: description,
+		Color:       color,
+	}
+}
+
+func (h *handler) reportSyncTaskOrderCompletion(pb *discordsvc.ProgressBar, month string, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated, lineItemsUpdated int, updateHoursOnly bool) {
+	if pb == nil {
+		return
+	}
+
+	pb.Report(h.buildSyncTaskOrderFinalEmbed(month, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated, lineItemsUpdated, updateHoursOnly))
+}
+
+func (h *handler) reportSyncTaskOrderFinalProgress(l logger.Logger, channelID, month string, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated, lineItemsUpdated int, updateHoursOnly bool) {
+	if channelID == "" || h.service.Discord == nil {
+		return
+	}
+
+	embed := h.buildSyncTaskOrderFinalEmbed(month, contractorsProcessed, totalContractors, ordersCreated, lineItemsCreated, lineItemsUpdated, updateHoursOnly)
+	if _, err := h.service.Discord.SendChannelMessageComplex(channelID, "", []*discordgo.MessageEmbed{embed}, nil); err != nil {
+		l.Error(err, "failed to send final sync task order progress message")
+	}
 }
 
 // SendTaskOrderConfirmation godoc
@@ -646,8 +745,8 @@ func (h *handler) processContractorSync(
 	result := contractorSyncResult{
 		contractorID: contractorID,
 		detail: map[string]any{
-			"contractor_id":    contractorID,
-			"projects":         []map[string]any{},
+			"contractor_id":     contractorID,
+			"projects":          []map[string]any{},
 			"update_hours_only": updateHoursOnly,
 		},
 	}
