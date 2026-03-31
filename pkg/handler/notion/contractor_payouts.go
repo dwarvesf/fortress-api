@@ -458,11 +458,11 @@ func (h *handler) processContractorPayrollPayouts(c *gin.Context, l logger.Logge
 				}
 
 				// Calculate amount based on billing type
+				// Mixed type: receives monthly fixed + commission (so use monthly fixed for payout)
 				var amount float64
-				if rate.BillingType == "Monthly Fixed" {
-					// Prorate monthly fixed based on actual working days from Start Date
+				if rate.BillingType == "Monthly Fixed" || rate.BillingType == "Mixed" {
 					amount = calculateMonthlyFixedAmount(rate.StartDate, order.Date, rate.MonthlyFixed, l)
-					l.Debug(fmt.Sprintf("[worker-%d] using monthly fixed rate: %.2f (prorated from %.2f)", workerID, amount, rate.MonthlyFixed))
+					l.Debug(fmt.Sprintf("[worker-%d] using monthly fixed rate: %.2f (prorated from %.2f, billingType=%s)", workerID, amount, rate.MonthlyFixed, rate.BillingType))
 				} else {
 					amount = rate.HourlyRate * order.FinalHoursWorked
 					l.Debug(fmt.Sprintf("[worker-%d] using hourly rate: %.2f * %.2f = %.2f", workerID, rate.HourlyRate, order.FinalHoursWorked, amount))

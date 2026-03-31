@@ -1717,10 +1717,10 @@ func (s *ContractorPayoutsService) ProcessContractorPayrollPayoutsWithForce(
 
 		// Calculate amount based on billing type
 		var amount float64
-		if rate.BillingType == "Monthly Fixed" {
-			// Prorate monthly fixed based on actual working days from Start Date
+		// Mixed type: receives monthly fixed + commission (so use monthly fixed for payout)
+		if rate.BillingType == "Monthly Fixed" || rate.BillingType == "Mixed" {
 			amount = calculateMonthlyFixedAmount(rate.StartDate, order.Date, rate.MonthlyFixed, s.logger)
-			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] order %s: using monthly fixed rate: %.2f (prorated from %.2f)", order.PageID, amount, rate.MonthlyFixed))
+			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] order %s: using monthly fixed rate: %.2f (prorated from %.2f, billingType=%s)", order.PageID, amount, rate.MonthlyFixed, rate.BillingType))
 		} else {
 			amount = rate.HourlyRate * order.FinalHoursWorked
 			s.logger.Debug(fmt.Sprintf("[FORCE_SYNC] order %s: using hourly rate: %.2f * %.2f = %.2f", order.PageID, rate.HourlyRate, order.FinalHoursWorked, amount))
