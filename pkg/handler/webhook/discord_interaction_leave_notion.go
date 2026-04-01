@@ -421,17 +421,32 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 
 	l.Debugf("fetched leave request: start=%v end=%v email=%s", leave.StartDate, leave.EndDate, leave.Email)
 
-	// Look up employee by email with DiscordAccount preloaded
-	employees, err := h.store.Employee.GetByEmails(h.repo.DB().Preload("DiscordAccount"), []string{leave.Email})
+	contractorPageID, err := leaveService.LookupContractorByEmail(ctx, leave.Email)
 	if err != nil {
-		return fmt.Errorf("failed to find employee by email %s: %w", leave.Email, err)
+		return fmt.Errorf("failed to find contractor by email %s: %w", leave.Email, err)
 	}
-	if len(employees) == 0 {
-		return fmt.Errorf("no employee found with email %s", leave.Email)
+	if contractorPageID == "" {
+		return fmt.Errorf("no contractor found in Notion with email %s", leave.Email)
 	}
-	employee := employees[0]
 
-	l.Debugf("found employee: full_name=%s team_email=%s", employee.FullName, employee.TeamEmail)
+	contractor, err := leaveService.GetContractorDetails(ctx, contractorPageID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch contractor details for page %s: %w", contractorPageID, err)
+	}
+	if contractor == nil {
+		return fmt.Errorf("contractor details not found for page %s", contractorPageID)
+	}
+
+	contractorEmail := contractor.TeamEmail
+	if contractorEmail == "" {
+		contractorEmail = contractor.PersonalEmail
+	}
+	if contractorEmail == "" {
+		contractorEmail = leave.Email
+	}
+
+	l.Debugf("resolved contractor for leave page_id=%s contractor_page_id=%s team_email_present=%t personal_email_present=%t",
+		pageID, contractorPageID, contractor.TeamEmail != "", contractor.PersonalEmail != "")
 
 	// Create calendar service
 	calService := googleSvc.NewCalendarService(h.config, h.logger)
@@ -445,30 +460,30 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 		leave.EndDate = leave.StartDate
 	}
 
-	// Get Discord username from employee
+	// Get Discord username from contractor
 	discordUsername := ""
-	if employee.DiscordAccount != nil && employee.DiscordAccount.DiscordUsername != "" {
-		discordUsername = employee.DiscordAccount.DiscordUsername
+	if contractor.DiscordUsername != "" {
+		discordUsername = contractor.DiscordUsername
 	} else {
 		// Fallback to full name if no Discord username
-		discordUsername = employee.FullName
+		discordUsername = contractor.FullName
 	}
 
 	// Build event summary and description matching the format: "👾 <discord_username> off"
 	summary := fmt.Sprintf("👾 %s off", discordUsername)
 	description := fmt.Sprintf("Type: %s\nRequest: %s\nDetails: %s\nRequested by: %s (%s)",
-		leave.UnavailabilityType, leave.LeaveRequestTitle, leave.AdditionalContext, employee.FullName, employee.TeamEmail)
+		leave.UnavailabilityType, leave.LeaveRequestTitle, leave.AdditionalContext, contractor.FullName, contractorEmail)
 
 	// Create all-day event (Notion database doesn't have Shift field)
 	// Add assigned approvers as attendees
-	attendees := []string{employee.TeamEmail}
+	attendees := []string{contractorEmail}
 	if len(leave.Assignees) > 0 {
 		attendees = append(attendees, leave.Assignees...)
 		l.Debugf("added %d assignees as attendees: %v", len(leave.Assignees), leave.Assignees)
 	} else {
 		// Fallback: get stakeholder emails from deployments if no assignees
 		l.Debug("no assignees found, fetching stakeholders from deployments")
-		stakeholderEmails := h.getStakeholderEmailsFromDeployments(ctx, l, leaveService, employee.TeamEmail)
+		stakeholderEmails := h.getStakeholderEmailsFromDeployments(ctx, l, leaveService, contractorEmail)
 		if len(stakeholderEmails) > 0 {
 			attendees = append(attendees, stakeholderEmails...)
 			l.Debugf("added %d stakeholder emails as attendees: %v", len(stakeholderEmails), stakeholderEmails)
@@ -483,7 +498,7 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 		StartDate:   *leave.StartDate,
 		EndDate:     *leave.EndDate,
 		AllDay:      true,
-		Email:       employee.TeamEmail,
+		Email:       contractorEmail,
 		Attendees:   attendees,
 	}
 

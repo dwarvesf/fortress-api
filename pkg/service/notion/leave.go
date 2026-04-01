@@ -20,19 +20,19 @@ import (
 
 // LeaveRequest represents a leave request from Notion Unavailability Notices database
 type LeaveRequest struct {
-	PageID              string
-	LeaveRequestTitle   string     // Title field - leave request name
-	EmployeeID          string     // Relation page ID - contractor
-	Email               string     // Rollup value from Contractor relation (Team Email)
-	UnavailabilityType  string     // "Personal Time", "Health / Illness", "Family / Emergency", "Travel / Vacation", "Other"
-	StartDate           *time.Time
-	EndDate             *time.Time
-	Status              string     // "New", "Acknowledged", "Not Applicable", "Withdrawn"
-	ReviewedByID        string     // Relation page ID - person who reviewed/approved
-	DateApproved        *time.Time
-	DateRequested       *time.Time // When the request was submitted
-	AdditionalContext   string     // Detailed reason for leave
-	Assignees           []string   // Notion user emails from People property
+	PageID             string
+	LeaveRequestTitle  string // Title field - leave request name
+	EmployeeID         string // Relation page ID - contractor
+	Email              string // Rollup value from Contractor relation (Team Email)
+	UnavailabilityType string // "Personal Time", "Health / Illness", "Family / Emergency", "Travel / Vacation", "Other"
+	StartDate          *time.Time
+	EndDate            *time.Time
+	Status             string // "New", "Acknowledged", "Not Applicable", "Withdrawn"
+	ReviewedByID       string // Relation page ID - person who reviewed/approved
+	DateApproved       *time.Time
+	DateRequested      *time.Time // When the request was submitted
+	AdditionalContext  string     // Detailed reason for leave
+	Assignees          []string   // Notion user emails from People property
 }
 
 // LeaveService handles leave request operations with Notion
@@ -157,43 +157,21 @@ func (s *LeaveService) UpdateLeaveStatus(ctx context.Context, pageID, status, ap
 
 // GetContractorPageIDByEmail looks up a contractor page ID by email
 func (s *LeaveService) GetContractorPageIDByEmail(ctx context.Context, email string) (string, error) {
-	if s.client == nil {
-		return "", errors.New("notion client is nil")
-	}
+	maskedEmail := maskEmailForLog(email)
+	s.logger.Debug(fmt.Sprintf("resolving contractor page ID by email for leave flow: email=%s", maskedEmail))
 
-	contractorDBID := s.cfg.LeaveIntegration.Notion.ContractorDBID
-	if contractorDBID == "" {
-		return "", errors.New("contractor database ID not configured")
-	}
-
-	s.logger.Debug(fmt.Sprintf("looking up contractor by email: email=%s db_id=%s", email, contractorDBID))
-
-	// Query contractor database for matching email
-	filter := &nt.DatabaseQueryFilter{
-		Property: "Team Email",
-		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-			Email: &nt.TextPropertyFilter{
-				Equals: email,
-			},
-		},
-	}
-
-	resp, err := s.client.QueryDatabase(ctx, contractorDBID, &nt.DatabaseQuery{
-		Filter:   filter,
-		PageSize: 1,
-	})
+	details, err := s.LookupContractorDetailsByEmail(ctx, email)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("failed to query contractor database: email=%s", email))
-		return "", fmt.Errorf("failed to query contractor database: %w", err)
+		return "", err
 	}
 
-	if len(resp.Results) == 0 {
-		s.logger.Debug(fmt.Sprintf("no contractor found for email: %s", email))
+	if details == nil {
+		s.logger.Debug(fmt.Sprintf("no contractor found for email in leave flow: email=%s", maskedEmail))
 		return "", fmt.Errorf("contractor not found for email: %s", email)
 	}
 
-	pageID := resp.Results[0].ID
-	s.logger.Debug(fmt.Sprintf("found contractor page: email=%s page_id=%s", email, pageID))
+	pageID := details.PageID
+	s.logger.Debug(fmt.Sprintf("found contractor page for leave flow: email=%s page_id=%s", maskedEmail, pageID))
 	return pageID, nil
 }
 
@@ -653,7 +631,89 @@ type ContractorDetails struct {
 	FullName        string
 	DiscordUsername string
 	TeamEmail       string
+	PersonalEmail   string
 	Status          string
+}
+
+func buildContractorDetailsFromPage(page nt.Page) (*ContractorDetails, error) {
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, errors.New("failed to cast contractor properties")
+	}
+
+	return &ContractorDetails{
+		PageID:          page.ID,
+		FullName:        ExtractTitle(props, "Full Name"),
+		DiscordUsername: ExtractRichText(props, "Discord"),
+		TeamEmail:       ExtractEmail(props, "Team Email"),
+		PersonalEmail:   ExtractEmail(props, "Personal Email"),
+		Status:          ExtractSelect(props, "Status"),
+	}, nil
+}
+
+func maskEmailForLog(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 || parts[0] == "" {
+		return "***"
+	}
+
+	local := parts[0]
+	if len(local) == 1 {
+		return local + "***@" + parts[1]
+	}
+
+	return local[:1] + "***" + local[len(local)-1:] + "@" + parts[1]
+}
+
+// LookupContractorDetailsByEmail finds contractor details by team email or personal email.
+// Returns nil if not found (graceful handling).
+func (s *LeaveService) LookupContractorDetailsByEmail(ctx context.Context, email string) (*ContractorDetails, error) {
+	if email == "" {
+		s.logger.Debug("contractor lookup email is empty, skipping contractor detail lookup")
+		return nil, nil
+	}
+
+	if s.client == nil {
+		return nil, errors.New("notion client is nil")
+	}
+
+	contractorDBID := s.cfg.LeaveIntegration.Notion.ContractorDBID
+	if contractorDBID == "" {
+		return nil, errors.New("contractor database ID not configured")
+	}
+
+	maskedEmail := maskEmailForLog(email)
+	query := &nt.DatabaseQuery{
+		Filter:   buildContractorEmailLookupFilter(email),
+		PageSize: 2,
+	}
+
+	s.logger.Debug(fmt.Sprintf("looking up contractor details by email across Team Email and Personal Email: email=%s db_id=%s", maskedEmail, contractorDBID))
+
+	resp, err := s.client.QueryDatabase(ctx, contractorDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to query contractors by email: email=%s", maskedEmail))
+		return nil, fmt.Errorf("failed to query contractor database: %w", err)
+	}
+
+	if len(resp.Results) == 0 {
+		s.logger.Info(fmt.Sprintf("contractor not found in Notion: email=%s", maskedEmail))
+		return nil, nil
+	}
+
+	if len(resp.Results) > 1 {
+		s.logger.Warn(fmt.Sprintf("multiple contractors found for email (taking first): email=%s count=%d", maskedEmail, len(resp.Results)))
+	}
+
+	details, err := buildContractorDetailsFromPage(resp.Results[0])
+	if err != nil {
+		s.logger.Error(err, "failed to cast contractor properties")
+		return nil, err
+	}
+
+	s.logger.Debug(fmt.Sprintf("resolved contractor details by email: email=%s page_id=%s status=%s", maskedEmail, details.PageID, details.Status))
+
+	return details, nil
 }
 
 // GetContractorDetails fetches contractor details from Notion by page ID
@@ -672,18 +732,10 @@ func (s *LeaveService) GetContractorDetails(ctx context.Context, contractorPageI
 		return nil, err
 	}
 
-	props, ok := page.Properties.(nt.DatabasePageProperties)
-	if !ok {
-		s.logger.Error(errors.New("invalid properties type"), "failed to cast contractor properties")
-		return nil, errors.New("failed to cast contractor properties")
-	}
-
-	details := &ContractorDetails{
-		PageID:          contractorPageID,
-		FullName:        ExtractTitle(props, "Full Name"),
-		DiscordUsername: ExtractRichText(props, "Discord"),
-		TeamEmail:       ExtractEmail(props, "Team Email"),
-		Status:          ExtractSelect(props, "Status"),
+	details, err := buildContractorDetailsFromPage(page)
+	if err != nil {
+		s.logger.Error(err, "failed to cast contractor properties")
+		return nil, err
 	}
 
 	s.logger.Debug(fmt.Sprintf("fetched contractor details: page_id=%s name=%s discord=%s status=%s",
@@ -692,52 +744,66 @@ func (s *LeaveService) GetContractorDetails(ctx context.Context, contractorPageI
 	return details, nil
 }
 
-// LookupContractorByEmail finds contractor page ID by team email
+func buildContractorEmailLookupFilter(email string) *nt.DatabaseQueryFilter {
+	return &nt.DatabaseQueryFilter{
+		Or: []nt.DatabaseQueryFilter{
+			{
+				Property: "Team Email",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Email: &nt.TextPropertyFilter{
+						Equals: email,
+					},
+				},
+			},
+			{
+				Property: "Personal Email",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Email: &nt.TextPropertyFilter{
+						Equals: email,
+					},
+				},
+			},
+		},
+	}
+}
+
+// LookupContractorByEmail finds contractor page ID by team email or personal email.
 // Returns empty string if not found (graceful handling)
 // Returns error only on API failures
 func (s *LeaveService) LookupContractorByEmail(
 	ctx context.Context,
-	teamEmail string,
+	email string,
 ) (string, error) {
-	if teamEmail == "" {
-		s.logger.Debug("team email is empty, skipping contractor lookup")
+	if email == "" {
+		s.logger.Debug("contractor lookup email is empty, skipping contractor lookup")
 		return "", nil
 	}
 
-	s.logger.Debug(fmt.Sprintf("looking up contractor by email: %s", teamEmail))
-
-	filter := &nt.DatabaseQueryFilter{
-		Property: "Team Email",
-		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-			Email: &nt.TextPropertyFilter{
-				Equals: teamEmail,
-			},
-		},
-	}
+	s.logger.Debug(fmt.Sprintf("looking up contractor by email across Team Email and Personal Email: %s", email))
 
 	query := &nt.DatabaseQuery{
-		Filter: filter,
+		Filter:   buildContractorEmailLookupFilter(email),
+		PageSize: 2,
 	}
 
 	contractorDBID := s.cfg.LeaveIntegration.Notion.ContractorDBID
 	resp, err := s.client.QueryDatabase(ctx, contractorDBID, query)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("failed to query contractors: email=%s", teamEmail))
+		s.logger.Error(err, fmt.Sprintf("failed to query contractors by email: email=%s", email))
 		return "", err
 	}
 
 	if len(resp.Results) == 0 {
-		s.logger.Info(fmt.Sprintf("contractor not found in Notion: email=%s", teamEmail))
+		s.logger.Info(fmt.Sprintf("contractor not found in Notion: email=%s", email))
 		return "", nil
 	}
 
 	if len(resp.Results) > 1 {
-		s.logger.Warn(fmt.Sprintf("multiple contractors found for email (taking first): email=%s count=%d", teamEmail, len(resp.Results)))
+		s.logger.Warn(fmt.Sprintf("multiple contractors found for email (taking first): email=%s count=%d", email, len(resp.Results)))
 	}
 
 	contractorPageID := resp.Results[0].ID
-	s.logger.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", teamEmail, contractorPageID))
+	s.logger.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", email, contractorPageID))
 
 	return contractorPageID, nil
 }
-
