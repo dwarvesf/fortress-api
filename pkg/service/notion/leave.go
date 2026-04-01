@@ -665,8 +665,6 @@ func maskEmailForLog(email string) string {
 	return local[:1] + "***" + local[len(local)-1:] + "@" + parts[1]
 }
 
-// LookupContractorDetailsByEmail finds contractor details by team email or personal email.
-// Returns nil if not found (graceful handling).
 func (s *LeaveService) LookupContractorDetailsByEmail(ctx context.Context, email string) (*ContractorDetails, error) {
 	if email == "" {
 		s.logger.Debug("contractor lookup email is empty, skipping contractor detail lookup")
@@ -779,31 +777,20 @@ func (s *LeaveService) LookupContractorByEmail(
 		return "", nil
 	}
 
-	s.logger.Debug(fmt.Sprintf("looking up contractor by email across Team Email and Personal Email: %s", email))
+	maskedEmail := maskEmailForLog(email)
+	s.logger.Debug(fmt.Sprintf("looking up contractor by email across Team Email and Personal Email: email=%s", maskedEmail))
 
-	query := &nt.DatabaseQuery{
-		Filter:   buildContractorEmailLookupFilter(email),
-		PageSize: 2,
-	}
-
-	contractorDBID := s.cfg.LeaveIntegration.Notion.ContractorDBID
-	resp, err := s.client.QueryDatabase(ctx, contractorDBID, query)
+	details, err := s.LookupContractorDetailsByEmail(ctx, email)
 	if err != nil {
-		s.logger.Error(err, fmt.Sprintf("failed to query contractors by email: email=%s", email))
 		return "", err
 	}
 
-	if len(resp.Results) == 0 {
-		s.logger.Info(fmt.Sprintf("contractor not found in Notion: email=%s", email))
+	if details == nil {
 		return "", nil
 	}
 
-	if len(resp.Results) > 1 {
-		s.logger.Warn(fmt.Sprintf("multiple contractors found for email (taking first): email=%s count=%d", email, len(resp.Results)))
-	}
-
-	contractorPageID := resp.Results[0].ID
-	s.logger.Debug(fmt.Sprintf("found contractor: email=%s page_id=%s", email, contractorPageID))
+	contractorPageID := details.PageID
+	s.logger.Debug(fmt.Sprintf("found contractor by email: email=%s page_id=%s", maskedEmail, contractorPageID))
 
 	return contractorPageID, nil
 }

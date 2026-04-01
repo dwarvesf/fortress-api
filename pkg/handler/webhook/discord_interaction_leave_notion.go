@@ -419,22 +419,14 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 		return fmt.Errorf("failed to fetch leave request: %w", err)
 	}
 
-	l.Debugf("fetched leave request: start=%v end=%v email=%s", leave.StartDate, leave.EndDate, leave.Email)
+	l.Debugf("fetched leave request: start=%v end=%v email=%s contractor_page_id=%s", leave.StartDate, leave.EndDate, leave.Email, leave.EmployeeID)
 
-	contractorPageID, err := leaveService.LookupContractorByEmail(ctx, leave.Email)
+	contractor, err := leaveService.LookupContractorDetailsByEmail(ctx, leave.Email)
 	if err != nil {
-		return fmt.Errorf("failed to find contractor by email %s: %w", leave.Email, err)
-	}
-	if contractorPageID == "" {
-		return fmt.Errorf("no contractor found in Notion with email %s", leave.Email)
-	}
-
-	contractor, err := leaveService.GetContractorDetails(ctx, contractorPageID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch contractor details for page %s: %w", contractorPageID, err)
+		return fmt.Errorf("failed to resolve contractor by leave email %s: %w", leave.Email, err)
 	}
 	if contractor == nil {
-		return fmt.Errorf("contractor details not found for page %s", contractorPageID)
+		return fmt.Errorf("no contractor found with leave email %s", leave.Email)
 	}
 
 	contractorEmail := contractor.TeamEmail
@@ -445,8 +437,8 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 		contractorEmail = leave.Email
 	}
 
-	l.Debugf("resolved contractor for leave page_id=%s contractor_page_id=%s team_email_present=%t personal_email_present=%t",
-		pageID, contractorPageID, contractor.TeamEmail != "", contractor.PersonalEmail != "")
+	l.Debugf("resolved contractor for leave calendar flow: page_id=%s contractor_page_id=%s full_name=%s has_team_email=%t has_personal_email=%t has_discord_username=%t",
+		pageID, contractor.PageID, contractor.FullName, contractor.TeamEmail != "", contractor.PersonalEmail != "", contractor.DiscordUsername != "")
 
 	// Create calendar service
 	calService := googleSvc.NewCalendarService(h.config, h.logger)
@@ -483,7 +475,11 @@ func (h *handler) createCalendarEventForLeave(ctx context.Context, l logger.Logg
 	} else {
 		// Fallback: get stakeholder emails from deployments if no assignees
 		l.Debug("no assignees found, fetching stakeholders from deployments")
-		stakeholderEmails := h.getStakeholderEmailsFromDeployments(ctx, l, leaveService, contractorEmail)
+		stakeholderLookupEmail := contractor.TeamEmail
+		if stakeholderLookupEmail == "" {
+			stakeholderLookupEmail = leave.Email
+		}
+		stakeholderEmails := h.getStakeholderEmailsFromDeployments(ctx, l, leaveService, stakeholderLookupEmail)
 		if len(stakeholderEmails) > 0 {
 			attendees = append(attendees, stakeholderEmails...)
 			l.Debugf("added %d stakeholder emails as attendees: %v", len(stakeholderEmails), stakeholderEmails)
