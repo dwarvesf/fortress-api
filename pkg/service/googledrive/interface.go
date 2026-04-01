@@ -25,4 +25,6 @@ type IService interface {
 	// ShareFileWithEmail shares a Google Drive file with the specified email address
 	// Google automatically sends a notification email to the recipient
 	ShareFileWithEmail(fileID, email string) error
+
+	DownloadFileFromYearDir(parentDirID, year, fileName string) ([]byte, error)
 }

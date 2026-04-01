@@ -170,12 +170,12 @@ func Test_parseKeyValuePairs(t *testing.T) {
 }
 
 func TestGenerate_ExpenseIntegration(t *testing.T) {
-		env := &mockENV{
-			values: map[string]string{
-				"NOCO_EXPENSE_WORKSPACE_ID":      "ws_1",
-				"NOCO_EXPENSE_TABLE_ID":          "tbl_1",
-				"NOCO_EXPENSE_WEBHOOK_SECRET":    "secret",
-				"NOCO_EXPENSE_APPROVER_MAPPING":  "han@example.com:123, ops@example.com:456",
+	env := &mockENV{
+		values: map[string]string{
+			"NOCO_EXPENSE_WORKSPACE_ID":      "ws_1",
+			"NOCO_EXPENSE_TABLE_ID":          "tbl_1",
+			"NOCO_EXPENSE_WEBHOOK_SECRET":    "secret",
+			"NOCO_EXPENSE_APPROVER_MAPPING":  "han@example.com:123, ops@example.com:456",
 			"NOCO_BASE_URL":                  "https://nocodb",
 			"NOCO_TOKEN":                     "token",
 			"NOCO_WORKSPACE_ID":              "nw",
@@ -208,58 +208,58 @@ func TestGenerate_ExpenseIntegration(t *testing.T) {
 
 func TestGenerate_TaskOrderLogWorkerPoolSize(t *testing.T) {
 	tests := []struct {
-		name          string
-		envValue      string
-		expectedSize  int
-		description   string
+		name         string
+		envValue     string
+		expectedSize int
+		description  string
 	}{
 		{
-			name:          "default value when not set",
-			envValue:      "",
-			expectedSize:  5,
-			description:   "should default to 5 when env var not set",
+			name:         "default value when not set",
+			envValue:     "",
+			expectedSize: 5,
+			description:  "should default to 5 when env var not set",
 		},
 		{
-			name:          "custom valid value",
-			envValue:      "10",
-			expectedSize:  10,
-			description:   "should use custom value within valid range",
+			name:         "custom valid value",
+			envValue:     "10",
+			expectedSize: 10,
+			description:  "should use custom value within valid range",
 		},
 		{
-			name:          "minimum boundary - valid 1",
-			envValue:      "1",
-			expectedSize:  1,
-			description:   "should accept minimum value of 1",
+			name:         "minimum boundary - valid 1",
+			envValue:     "1",
+			expectedSize: 1,
+			description:  "should accept minimum value of 1",
 		},
 		{
-			name:          "maximum boundary - valid 20",
-			envValue:      "20",
-			expectedSize:  20,
-			description:   "should accept maximum value of 20",
+			name:         "maximum boundary - valid 20",
+			envValue:     "20",
+			expectedSize: 20,
+			description:  "should accept maximum value of 20",
 		},
 		{
-			name:          "below minimum - clamp to 1",
-			envValue:      "0",
-			expectedSize:  1,
-			description:   "should clamp 0 to minimum of 1",
+			name:         "below minimum - clamp to 1",
+			envValue:     "0",
+			expectedSize: 1,
+			description:  "should clamp 0 to minimum of 1",
 		},
 		{
-			name:          "negative value - clamp to 1",
-			envValue:      "-5",
-			expectedSize:  1,
-			description:   "should clamp negative values to minimum of 1",
+			name:         "negative value - clamp to 1",
+			envValue:     "-5",
+			expectedSize: 1,
+			description:  "should clamp negative values to minimum of 1",
 		},
 		{
-			name:          "above maximum - clamp to 20",
-			envValue:      "25",
-			expectedSize:  20,
-			description:   "should clamp values above 20 to maximum of 20",
+			name:         "above maximum - clamp to 20",
+			envValue:     "25",
+			expectedSize: 20,
+			description:  "should clamp values above 20 to maximum of 20",
 		},
 		{
-			name:          "very large value - clamp to 20",
-			envValue:      "1000",
-			expectedSize:  20,
-			description:   "should clamp very large values to maximum of 20",
+			name:         "very large value - clamp to 20",
+			envValue:     "1000",
+			expectedSize: 20,
+			description:  "should clamp very large values to maximum of 20",
 		},
 	}
 
@@ -281,6 +281,20 @@ func TestGenerate_TaskOrderLogWorkerPoolSize(t *testing.T) {
 					tt.description, cfg.TaskOrderLogWorkerPoolSize, tt.expectedSize)
 			}
 		})
+	}
+}
+
+func TestGenerate_ContractorPaymentDirID(t *testing.T) {
+	env := &mockENV{
+		values: map[string]string{
+			"CONTRACTOR_PAYMENT_DIR_ID": "drive-parent-id",
+		},
+		bools: map[string]bool{},
+	}
+
+	cfg := Generate(env)
+	if cfg.Invoice.ContractorPaymentDirID != "drive-parent-id" {
+		t.Fatalf("expected ContractorPaymentDirID=drive-parent-id, got %s", cfg.Invoice.ContractorPaymentDirID)
 	}
 }
 

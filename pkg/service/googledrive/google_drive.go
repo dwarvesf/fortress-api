@@ -324,6 +324,56 @@ func (g *googleService) DownloadInvoicePDF(invoice *model.Invoice, dirName strin
 	return io.ReadAll(resp.Body)
 }
 
+func (g *googleService) DownloadFileFromYearDir(parentDirID, year, fileName string) ([]byte, error) {
+	if err := g.ensureToken(g.appConfig.Google.AccountingGoogleRefreshToken); err != nil {
+		return nil, err
+	}
+
+	if err := g.prepareService(); err != nil {
+		return nil, err
+	}
+
+	l := g.logger.AddField("method", "DownloadFileFromYearDir").
+		AddField("parent_dir_id", parentDirID).
+		AddField("year", year).
+		AddField("file_name", fileName)
+	l.Debug("searching year directory for contractor payment file")
+
+	yearDir, err := g.searchFile(year, parentDirID, true)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search year directory: %w", err)
+	}
+	if yearDir == nil {
+		return nil, fmt.Errorf("year directory not found: %s", year)
+	}
+
+	l.AddField("year_dir_id", yearDir.Id).Debug("found year directory")
+
+	file, err := g.searchFile(fileName, yearDir.Id, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search payment file: %w", err)
+	}
+	if file == nil {
+		return nil, fmt.Errorf("file not found: %s", fileName)
+	}
+
+	l.AddField("file_id", file.Id).AddField("mime_type", file.MimeType).Debug("found contractor payment file")
+
+	resp, err := g.service.Files.Get(file.Id).SupportsAllDrives(true).Download()
+	if err != nil {
+		return nil, fmt.Errorf("failed to download payment file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read payment file body: %w", err)
+	}
+
+	l.AddField("downloaded_bytes", len(body)).Debug("downloaded contractor payment file")
+	return body, nil
+}
+
 // FindContractorInvoiceFileID finds a contractor invoice PDF in Google Drive
 // Searches in the contractor's subfolder under the contractor invoice parent folder
 // Returns the file ID if found, empty string if not found

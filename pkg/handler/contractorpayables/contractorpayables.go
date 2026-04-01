@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -119,19 +120,13 @@ func (h *handler) Commit(c *gin.Context) {
 		return
 	}
 
-	// Validate month format (YYYY-MM)
-	if !isValidMonthFormat(req.Month) {
-		l.Error(nil, "invalid month format")
-		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil,
-			nil, nil, "Invalid month format. Use YYYY-MM (e.g., 2025-01)"))
-		return
-	}
-
-	l.Debug("calling controller.CommitPayables")
-
-	result, err := h.controller.CommitPayables(c.Request.Context(), req.Month, req.Batch, req.Contractor)
+	result, err := h.commit(c, req, l)
 	if err != nil {
 		l.Error(err, "failed to commit payables")
+		if strings.Contains(err.Error(), "invalid month format") || strings.Contains(err.Error(), "invalid batch") || strings.Contains(err.Error(), "invalid year") {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, err.Error()))
+			return
+		}
 
 		// Check if no payables found
 		if strings.Contains(err.Error(), "no pending payables") {
@@ -150,12 +145,7 @@ func (h *handler) Commit(c *gin.Context) {
 	}
 
 	// Send Discord notification to audit log
-	contractorInfo := ""
-	if req.Contractor != "" {
-		contractorInfo = fmt.Sprintf(" for contractor=%s", req.Contractor)
-	}
-	msg := fmt.Sprintf("**Contractor Payables Commit**\nMonth: %s | Batch: %d%s\nUpdated: %d | Failed: %d",
-		req.Month, req.Batch, contractorInfo, result.Updated, result.Failed)
+	msg := buildAuditMessage(req, result)
 
 	discordMsg, err := h.service.Discord.SendMessage(model.DiscordMessage{
 		Content: msg,
@@ -167,6 +157,49 @@ func (h *handler) Commit(c *gin.Context) {
 	}
 
 	c.JSON(statusCode, view.CreateResponse[any](result, nil, nil, nil, ""))
+}
+
+func (h *handler) commit(c *gin.Context, req CommitRequest, l logger.Logger) (*ctrlcontractorpayables.CommitResponse, error) {
+	if req.FileName != "" {
+		year := req.Year
+		if year == 0 {
+			year = time.Now().Year()
+		}
+		if year < 2000 || year > 3000 {
+			return nil, fmt.Errorf("invalid year: %d", year)
+		}
+
+		l.Fields(logger.Fields{"file_name": req.FileName, "year": year}).Debug("calling controller.CommitPayablesByFile")
+		return h.controller.CommitPayablesByFile(c.Request.Context(), req.FileName, year)
+	}
+
+	if !isValidMonthFormat(req.Month) {
+		return nil, fmt.Errorf("invalid month format. use YYYY-MM (e.g., 2025-01)")
+	}
+	if req.Batch != 1 && req.Batch != 15 {
+		return nil, fmt.Errorf("invalid batch: %d", req.Batch)
+	}
+
+	l.Debug("calling controller.CommitPayables")
+	return h.controller.CommitPayables(c.Request.Context(), req.Month, req.Batch, req.Contractor)
+}
+
+func buildAuditMessage(req CommitRequest, result *ctrlcontractorpayables.CommitResponse) string {
+	if req.FileName != "" {
+		year := req.Year
+		if year == 0 {
+			year = result.Year
+		}
+		return fmt.Sprintf("**Contractor Payables Commit**\nMode: file | Year: %d | File: %s\nUpdated: %d | Failed: %d",
+			year, req.FileName, result.Updated, result.Failed)
+	}
+
+	contractorInfo := ""
+	if req.Contractor != "" {
+		contractorInfo = fmt.Sprintf(" for contractor=%s", req.Contractor)
+	}
+	return fmt.Sprintf("**Contractor Payables Commit**\nMonth: %s | Batch: %d%s\nUpdated: %d | Failed: %d",
+		req.Month, req.Batch, contractorInfo, result.Updated, result.Failed)
 }
 
 // isValidMonthFormat validates month is in YYYY-MM format

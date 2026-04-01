@@ -161,7 +161,7 @@ func (s *ContractorPayablesService) findExistingPayable(ctx context.Context, con
 // PayableInfo represents payable information for Discord lookup
 type PayableInfo struct {
 	PageID      string
-	Status      string     // "New", "Pending", "Paid"
+	Status      string // "New", "Pending", "Paid"
 	Total       float64
 	Currency    string
 	InvoiceID   string
@@ -672,11 +672,81 @@ type PendingPayable struct {
 	PayoutItemPageIDs []string // From Payout Items relation (multiple)
 }
 
+func (s *ContractorPayablesService) FindPendingPayableByInvoiceID(ctx context.Context, invoiceID string) (*PendingPayable, error) {
+	payablesDBID := s.cfg.Notion.Databases.ContractorPayables
+	if payablesDBID == "" {
+		return nil, errors.New("contractor payables database ID not configured")
+	}
+	if invoiceID == "" {
+		return nil, errors.New("invoice ID is required")
+	}
+
+	s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: searching pending payable by invoiceID=%s", invoiceID))
+
+	filter := &nt.DatabaseQueryFilter{
+		And: []nt.DatabaseQueryFilter{
+			{
+				Property: "Invoice ID",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					RichText: &nt.TextPropertyFilter{Equals: invoiceID},
+				},
+			},
+			{
+				Property: "Payment Status",
+				DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+					Status: &nt.StatusDatabaseQueryFilter{Equals: "Pending"},
+				},
+			},
+		},
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, payablesDBID, &nt.DatabaseQuery{
+		Filter:   filter,
+		PageSize: 1,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to query pending payable by invoice ID: %w", err)
+	}
+	if len(resp.Results) == 0 {
+		return nil, nil
+	}
+
+	page := resp.Results[0]
+	props, ok := page.Properties.(nt.DatabasePageProperties)
+	if !ok {
+		return nil, errors.New("failed to cast pending payable properties")
+	}
+
+	payable := &PendingPayable{
+		PageID:            page.ID,
+		ContractorPageID:  ExtractFirstRelationID(props, "Contractor"),
+		ContractorName:    ExtractRollupTitle(props, "Contractor Name"),
+		Discord:           ExtractRichTextFirst(props, "Discord"),
+		Total:             ExtractNumber(props, "Total"),
+		Currency:          ExtractSelect(props, "Currency"),
+		Period:            ExtractDateString(props, "Period"),
+		PayoutItemPageIDs: ExtractAllRelationIDs(props, "Payout Items"),
+	}
+
+	if payable.ContractorPageID != "" && (payable.ContractorName == "" || payable.Discord == "") {
+		info := s.getContractorInfo(ctx, payable.ContractorPageID)
+		if payable.ContractorName == "" {
+			payable.ContractorName = info.Name
+		}
+		if payable.Discord == "" {
+			payable.Discord = info.Discord
+		}
+	}
+
+	return payable, nil
+}
+
 // QueryPendingPayablesByPeriod queries all contractor payables with Payment Status="Pending" for a given month and batch.
 // Month should be in YYYY-MM format (e.g., "2025-01").
 // Batch is the PayDay (1 or 15) which determines the period start date:
 //   - batch 1: Period starts on 1st (YYYY-MM-01)
 //   - batch 15: Period starts on 15th (YYYY-MM-15)
+//
 // Returns empty slice if no results found (not an error).
 func (s *ContractorPayablesService) QueryPendingPayablesByPeriod(ctx context.Context, month string, batch int) ([]PendingPayable, error) {
 	payablesDBID := s.cfg.Notion.Databases.ContractorPayables

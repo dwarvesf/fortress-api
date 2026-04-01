@@ -60,7 +60,6 @@ type Config struct {
 	OpenRouter OpenRouter
 	Redis      Redis
 
-
 	APIKey                     string
 	Debug                      bool
 	DBMonitoringEnabled        bool
@@ -332,6 +331,7 @@ type Invoice struct {
 	TemplatePath           string
 	DirID                  string
 	ContractorInvoiceDirID string
+	ContractorPaymentDirID string
 	TestEmail              string
 }
 
@@ -638,6 +638,7 @@ func Generate(v ENV) *Config {
 			TemplatePath:           v.GetString("INVOICE_TEMPLATE_PATH"),
 			DirID:                  v.GetString("INVOICE_DIR_ID"),
 			ContractorInvoiceDirID: v.GetString("CONTRACTOR_INVOICE_DIR_ID"),
+			ContractorPaymentDirID: v.GetString("CONTRACTOR_PAYMENT_DIR_ID"),
 			TestEmail:              v.GetString("INVOICE_TEST_EMAIL"),
 		},
 
