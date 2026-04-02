@@ -204,29 +204,54 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 			return
 		}
 
-		// Check for overlap with existing pending payables
-		hasOverlap, overlappingPayable := h.checkPayoutItemOverlap(ctx, l, pendingPayables, candidatePayoutItemIDs, payablePayoutItems)
+		// Collect ALL payout item IDs already covered by pending payables
+		coveredIDs := make(map[string]bool)
+		for _, ids := range payablePayoutItems {
+			for _, id := range ids {
+				coveredIDs[id] = true
+			}
+		}
 
-		if hasOverlap {
-			l.Debug(fmt.Sprintf("overlap detected with existing payable %s — returning existing payable", overlappingPayable.PageID))
-			h.processExistingPendingPayables(l, req, rateData, []*notion.PayableInfo{overlappingPayable})
+		// Filter candidates to only uncovered items
+		var remainingCandidateIDs []string
+		for _, id := range candidatePayoutItemIDs {
+			if !coveredIDs[id] {
+				remainingCandidateIDs = append(remainingCandidateIDs, id)
+			}
+		}
+
+		l.Debug(fmt.Sprintf("overlap analysis: total=%d covered=%d remaining=%d",
+			len(candidatePayoutItemIDs), len(candidatePayoutItemIDs)-len(remainingCandidateIDs), len(remainingCandidateIDs)))
+
+		if len(remainingCandidateIDs) == 0 {
+			// ALL candidate items are covered by existing payables — return them
+			l.Debug("all candidate payout items covered by existing payables — returning existing payable(s)")
+			h.processExistingPendingPayables(l, req, rateData, pendingPayables)
 			return
 		}
 
-		// No overlap — proceed to generate new invoice
-		l.Debug("no overlap detected with any pending payable — proceeding to generate new invoice")
+		// Some candidates are NOT covered — generate new invoice excluding covered items
+		l.Debug(fmt.Sprintf("%d uncovered payout items found — generating new invoice (excluding %d covered items)",
+			len(remainingCandidateIDs), len(coveredIDs)))
+
+		var excludeIDs []string
+		for id := range coveredIDs {
+			excludeIDs = append(excludeIDs, id)
+		}
+		h.generateAndCreatePayable(ctx, l, req, rateData, "", excludeIDs)
+		return
 	}
 
 	// Case 2: New payable exists → regenerate invoice and update payable
 	if newPayable != nil {
 		l.Debug(fmt.Sprintf("found payable with status=New (pageID=%s) - regenerating invoice", newPayable.PageID))
-		h.generateAndCreatePayable(ctx, l, req, rateData, newPayable.PageID)
+		h.generateAndCreatePayable(ctx, l, req, rateData, newPayable.PageID, nil)
 		return
 	}
 
 	// Case 3: No payable exists → generate new invoice and create payable
 	l.Debug("no payable exists - generating new invoice")
-	h.generateAndCreatePayable(ctx, l, req, rateData, "")
+	h.generateAndCreatePayable(ctx, l, req, rateData, "", nil)
 }
 
 // processExistingPendingPayables handles the existing flow for pending payables
@@ -1021,12 +1046,14 @@ func (h *handler) deriveCandidatePayoutItemIDs(
 
 // generateAndCreatePayable generates a contractor invoice, creates/updates payable in Notion, and shares with contractor
 // existingPayablePageID is empty for new payables, or the page ID to update for regeneration
+// excludePayoutItemIDs contains payout IDs already covered by existing payables (nil for full invoice)
 func (h *handler) generateAndCreatePayable(
 	ctx context.Context,
 	l logger.Logger,
 	req GenInvoiceRequest,
 	rateData *notion.ContractorRateData,
 	existingPayablePageID string,
+	excludePayoutItemIDs []string,
 ) {
 	// Update DM with generating status
 	h.updateDMWithGenerating(l, req.DMChannelID, req.DMMessageID, req.Month)
@@ -1037,8 +1064,9 @@ func (h *handler) generateAndCreatePayable(
 	// Step 1: Generate invoice data
 	l.Debug(fmt.Sprintf("step 1: generating contractor invoice data with invoiceType=%q", invoiceType))
 	opts := &invoice.ContractorInvoiceOptions{
-		GroupFeeByProject: false,
-		InvoiceType:       invoiceType,
+		GroupFeeByProject:    false,
+		InvoiceType:          invoiceType,
+		ExcludePayoutItemIDs: excludePayoutItemIDs,
 	}
 	invoiceData, err := h.controller.Invoice.GenerateContractorInvoice(ctx, req.DiscordUsername, req.Month, opts)
 	if err != nil {

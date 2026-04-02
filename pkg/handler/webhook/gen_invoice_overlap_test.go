@@ -212,3 +212,65 @@ func TestCheckPayoutItemOverlap_Respects90DayWindow(t *testing.T) {
 	assert.False(t, hasOverlap, "should not detect overlap when payable only has items outside the 90-day window")
 	assert.Nil(t, matchedPayable, "no payable should be matched when there is no overlap with in-window candidates")
 }
+
+// TestRemainingCandidates_SupersetRequest verifies the flow where request contains a superset
+// of items covered by P1. The remaining (uncovered) items should be used for P2.
+func TestRemainingCandidates_SupersetRequest(t *testing.T) {
+	l := logger.NewLogrusLogger("debug")
+	_ = &handler{logger: l}
+
+	// P1 has [pi1, pi2], request candidates are [pi1, pi2, pi3, pi4]
+	// After filtering, remaining should be [pi3, pi4]
+	payablePayoutItems := map[string][]string{
+		"payable-p1": {"pi1", "pi2"},
+	}
+	candidatePayoutItemIDs := []string{"pi1", "pi2", "pi3", "pi4"}
+
+	// Collect covered IDs (same logic as processGenInvoice)
+	coveredIDs := make(map[string]bool)
+	for _, ids := range payablePayoutItems {
+		for _, id := range ids {
+			coveredIDs[id] = true
+		}
+	}
+
+	var remainingCandidateIDs []string
+	for _, id := range candidatePayoutItemIDs {
+		if !coveredIDs[id] {
+			remainingCandidateIDs = append(remainingCandidateIDs, id)
+		}
+	}
+
+	assert.Equal(t, 2, len(remainingCandidateIDs), "should have 2 uncovered payout items")
+	assert.Contains(t, remainingCandidateIDs, "pi3", "pi3 should be in remaining")
+	assert.Contains(t, remainingCandidateIDs, "pi4", "pi4 should be in remaining")
+}
+
+// TestRemainingCandidates_FullyCovered verifies that when all candidates are covered
+// by existing payables, remaining is empty (should return existing payable).
+func TestRemainingCandidates_FullyCovered(t *testing.T) {
+	l := logger.NewLogrusLogger("debug")
+	_ = &handler{logger: l}
+
+	// P1 has [pi1, pi2], request candidates are [pi1, pi2]
+	payablePayoutItems := map[string][]string{
+		"payable-p1": {"pi1", "pi2"},
+	}
+	candidatePayoutItemIDs := []string{"pi1", "pi2"}
+
+	coveredIDs := make(map[string]bool)
+	for _, ids := range payablePayoutItems {
+		for _, id := range ids {
+			coveredIDs[id] = true
+		}
+	}
+
+	var remainingCandidateIDs []string
+	for _, id := range candidatePayoutItemIDs {
+		if !coveredIDs[id] {
+			remainingCandidateIDs = append(remainingCandidateIDs, id)
+		}
+	}
+
+	assert.Equal(t, 0, len(remainingCandidateIDs), "all candidates should be covered")
+}

@@ -101,8 +101,9 @@ type ContractorInvoiceSection struct {
 
 // ContractorInvoiceOptions contains options for generating contractor invoice
 type ContractorInvoiceOptions struct {
-	GroupFeeByProject bool   // Group Fee (Commission) items by project (default true)
-	InvoiceType       string // "service_and_refund" | "extra_payment" | "" (full invoice)
+	GroupFeeByProject    bool     // Group Fee (Commission) items by project (default true)
+	InvoiceType          string   // "service_and_refund" | "extra_payment" | "" (full invoice)
+	ExcludePayoutItemIDs []string // Payout item IDs to exclude (already covered by existing payables)
 }
 
 // GenerateContractorInvoice generates contractor invoice data from Notion
@@ -409,6 +410,24 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	}
 
 	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: total payouts after merge: %d", len(payouts)))
+
+	// Filter out excluded payout items (already covered by existing pending payables)
+	if len(opts.ExcludePayoutItemIDs) > 0 {
+		excludeSet := make(map[string]bool, len(opts.ExcludePayoutItemIDs))
+		for _, id := range opts.ExcludePayoutItemIDs {
+			excludeSet[id] = true
+		}
+		var filtered []notion.PayoutEntry
+		for _, p := range payouts {
+			if excludeSet[p.PageID] {
+				l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: excluding payout %s (already covered by existing payable)", p.PageID))
+				continue
+			}
+			filtered = append(filtered, p)
+		}
+		l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: payouts after exclusion filter: %d (excluded %d)", len(filtered), len(payouts)-len(filtered)))
+		payouts = filtered
+	}
 
 	if len(payouts) == 0 {
 		l.Debug("no pending payouts found for contractor")
