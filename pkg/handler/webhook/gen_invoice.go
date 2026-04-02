@@ -183,34 +183,38 @@ func (h *handler) processGenInvoice(l logger.Logger, req GenInvoiceRequest) {
 		}
 	}
 
-	// Case 1: Pending payables exist
+	// Case 1: Pending payables exist — check payout item overlap before reusing
 	if len(pendingPayables) > 0 {
-		l.Debug(fmt.Sprintf("found %d pending payable(s)", len(pendingPayables)))
+		l.Debug(fmt.Sprintf("found %d pending payable(s) — deriving candidate payout items for overlap check", len(pendingPayables)))
 
-		// If no specific invoice type requested, use existing behavior (return first pending payable)
-		if req.InvoiceType == "" {
-			l.Debug("no invoice type specified - returning existing pending payable(s)")
-			h.processExistingPendingPayables(l, req, rateData, pendingPayables)
+		// Derive candidate payout item IDs that would be included in the new invoice
+		// This follows the same invoice-generation path (including invoice-type filtering and 90-day window)
+		candidatePayoutItemIDs, payablePayoutItems, err := h.deriveCandidatePayoutItemIDs(ctx, l, req, rateData, pendingPayables)
+		if err != nil {
+			l.Errorf(err, "failed to derive candidate payout item IDs for overlap check")
+			h.updateDMWithError(l, req.DMChannelID, req.DMMessageID, "Failed to check invoice availability. Please try again later.")
 			return
 		}
 
-		// If invoice type is specified, check if pending payable matches the requested type
-		l.Debug(fmt.Sprintf("invoice type specified: %s - checking if pending payable matches", req.InvoiceType))
+		l.Debug(fmt.Sprintf("candidate payout items derived: count=%d", len(candidatePayoutItemIDs)))
 
-		// Check the first pending payable (there should typically be only one per period)
-		firstPendingPayable := pendingPayables[0]
-		existingPayableType := h.determinePayableInvoiceType(ctx, l, firstPendingPayable, rateData.ContractorPageID)
-
-		l.Debug(fmt.Sprintf("existing payable type: %s, requested type: %s", existingPayableType, req.InvoiceType))
-
-		if existingPayableType == req.InvoiceType {
-			l.Debug("payable type matches - returning existing pending payable(s)")
-			h.processExistingPendingPayables(l, req, rateData, pendingPayables)
+		if len(candidatePayoutItemIDs) == 0 {
+			l.Debug("no candidate payout items after filtering — showing no-payouts message")
+			h.updateDMWithNoPayouts(l, req.DMChannelID, req.DMMessageID, req.Month)
 			return
 		}
 
-		// Type doesn't match - fall through to generate new invoice
-		l.Debug("payable type doesn't match - will generate new invoice with requested type")
+		// Check for overlap with existing pending payables
+		hasOverlap, overlappingPayable := h.checkPayoutItemOverlap(ctx, l, pendingPayables, candidatePayoutItemIDs, payablePayoutItems)
+
+		if hasOverlap {
+			l.Debug(fmt.Sprintf("overlap detected with existing payable %s — returning existing payable", overlappingPayable.PageID))
+			h.processExistingPendingPayables(l, req, rateData, []*notion.PayableInfo{overlappingPayable})
+			return
+		}
+
+		// No overlap — proceed to generate new invoice
+		l.Debug("no overlap detected with any pending payable — proceeding to generate new invoice")
 	}
 
 	// Case 2: New payable exists → regenerate invoice and update payable
@@ -843,6 +847,176 @@ func extractAllRelationIDs(props nt.DatabasePageProperties, propName string) []s
 		ids[i] = rel.ID
 	}
 	return ids
+}
+
+// OverlapCheckOption is a functional option for configuring the overlap check behavior
+type OverlapCheckOption func(*overlapCheckConfig)
+
+// overlapCheckConfig holds configuration for the overlap check
+type overlapCheckConfig struct {
+	cutoffDate string // If set, only payout items within this window are considered for overlap
+}
+
+// WithCutoffDate sets a cutoff date for overlap checking.
+// Only payout items with IDs present in the candidate set AND NOT excluded by
+// external 90-day filtering are considered.
+func WithCutoffDate(cutoffDate string) OverlapCheckOption {
+	return func(cfg *overlapCheckConfig) {
+		cfg.cutoffDate = cutoffDate
+	}
+}
+
+// checkPayoutItemOverlap checks if the payouts that would be included in a new invoice
+// overlap with any existing same-period pending payable's payout items.
+// payablePayoutItems is a map of payablePageID → payout item IDs already linked to that payable.
+// Returns (hasOverlap, matchedPayable).
+func (h *handler) checkPayoutItemOverlap(
+	ctx context.Context,
+	l logger.Logger,
+	pendingPayables []*notion.PayableInfo,
+	newPayoutItemIDs []string,
+	payablePayoutItems map[string][]string,
+	opts ...OverlapCheckOption,
+) (bool, *notion.PayableInfo) {
+	// Apply options
+	cfg := &overlapCheckConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	l.Debug(fmt.Sprintf("checking overlap: pendingPayables=%d newPayoutItems=%d cutoffDate=%s",
+		len(pendingPayables), len(newPayoutItemIDs), cfg.cutoffDate))
+
+	if len(newPayoutItemIDs) == 0 || len(pendingPayables) == 0 {
+		l.Debug("overlap check skipped: empty new payout items or no pending payables")
+		return false, nil
+	}
+
+	newPayoutSet := make(map[string]bool, len(newPayoutItemIDs))
+	for _, id := range newPayoutItemIDs {
+		newPayoutSet[id] = true
+	}
+
+	for _, payable := range pendingPayables {
+		existingPayoutIDs, ok := payablePayoutItems[payable.PageID]
+		if !ok {
+			l.Debug(fmt.Sprintf("payable %s has no payout items in map — skipping", payable.PageID))
+			continue
+		}
+
+		l.Debug(fmt.Sprintf("comparing payout items: payable=%s existingCount=%d newCount=%d",
+			payable.PageID, len(existingPayoutIDs), len(newPayoutItemIDs)))
+
+		// Check for overlap
+		for _, id := range existingPayoutIDs {
+			if newPayoutSet[id] {
+				l.Debug(fmt.Sprintf("payout overlap found: payable=%s overlappingItem=%s", payable.PageID, id))
+				return true, payable
+			}
+		}
+	}
+
+	l.Debug("no overlap found across all pending payables")
+	return false, nil
+}
+
+// deriveCandidatePayoutItemIDs derives the set of payout item IDs that would be included in a new invoice.
+// It also fetches the payout item IDs for each pending payable.
+// Returns (candidatePayoutItemIDs, payablePayoutItems map, error).
+func (h *handler) deriveCandidatePayoutItemIDs(
+	ctx context.Context,
+	l logger.Logger,
+	req GenInvoiceRequest,
+	rateData *notion.ContractorRateData,
+	pendingPayables []*notion.PayableInfo,
+) ([]string, map[string][]string, error) {
+	l.Debug(fmt.Sprintf("deriving candidate payout item IDs: contractor=%s month=%s invoiceType=%s",
+		rateData.ContractorPageID, req.Month, req.InvoiceType))
+
+	// Calculate issue date / cutoff date (same logic as processGenInvoice)
+	payDay := rateData.PayDay
+	if payDay <= 0 || payDay > 31 {
+		payDay = 15 // Default
+	}
+	monthTime, _ := time.Parse("2006-01", req.Month)
+	nextMonth := monthTime.AddDate(0, 1, 0)
+	issueDate := time.Date(nextMonth.Year(), nextMonth.Month(), payDay, 0, 0, 0, 0, time.UTC)
+	cutoffDate := issueDate.Format("2006-01-02")
+
+	l.Debug(fmt.Sprintf("using cutoff date for candidate payouts: %s", cutoffDate))
+
+	// Query pending payouts for this contractor (same as invoice controller)
+	payouts, err := h.service.Notion.ContractorPayouts.QueryPendingPayoutsByContractor(ctx, rateData.ContractorPageID, cutoffDate)
+	if err != nil {
+		l.Errorf(err, "failed to query pending payouts for candidate derivation")
+		return nil, nil, fmt.Errorf("failed to query pending payouts: %w", err)
+	}
+
+	l.Debug(fmt.Sprintf("queried %d pending payouts for contractor", len(payouts)))
+
+	// Also query refund/commission/other payouts before cutoff
+	refundPayouts, err := h.service.Notion.ContractorPayouts.QueryPendingRefundCommissionBeforeDate(ctx, rateData.ContractorPageID, cutoffDate)
+	if err != nil {
+		l.Debug(fmt.Sprintf("failed to query refund/commission payouts (non-fatal): %v", err))
+		// Non-fatal: continue without them
+	} else {
+		// Merge, deduplicating by PageID
+		existingIDs := make(map[string]bool)
+		for _, p := range payouts {
+			existingIDs[p.PageID] = true
+		}
+		for _, p := range refundPayouts {
+			if !existingIDs[p.PageID] {
+				payouts = append(payouts, p)
+				existingIDs[p.PageID] = true
+			}
+		}
+		l.Debug(fmt.Sprintf("merged payouts total: %d", len(payouts)))
+	}
+
+	// Apply invoice type filter if specified (matches controller logic)
+	var candidateIDs []string
+	for _, payout := range payouts {
+		if req.InvoiceType != "" {
+			// Determine payout type
+			isServiceOrRefund := payout.SourceType == notion.PayoutSourceTypeServiceFee || payout.SourceType == notion.PayoutSourceTypeRefund
+			isExtraPayment := payout.SourceType == notion.PayoutSourceTypeCommission || payout.SourceType == notion.PayoutSourceTypeExtraPayment
+
+			if req.InvoiceType == "service_and_refund" && !isServiceOrRefund {
+				l.Debug(fmt.Sprintf("filtering out payout %s (type=%s) for service_and_refund invoice", payout.PageID, payout.SourceType))
+				continue
+			}
+			if req.InvoiceType == "extra_payment" && !isExtraPayment {
+				l.Debug(fmt.Sprintf("filtering out payout %s (type=%s) for extra_payment invoice", payout.PageID, payout.SourceType))
+				continue
+			}
+		}
+		candidateIDs = append(candidateIDs, payout.PageID)
+	}
+
+	l.Debug(fmt.Sprintf("candidate payout item IDs after type filter: %d", len(candidateIDs)))
+
+	// Build payablePayoutItems map: for each pending payable, fetch its linked Payout Items
+	payablePayoutItems := make(map[string][]string)
+	for _, payable := range pendingPayables {
+		page, err := h.service.Notion.GetPage(payable.PageID)
+		if err != nil {
+			l.Errorf(err, fmt.Sprintf("failed to get payable page %s for overlap check", payable.PageID))
+			continue
+		}
+
+		props, ok := page.Properties.(nt.DatabasePageProperties)
+		if !ok {
+			l.Debug(fmt.Sprintf("failed to cast properties for payable %s", payable.PageID))
+			continue
+		}
+
+		existingPayoutIDs := extractAllRelationIDs(props, "Payout Items")
+		payablePayoutItems[payable.PageID] = existingPayoutIDs
+		l.Debug(fmt.Sprintf("payable %s has %d payout items", payable.PageID, len(existingPayoutIDs)))
+	}
+
+	return candidateIDs, payablePayoutItems, nil
 }
 
 // generateAndCreatePayable generates a contractor invoice, creates/updates payable in Notion, and shares with contractor
