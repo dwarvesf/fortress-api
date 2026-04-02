@@ -458,7 +458,7 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 			convMu.Lock()
 			if rate > 0 && rate != 1.0 && capturedDisplayRate == 0 {
-				capturedDisplayRate = 1 / rate
+				capturedDisplayRate = rate
 			}
 			l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: converted %.2f %s = %.2f USD (idx=%d, rate=%.8f)", p.Amount, p.Currency, amountsUSD[idx], idx, rate))
 			convMu.Unlock()

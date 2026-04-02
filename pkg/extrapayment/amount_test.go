@@ -52,7 +52,8 @@ func TestResolveAmountUSD(t *testing.T) {
 	})
 
 	t.Run("converts non USD amount using wise and rounds to 2 decimals", func(t *testing.T) {
-		wiseSvc := &mockWiseService{convertedAmount: 379.694, rate: 0.0000379694}
+		mathRate := 0.0000379694
+		wiseSvc := &mockWiseService{convertedAmount: 379.694, rate: mathRate}
 
 		amountUSD, rate, err := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-2", 10000000, "VND")
 		if err != nil {
@@ -61,8 +62,9 @@ func TestResolveAmountUSD(t *testing.T) {
 		if amountUSD != 379.69 {
 			t.Fatalf("expected 379.69 USD, got %v", amountUSD)
 		}
-		if rate != 0.0000379694 {
-			t.Fatalf("expected rate 0.0000379694, got %v", rate)
+		expectedDisplayRate := 1.0 / mathRate
+		if rate != expectedDisplayRate {
+			t.Fatalf("expected rate %v, got %v", expectedDisplayRate, rate)
 		}
 		if wiseSvc.convertCalls != 1 {
 			t.Fatalf("expected wise convert to be called once, got %d calls", wiseSvc.convertCalls)
@@ -86,7 +88,10 @@ func TestResolveAmountUSD(t *testing.T) {
 	})
 
 	t.Run("skips cache when redis is nil", func(t *testing.T) {
-		wiseSvc := &mockWiseService{convertedAmount: 400.00, rate: 0.00004}
+		mathRate := 0.00004
+		wiseSvc := &mockWiseService{convertedAmount: 400.00, rate: mathRate}
+
+		expectedDisplayRate := 1.0 / mathRate
 
 		// First call should hit the mock Wise service
 		amountUSD1, rate1, err1 := extrapayment.ResolveAmountUSD(ctx, logger.NewLogrusLogger("debug"), wiseSvc, nil, "page-5-cache-test", 10000000, "VND")
@@ -96,8 +101,8 @@ func TestResolveAmountUSD(t *testing.T) {
 		if amountUSD1 != 400.00 {
 			t.Fatalf("expected 400.00 USD, got %v", amountUSD1)
 		}
-		if rate1 != 0.00004 {
-			t.Fatalf("expected rate 0.00004, got %v", rate1)
+		if rate1 != expectedDisplayRate {
+			t.Fatalf("expected rate %v, got %v", expectedDisplayRate, rate1)
 		}
 		if wiseSvc.convertCalls != 1 {
 			t.Fatalf("expected wise convert to be called once, got %d calls", wiseSvc.convertCalls)
@@ -111,8 +116,8 @@ func TestResolveAmountUSD(t *testing.T) {
 		if amountUSD2 != 400.00 {
 			t.Fatalf("expected 400.00 USD, got %v", amountUSD2)
 		}
-		if rate2 != 0.00004 {
-			t.Fatalf("expected rate 0.00004, got %v", rate2)
+		if rate2 != expectedDisplayRate {
+			t.Fatalf("expected rate %v, got %v", expectedDisplayRate, rate2)
 		}
 		if wiseSvc.convertCalls != 2 {
 			t.Fatalf("expected wise convert to be called twice (no cache), got %d calls", wiseSvc.convertCalls)

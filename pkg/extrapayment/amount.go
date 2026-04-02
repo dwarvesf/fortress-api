@@ -36,14 +36,22 @@ func ResolveAmountUSD(ctx context.Context, l logger.Logger, wiseSvc wise.IServic
 		return amount, 1.0, nil
 	}
 
-	cacheKey := fmt.Sprintf("extra_payment_conversion:%s", pageID)
+	cacheKey := fmt.Sprintf("extra_payment_conversion_v2:%s", pageID)
 	if rdb != nil {
 		cachedValue, err := rdb.Get(ctx, cacheKey).Result()
 		if err == nil {
 			var conversion CachedConversion
 			if err := json.Unmarshal([]byte(cachedValue), &conversion); err == nil {
-				conversionLogger.Debug("extra payment USD amount and rate found in Redis")
-				return conversion.AmountUSD, conversion.Rate, nil
+				conversionLogger.Debug("extra payment conversion rate found in Redis")
+				// Recalculate AmountUSD using current amount and cached display rate to handle Notion updates
+				// The rate in Redis is now stored as display rate (e.g., VND/USD = 26337)
+				displayRate := conversion.Rate
+				if displayRate == 0 {
+					displayRate = 1.0
+				}
+				actualRate := 1.0 / displayRate
+				amountUSD := math.Round(amount*actualRate*100) / 100
+				return amountUSD, displayRate, nil
 			}
 		}
 	}
@@ -54,25 +62,31 @@ func ResolveAmountUSD(ctx context.Context, l logger.Logger, wiseSvc wise.IServic
 		return 0, 0, err
 	}
 
-	convertedAmount, rate, err := wiseSvc.Convert(amount, currency, "USD")
+	convertedAmount, mathRate, err := wiseSvc.Convert(amount, currency, "USD")
 	if err != nil {
 		conversionLogger.Error(err, "wise conversion failed for extra payment amount")
 		return 0, 0, fmt.Errorf("failed to convert %s to USD for entry %s: %w", strings.ToUpper(currency), pageID, err)
+	}
+
+	displayRate := 1.0
+	if mathRate != 0 {
+		displayRate = 1.0 / mathRate
 	}
 
 	roundedAmount := math.Round(convertedAmount*100) / 100
 	if rdb != nil {
 		val, _ := json.Marshal(CachedConversion{
 			AmountUSD: roundedAmount,
-			Rate:      rate,
+			Rate:      displayRate,
 		})
 		rdb.Set(ctx, cacheKey, val, 30*24*time.Hour)
 	}
 	
 	conversionLogger.Fields(logger.Fields{
-		"wise_rate":        rate,
+		"wise_rate":        mathRate,
+		"display_rate":     displayRate,
 		"converted_amount": roundedAmount,
 	}).Debug("resolved extra payment USD amount via Wise")
 
-	return roundedAmount, rate, nil
+	return roundedAmount, displayRate, nil
 }
