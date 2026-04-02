@@ -2,9 +2,11 @@ package contractorpayables
 
 // PreviewCommitRequest contains query parameters for preview endpoint
 type PreviewCommitRequest struct {
-	Month      string `form:"month" binding:"required"` // YYYY-MM format
-	Batch      int    `form:"batch" binding:"required,oneof=1 15"`
+	Month      string `form:"month"`
+	Batch      int    `form:"batch"`
 	Contractor string `form:"contractor"` // Optional: contractor discord username to filter
+	FileName   string `form:"file_name"`
+	Year       int    `form:"year"`
 }
 
 // CommitRequest contains the request body for commit endpoint

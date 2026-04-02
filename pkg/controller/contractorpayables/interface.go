@@ -7,6 +7,7 @@ import (
 // IController defines the interface for contractor payables controller
 type IController interface {
 	PreviewCommit(ctx context.Context, month string, batch int, contractor string) (*PreviewCommitResponse, error)
+	PreviewCommitByFile(ctx context.Context, fileName string, year int) (*PreviewCommitResponse, error)
 	CommitPayables(ctx context.Context, month string, batch int, contractor string) (*CommitResponse, error)
 	CommitPayablesByFile(ctx context.Context, fileName string, year int) (*CommitResponse, error)
 	// GetCachedPreview retrieves a cached preview (from PreviewCommit call)
@@ -15,6 +16,9 @@ type IController interface {
 
 // PreviewCommitResponse contains the preview data
 type PreviewCommitResponse struct {
+	Mode        string              `json:"mode,omitempty"`
+	FileName    string              `json:"file_name,omitempty"`
+	Year        int                 `json:"year,omitempty"`
 	Month       string              `json:"month"`
 	Batch       int                 `json:"batch"`
 	Count       int                 `json:"count"`

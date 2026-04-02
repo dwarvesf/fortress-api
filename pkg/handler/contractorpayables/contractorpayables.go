@@ -59,11 +59,39 @@ func (h *handler) PreviewCommit(c *gin.Context) {
 		return
 	}
 
+	if req.FileName != "" {
+		year := req.Year
+		if year == 0 {
+			year = time.Now().Year()
+		}
+		if year < 2000 || year > 3000 {
+			c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil, nil, nil, fmt.Sprintf("Invalid year: %d", year)))
+			return
+		}
+
+		l.Fields(logger.Fields{"file_name": req.FileName, "year": year}).Debug("calling controller.PreviewCommitByFile")
+		result, err := h.controller.PreviewCommitByFile(c.Request.Context(), req.FileName, year)
+		if err != nil {
+			l.Error(err, "failed to preview file commit")
+			c.JSON(http.StatusInternalServerError, view.CreateResponse[any](nil, nil, err, nil, ""))
+			return
+		}
+
+		c.JSON(http.StatusOK, view.CreateResponse[any](result, nil, nil, nil, ""))
+		return
+	}
+
 	// Validate month format (YYYY-MM)
 	if !isValidMonthFormat(req.Month) {
 		l.Error(nil, "invalid month format")
 		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil,
 			nil, nil, "Invalid month format. Use YYYY-MM (e.g., 2025-01)"))
+		return
+	}
+	if req.Batch != 1 && req.Batch != 15 {
+		l.Error(nil, "invalid batch")
+		c.JSON(http.StatusBadRequest, view.CreateResponse[any](nil, nil,
+			nil, nil, "Invalid batch. Use 1 or 15"))
 		return
 	}
 

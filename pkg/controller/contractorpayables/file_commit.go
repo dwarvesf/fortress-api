@@ -86,16 +86,10 @@ func (c *controller) CommitPayablesByFile(ctx context.Context, fileName string, 
 
 	l.AddField("parent_dir_id", c.config.Invoice.ContractorPaymentDirID).Debug("starting file-based payable commit")
 
-	body, err := c.service.GoogleDrive.DownloadFileFromYearDir(c.config.Invoice.ContractorPaymentDirID, strconv.Itoa(year), resolvedName)
-	if err != nil {
-		l.Error(err, "failed to download contractor payment file from Google Drive")
-		return nil, fmt.Errorf("failed to download contractor payment file: %w", err)
-	}
-
-	invoiceIDs, err := extractInvoiceIDsFromWorkbook(body)
+	invoiceIDs, err := c.extractInvoiceIDsFromPaymentFile(ctx, resolvedName, year)
 	if err != nil {
 		l.Error(err, "failed to extract invoice IDs from payment file")
-		return nil, fmt.Errorf("failed to parse contractor payment file: %w", err)
+		return nil, err
 	}
 	if len(invoiceIDs) == 0 {
 		return nil, fmt.Errorf("no invoice IDs found in column Q for file %s", resolvedName)
@@ -168,6 +162,25 @@ func (c *controller) CommitPayablesByFile(ctx context.Context, fileName string, 
 
 	l.AddField("updated", result.Updated).AddField("failed", result.Failed).Debug("completed file-based payable commit")
 	return result, nil
+}
+
+func (c *controller) extractInvoiceIDsFromPaymentFile(ctx context.Context, fileName string, year int) ([]string, error) {
+	resolvedName := normalizePaymentFileName(fileName)
+	if c.config.Invoice.ContractorPaymentDirID == "" {
+		return nil, fmt.Errorf("CONTRACTOR_PAYMENT_DIR_ID is not configured")
+	}
+
+	body, err := c.service.GoogleDrive.DownloadFileFromYearDir(c.config.Invoice.ContractorPaymentDirID, strconv.Itoa(year), resolvedName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download contractor payment file: %w", err)
+	}
+
+	invoiceIDs, err := extractInvoiceIDsFromWorkbook(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse contractor payment file: %w", err)
+	}
+
+	return invoiceIDs, nil
 }
 
 func normalizePaymentFileName(fileName string) string {

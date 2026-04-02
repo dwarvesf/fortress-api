@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	maxRetries       = 3
-	retryInterval    = 500 * time.Millisecond
-	previewCacheTTL  = 5 * time.Minute // Cache preview for 5 minutes
+	maxRetries      = 3
+	retryInterval   = 500 * time.Millisecond
+	previewCacheTTL = 5 * time.Minute // Cache preview for 5 minutes
 )
 
 // cachedPreview holds a preview response with expiration time
@@ -156,6 +156,60 @@ func (c *controller) PreviewCommit(ctx context.Context, month string, batch int,
 	// Only cache if no contractor filter (full preview)
 	if contractor == "" {
 		c.cachePreview(month, batch, result)
+	}
+
+	return result, nil
+}
+
+func (c *controller) PreviewCommitByFile(ctx context.Context, fileName string, year int) (*PreviewCommitResponse, error) {
+	resolvedName := normalizePaymentFileName(fileName)
+	l := c.logger.Fields(logger.Fields{
+		"controller": "contractorpayables",
+		"method":     "PreviewCommitByFile",
+		"file_name":  resolvedName,
+		"year":       year,
+	})
+
+	invoiceIDs, err := c.extractInvoiceIDsFromPaymentFile(ctx, resolvedName, year)
+	if err != nil {
+		l.Error(err, "failed to extract invoice IDs from payment file")
+		return nil, err
+	}
+
+	contractors := make([]ContractorPreview, 0, len(invoiceIDs))
+	totalAmount := 0.0
+	seenPayables := make(map[string]struct{})
+
+	for _, invoiceID := range invoiceIDs {
+		payable, lookupErr := c.service.Notion.ContractorPayables.FindPendingPayableByInvoiceID(ctx, invoiceID)
+		if lookupErr != nil {
+			l.Error(lookupErr, fmt.Sprintf("failed to lookup payable by invoice ID %s", invoiceID))
+			continue
+		}
+		if payable == nil {
+			continue
+		}
+		if _, exists := seenPayables[payable.PageID]; exists {
+			continue
+		}
+
+		seenPayables[payable.PageID] = struct{}{}
+		contractors = append(contractors, ContractorPreview{
+			Name:      payable.ContractorName,
+			Amount:    payable.Total,
+			Currency:  payable.Currency,
+			PayableID: payable.PageID,
+		})
+		totalAmount += payable.Total
+	}
+
+	result := &PreviewCommitResponse{
+		Mode:        "file",
+		FileName:    resolvedName,
+		Year:        year,
+		Count:       len(contractors),
+		TotalAmount: totalAmount,
+		Contractors: contractors,
 	}
 
 	return result, nil

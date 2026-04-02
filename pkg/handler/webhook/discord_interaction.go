@@ -157,22 +157,17 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 
 	// Payout preview button - show ephemeral confirmation
 	if strings.HasPrefix(customID, "payout_preview:") {
-		// Format: payout_preview:YYYY-MM:batch:channelId:userId
 		parts := strings.Split(customID, ":")
-		if len(parts) != 5 {
+		if len(parts) != 6 {
 			l.Errorf(nil, "invalid payout_preview custom_id format: %s", customID)
 			h.respondToInteraction(c, "Invalid payout preview format")
 			return
 		}
-		month := parts[1]
-		batch, err := strconv.Atoi(parts[2])
-		if err != nil {
-			l.Errorf(err, "invalid batch in payout_preview: %s", parts[2])
-			h.respondToInteraction(c, "Invalid batch number")
-			return
-		}
-		channelID := parts[3]
-		allowedUserID := parts[4]
+		mode := parts[1]
+		valueA := parts[2]
+		valueB := parts[3]
+		channelID := parts[4]
+		allowedUserID := parts[5]
 
 		// Validate user - only the user who ran the command can view details
 		clickedUserID := interaction.Member.User.ID
@@ -182,49 +177,73 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 			return
 		}
 
-		h.handlePayoutPreviewButton(c, l, interaction, month, batch, channelID)
+		if mode == "file" {
+			h.handlePayoutPreviewByFileButton(c, l, interaction, valueA, valueB, channelID)
+			return
+		}
+
+		batch, err := strconv.Atoi(valueB)
+		if err != nil {
+			l.Errorf(err, "invalid batch in payout_preview: %s", valueB)
+			h.respondToInteraction(c, "Invalid batch number")
+			return
+		}
+
+		h.handlePayoutPreviewButton(c, l, interaction, valueA, batch, channelID)
 		return
 	}
 
 	// Payout commit confirm button
 	if strings.HasPrefix(customID, "payout_commit_confirm:") {
-		// Format: payout_commit_confirm:YYYY-MM:batch:channelId
 		parts := strings.Split(customID, ":")
-		if len(parts) != 4 {
+		if len(parts) != 5 {
 			l.Errorf(nil, "invalid payout_commit_confirm custom_id format: %s", customID)
 			h.respondToInteraction(c, "Invalid payout confirm format")
 			return
 		}
-		month := parts[1]
-		batch, err := strconv.Atoi(parts[2])
+		mode := parts[1]
+		valueA := parts[2]
+		valueB := parts[3]
+		channelID := parts[4]
+		if mode == "file" {
+			h.handlePayoutCommitConfirmByFileButton(c, l, interaction, valueA, valueB, channelID)
+			return
+		}
+
+		batch, err := strconv.Atoi(valueB)
 		if err != nil {
-			l.Errorf(err, "invalid batch in payout_commit_confirm: %s", parts[2])
+			l.Errorf(err, "invalid batch in payout_commit_confirm: %s", valueB)
 			h.respondToInteraction(c, "Invalid batch number")
 			return
 		}
-		channelID := parts[3]
-		h.handlePayoutCommitConfirmButton(c, l, interaction, month, batch, channelID)
+		h.handlePayoutCommitConfirmButton(c, l, interaction, valueA, batch, channelID)
 		return
 	}
 
 	// Payout commit cancel button
 	if strings.HasPrefix(customID, "payout_commit_cancel:") {
-		// Format: payout_commit_cancel:YYYY-MM:batch:channelId
 		parts := strings.Split(customID, ":")
-		if len(parts) != 4 {
+		if len(parts) != 5 {
 			l.Errorf(nil, "invalid payout_commit_cancel custom_id format: %s", customID)
 			h.respondToInteraction(c, "Invalid payout cancel format")
 			return
 		}
-		month := parts[1]
-		batch, err := strconv.Atoi(parts[2])
+		mode := parts[1]
+		valueA := parts[2]
+		valueB := parts[3]
+		channelID := parts[4]
+		if mode == "file" {
+			h.handlePayoutCommitCancelByFileButton(c, l, interaction, valueA, valueB, channelID)
+			return
+		}
+
+		batch, err := strconv.Atoi(valueB)
 		if err != nil {
-			l.Errorf(err, "invalid batch in payout_commit_cancel: %s", parts[2])
+			l.Errorf(err, "invalid batch in payout_commit_cancel: %s", valueB)
 			h.respondToInteraction(c, "Invalid batch number")
 			return
 		}
-		channelID := parts[3]
-		h.handlePayoutCommitCancelButton(c, l, interaction, month, batch, channelID)
+		h.handlePayoutCommitCancelButton(c, l, interaction, valueA, batch, channelID)
 		return
 	}
 
