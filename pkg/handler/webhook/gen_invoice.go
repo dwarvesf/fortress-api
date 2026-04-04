@@ -1143,6 +1143,11 @@ func (h *handler) generateAndCreatePayable(
 
 	// Step 6: Create or update payable in Notion
 	l.Debug("step 6: creating/updating payable in Notion")
+	note := ""
+	if invoiceData.IsExtraPaymentOnly {
+		note = "Extra payment"
+	}
+
 	payableInput := notion.CreatePayableInput{
 		ContractorPageID: rateData.ContractorPageID,
 		Total:            invoiceData.TotalUSD,
@@ -1155,6 +1160,7 @@ func (h *handler) generateAndCreatePayable(
 		ContractorType:   "Individual", // Default
 		ExchangeRate:     invoiceData.ExchangeRate,
 		PDFBytes:         pdfBytes,
+		Note:             note,
 	}
 
 	payablePageID, err := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)

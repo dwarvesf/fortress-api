@@ -32,6 +32,7 @@ type CreatePayableInput struct {
 	ContractorType   string   // "Individual", "Sole Proprietor", "LLC", etc. (optional, defaults to "Individual")
 	ExchangeRate     float64  // Exchange rate for currency conversion (optional)
 	PDFBytes         []byte   // PDF file bytes to upload to Notion (optional)
+	Note             string   // Note field for the payable (optional)
 }
 
 // NewContractorPayablesService creates a new Notion contractor payables service
@@ -497,6 +498,16 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set exchangeRate=%.2f", input.ExchangeRate))
 	}
 
+	// Add Note (optional)
+	if input.Note != "" {
+		props["Note"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Note}},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set note=%s", input.Note))
+	}
+
 	params := nt.CreatePageParams{
 		ParentType:             nt.ParentTypeDatabase,
 		ParentID:               payablesDBID,
@@ -624,6 +635,16 @@ func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID st
 			Number: &input.ExchangeRate,
 		}
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating exchangeRate=%.2f", input.ExchangeRate))
+	}
+
+	// Add Note (optional)
+	if input.Note != "" {
+		props["Note"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Note}},
+			},
+		}
+		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating note=%s", input.Note))
 	}
 
 	// Update the page

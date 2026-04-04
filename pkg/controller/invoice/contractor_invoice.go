@@ -61,6 +61,9 @@ type ContractorInvoiceData struct {
 
 	// Invoice type for section filtering
 	InvoiceType string // "service_and_refund" | "extra_payment" | "" (full)
+
+	// Extra payment only flag
+	IsExtraPaymentOnly bool // true if the invoice only contains Commission and Extra Payment items
 }
 
 // ContractorInvoiceLineItem represents a line item in a contractor invoice
@@ -433,6 +436,17 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 		l.Debug("no pending payouts found for contractor")
 		return nil, fmt.Errorf("no pending payouts found for contractor=%s", discord)
 	}
+
+	// Check if all payouts are Commission or Extra Payment
+	isExtraPaymentOnly := true
+	for _, p := range payouts {
+		if p.SourceType != notion.PayoutSourceTypeCommission && p.SourceType != notion.PayoutSourceTypeExtraPayment {
+			isExtraPaymentOnly = false
+			break
+		}
+	}
+
+	l.Debug(fmt.Sprintf("[DEBUG] contractor_invoice: isExtraPaymentOnly=%v", isExtraPaymentOnly))
 
 	// 3. Convert all payout amounts to USD in parallel
 	l.Debug("[DEBUG] contractor_invoice: starting parallel currency conversions")
@@ -839,6 +853,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 
 		// Invoice type for section filtering
 		InvoiceType: opts.InvoiceType,
+
+		// Extra payment only flag
+		IsExtraPaymentOnly: isExtraPaymentOnly,
 	}
 
 	// Collect payout page IDs from processed payouts

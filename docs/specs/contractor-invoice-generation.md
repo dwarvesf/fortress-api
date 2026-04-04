@@ -18,6 +18,7 @@ Represents the entire invoice, including metadata and calculated totals.
 - `TotalUSD`: The final amount to be paid, normalized to USD.
 - `LineItems`: A slice of `ContractorInvoiceLineItem` objects.
 - `ExchangeRate`: Captured at the time of generation for display purposes.
+- `IsExtraPaymentOnly`: Flag indicating if the invoice contains only Commission and Extra Payment items.
 
 #### `ContractorInvoiceLineItem`
 Represents an individual charge or credit on the invoice.
@@ -80,6 +81,12 @@ The `FormatProofOfWorksByProject` method in `TaskOrderLogService` groups subitem
 ### 5. PDF Rendering
 - **Engine**: Uses `wkhtmltopdf` (via `go-wkhtmltopdf`).
 - **Template**: `contractor-invoice-template.html` uses Go's `html/template` with a custom `FuncMap` for money formatting, date manipulation, and HTML sanitization.
+
+### 6. Notion Payable Creation
+The system automatically creates or updates records in the **Contractor Payables** Notion database.
+- **Payable Properties**: Includes total amount, currency, invoice ID, and period range.
+- **Note Logic**: If the invoice contains **only** `Commission` and `Extra Payment` line items (e.g., no base service fee or refunds), the system automatically sets the **Note** field to `"Extra payment"` in Notion.
+- **PDF Attachment**: The generated PDF is uploaded and attached to the record for record-keeping.
 
 ---
 

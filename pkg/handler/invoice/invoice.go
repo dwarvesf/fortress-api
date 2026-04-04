@@ -590,6 +590,11 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 		l.Debug(fmt.Sprintf("[DEBUG] calculated period: payday=%d start=%s end=%s",
 			payday, periodStart.Format("2006-01-02"), periodEnd.Format("2006-01-02")))
 
+		note := ""
+		if invoiceData.IsExtraPaymentOnly {
+			note = "Extra payment"
+		}
+
 		payableInput := notion.CreatePayableInput{
 			ContractorPageID: invoiceData.ContractorPageID,
 			Total:            invoiceData.TotalUSD,
@@ -602,6 +607,7 @@ func (h *handler) GenerateContractorInvoice(c *gin.Context) {
 			ContractorType:   "Individual", // Default to Individual
 			ExchangeRate:     invoiceData.ExchangeRate,
 			PDFBytes:         pdfBytes, // Upload PDF to Notion
+			Note:             note,
 		}
 
 		l.Debug(fmt.Sprintf("[DEBUG] payable input: contractor=%s total=%.2f payoutItems=%d periodStart=%s periodEnd=%s",
@@ -983,6 +989,11 @@ func (h *handler) processContractorInvoice(l logger.Logger, ctx context.Context,
 	nextMonth := monthTime.AddDate(0, 1, 0)
 	periodEnd := time.Date(nextMonth.Year(), nextMonth.Month(), payday, 0, 0, 0, 0, time.UTC)
 
+	note := ""
+	if invoiceData.IsExtraPaymentOnly {
+		note = "Extra payment"
+	}
+
 	payableInput := notion.CreatePayableInput{
 		ContractorPageID: invoiceData.ContractorPageID,
 		Total:            invoiceData.TotalUSD,
@@ -995,6 +1006,7 @@ func (h *handler) processContractorInvoice(l logger.Logger, ctx context.Context,
 		ContractorType:   "Individual",
 		ExchangeRate:     invoiceData.ExchangeRate,
 		PDFBytes:         pdfBytes,
+		Note:             note,
 	}
 
 	_, payableErr := h.service.Notion.ContractorPayables.CreatePayable(ctx, payableInput)
