@@ -194,17 +194,43 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 	}
 
 	// Payout commit confirm button
+	// Supports multiple formats:
+	// - 3 parts (old): payout_commit_confirm:month:batch
+	// - 4 parts (current): payout_commit_confirm:month:batch:channelID
+	// - 5 parts (new with mode): payout_commit_confirm:mode:valueA:valueB:channelID
 	if strings.HasPrefix(customID, "payout_commit_confirm:") {
 		parts := strings.Split(customID, ":")
-		if len(parts) != 5 {
-			l.Errorf(nil, "invalid payout_commit_confirm custom_id format: %s", customID)
+
+		var mode, valueA, valueB, channelID string
+
+		switch len(parts) {
+		case 3:
+			// Old format: payout_commit_confirm:month:batch
+			l.Debugf("detected old format (3 parts) payout_commit_confirm custom_id: %s", customID)
+			mode = "period"
+			valueA = parts[1] // month
+			valueB = parts[2] // batch
+			channelID = interaction.ChannelID
+		case 4:
+			// Current format: payout_commit_confirm:month:batch:channelID
+			l.Debugf("detected current format (4 parts) payout_commit_confirm custom_id: %s", customID)
+			mode = "period"
+			valueA = parts[1] // month
+			valueB = parts[2] // batch
+			channelID = parts[3]
+		case 5:
+			// New format: payout_commit_confirm:mode:valueA:valueB:channelID
+			l.Debugf("detected new format (5 parts) payout_commit_confirm custom_id: %s", customID)
+			mode = parts[1]
+			valueA = parts[2]
+			valueB = parts[3]
+			channelID = parts[4]
+		default:
+			l.Errorf(nil, "invalid payout_commit_confirm custom_id format: expected 3, 4, or 5 parts, got %d. custom_id=%s", len(parts), customID)
 			h.respondToInteraction(c, "Invalid payout confirm format")
 			return
 		}
-		mode := parts[1]
-		valueA := parts[2]
-		valueB := parts[3]
-		channelID := parts[4]
+
 		if mode == "file" {
 			h.handlePayoutCommitConfirmByFileButton(c, l, interaction, valueA, valueB, channelID)
 			return
@@ -221,17 +247,43 @@ func (h *handler) handleMessageComponentInteraction(c *gin.Context, l logger.Log
 	}
 
 	// Payout commit cancel button
+	// Supports multiple formats:
+	// - 3 parts (old): payout_commit_cancel:month:batch
+	// - 4 parts (current): payout_commit_cancel:month:batch:channelID
+	// - 5 parts (new with mode): payout_commit_cancel:mode:valueA:valueB:channelID
 	if strings.HasPrefix(customID, "payout_commit_cancel:") {
 		parts := strings.Split(customID, ":")
-		if len(parts) != 5 {
-			l.Errorf(nil, "invalid payout_commit_cancel custom_id format: %s", customID)
+
+		var mode, valueA, valueB, channelID string
+
+		switch len(parts) {
+		case 3:
+			// Old format: payout_commit_cancel:month:batch
+			l.Debugf("detected old format (3 parts) payout_commit_cancel custom_id: %s", customID)
+			mode = "period"
+			valueA = parts[1] // month
+			valueB = parts[2] // batch
+			channelID = interaction.ChannelID
+		case 4:
+			// Current format: payout_commit_cancel:month:batch:channelID
+			l.Debugf("detected current format (4 parts) payout_commit_cancel custom_id: %s", customID)
+			mode = "period"
+			valueA = parts[1] // month
+			valueB = parts[2] // batch
+			channelID = parts[3]
+		case 5:
+			// New format: payout_commit_cancel:mode:valueA:valueB:channelID
+			l.Debugf("detected new format (5 parts) payout_commit_cancel custom_id: %s", customID)
+			mode = parts[1]
+			valueA = parts[2]
+			valueB = parts[3]
+			channelID = parts[4]
+		default:
+			l.Errorf(nil, "invalid payout_commit_cancel custom_id format: expected 3, 4, or 5 parts, got %d. custom_id=%s", len(parts), customID)
 			h.respondToInteraction(c, "Invalid payout cancel format")
 			return
 		}
-		mode := parts[1]
-		valueA := parts[2]
-		valueB := parts[3]
-		channelID := parts[4]
+
 		if mode == "file" {
 			h.handlePayoutCommitCancelByFileButton(c, l, interaction, valueA, valueB, channelID)
 			return
