@@ -1355,10 +1355,18 @@ func (n *notionService) QueryInvoicesByMonth(year, month int, statuses []string,
 	// Combine all filters with AND
 	finalFilter := &nt.DatabaseQueryFilter{And: filters}
 
+	// Process the newest invoice first when multiple invoices exist in the same month.
+	sorts := []nt.DatabaseQuerySort{
+		{
+			Property:  "Issue Date",
+			Direction: nt.SortDirDesc,
+		},
+	}
+
 	l.Debugf("querying Notion database with %d filter conditions", len(filters))
 
 	// Query database
-	response, err := n.GetDatabase(ClientInvoicesDBID, finalFilter, nil, 100)
+	response, err := n.GetDatabase(ClientInvoicesDBID, finalFilter, sorts, 100)
 	if err != nil {
 		l.Error(err, "failed to query Notion database")
 		return nil, fmt.Errorf("failed to query invoices by month: %w", err)

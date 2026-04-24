@@ -56,7 +56,7 @@ type CloneMonthlyInvoicesResponse struct {
 // @Param targetMonth query int false "Target month (1-12, default: current month)"
 // @Param targetYear query int false "Target year (default: current year)"
 // @Param projectId query string false "Optional Notion page ID to filter specific project"
-// @Param status query []string false "Statuses to clone (default: ['Paid'])"
+// @Param status query []string false "Statuses to clone (default: ['Paid', 'Sent'])"
 // @Param dryRun query bool false "If true, preview without creating (default: false)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response{data=CloneMonthlyInvoicesResponse}
@@ -148,7 +148,7 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 	// Default statuses
 	statuses := req.Status
 	if len(statuses) == 0 {
-		statuses = []string{"Paid"}
+		statuses = []string{"Paid", "Sent"}
 	}
 
 	l.Debug(fmt.Sprintf("parameters: sourceYear=%d, sourceMonth=%d, targetYear=%d, targetMonth=%d, statuses=%v, projectId=%s, dryRun=%v",
@@ -167,6 +167,7 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 	// Process each invoice
 	var cloned, skipped, errors int
 	var details []CloneInvoiceDetail
+	processedProjects := make(map[string]bool)
 
 	for _, invoice := range invoices {
 		props, ok := invoice.Properties.(nt.DatabasePageProperties)
@@ -191,6 +192,20 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 			skipped++
 			continue
 		}
+
+		if processedProjects[projectPageID] {
+			l.Debug(fmt.Sprintf("skipping invoice %s: another invoice for project %s was already selected", invoice.ID, projectPageID))
+			details = append(details, CloneInvoiceDetail{
+				InvoiceNumber: invoiceNumber,
+				ProjectID:     projectPageID,
+				Status:        "skipped",
+				Reason:        "another invoice for this project was already selected",
+			})
+			skipped++
+			continue
+		}
+
+		processedProjects[projectPageID] = true
 
 		// Check if invoice already exists for target month (idempotency)
 		exists, existingID, err := h.service.Notion.CheckInvoiceExistsForMonth(projectPageID, targetYear, targetMonth)

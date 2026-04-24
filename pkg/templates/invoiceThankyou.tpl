@@ -18,7 +18,6 @@ Content-Transfer-Encoding: quoted-printable
 				<div>Thanks for completing the payment for Invoice #{{.Number}}. This is to confirm that we have received your
 					payment fully.</div>
 				<div><br></div>
-				<div><br></div>
 			</div>
 			<div dir=3D"ltr">
 				<div>Thank you,</div>
