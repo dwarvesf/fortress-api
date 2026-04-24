@@ -56,7 +56,7 @@ type CloneMonthlyInvoicesResponse struct {
 // @Param targetMonth query int false "Target month (1-12, default: current month)"
 // @Param targetYear query int false "Target year (default: current year)"
 // @Param projectId query string false "Optional Notion page ID to filter specific project"
-// @Param status query []string false "Statuses to clone (default: ['Paid'])"
+// @Param status query []string false "Statuses to clone (default: ['Paid', 'Sent'])"
 // @Param dryRun query bool false "If true, preview without creating (default: false)"
 // @Security BearerAuth
 // @Success 200 {object} view.Response{data=CloneMonthlyInvoicesResponse}
@@ -148,7 +148,7 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 	// Default statuses
 	statuses := req.Status
 	if len(statuses) == 0 {
-		statuses = []string{"Paid"}
+		statuses = []string{"Paid", "Sent"}
 	}
 
 	l.Debug(fmt.Sprintf("parameters: sourceYear=%d, sourceMonth=%d, targetYear=%d, targetMonth=%d, statuses=%v, projectId=%s, dryRun=%v",
