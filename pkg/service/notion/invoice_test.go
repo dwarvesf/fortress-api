@@ -1,10 +1,17 @@
 package notion
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
 	"testing"
 
 	nt "github.com/dstotijn/go-notion"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/dwarvesf/fortress-api/pkg/logger"
 )
 
 func TestExtractFormulaString(t *testing.T) {
@@ -257,6 +264,38 @@ func TestNormalizeInvoiceStatusForNotion(t *testing.T) {
 			assert.Equal(t, tt.expected, normalizeInvoiceStatusForNotion(tt.input))
 		})
 	}
+}
+
+func TestQueryInvoicesByMonth_SortsByIssueDateDescending(t *testing.T) {
+	client := newNotionTestClient(t, func(r *http.Request) (*http.Response, error) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/databases/"+ClientInvoicesDBID+"/query", r.URL.Path)
+
+		bodyBytes, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+
+		var query nt.DatabaseQuery
+		require.NoError(t, json.Unmarshal(bodyBytes, &query))
+		require.NotNil(t, query.Filter)
+		require.Len(t, query.Sorts, 1)
+		require.Equal(t, "Issue Date", query.Sorts[0].Property)
+		require.Equal(t, nt.SortDirDesc, query.Sorts[0].Direction)
+
+		resp := nt.DatabaseQueryResponse{Results: []nt.Page{}}
+		payload, err := json.Marshal(resp)
+		require.NoError(t, err)
+
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewReader(payload)),
+			Header:     make(http.Header),
+		}, nil
+	})
+
+	ns := &notionService{notionClient: client, l: logger.NewLogrusLogger("debug")}
+
+	_, err := ns.QueryInvoicesByMonth(2026, 3, []string{"Paid", "Sent"}, "")
+	require.NoError(t, err)
 }
 
 // Helper functions for creating pointers

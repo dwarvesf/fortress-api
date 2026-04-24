@@ -167,6 +167,7 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 	// Process each invoice
 	var cloned, skipped, errors int
 	var details []CloneInvoiceDetail
+	processedProjects := make(map[string]bool)
 
 	for _, invoice := range invoices {
 		props, ok := invoice.Properties.(nt.DatabasePageProperties)
@@ -191,6 +192,20 @@ func (h *handler) CloneMonthlyInvoices(c *gin.Context) {
 			skipped++
 			continue
 		}
+
+		if processedProjects[projectPageID] {
+			l.Debug(fmt.Sprintf("skipping invoice %s: another invoice for project %s was already selected", invoice.ID, projectPageID))
+			details = append(details, CloneInvoiceDetail{
+				InvoiceNumber: invoiceNumber,
+				ProjectID:     projectPageID,
+				Status:        "skipped",
+				Reason:        "another invoice for this project was already selected",
+			})
+			skipped++
+			continue
+		}
+
+		processedProjects[projectPageID] = true
 
 		// Check if invoice already exists for target month (idempotency)
 		exists, existingID, err := h.service.Notion.CheckInvoiceExistsForMonth(projectPageID, targetYear, targetMonth)
