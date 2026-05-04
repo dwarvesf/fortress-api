@@ -498,9 +498,9 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: set exchangeRate=%.2f", input.ExchangeRate))
 	}
 
-	// Add Note (optional)
+	// Add Notes (optional)
 	if input.Note != "" {
-		props["Note"] = nt.DatabasePageProperty{
+		props["Notes"] = nt.DatabasePageProperty{
 			RichText: []nt.RichText{
 				{Text: &nt.Text{Content: input.Note}},
 			},
@@ -637,9 +637,9 @@ func (s *ContractorPayablesService) updatePayable(ctx context.Context, pageID st
 		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: updating exchangeRate=%.2f", input.ExchangeRate))
 	}
 
-	// Add Note (optional)
+	// Add Notes (optional)
 	if input.Note != "" {
-		props["Note"] = nt.DatabasePageProperty{
+		props["Notes"] = nt.DatabasePageProperty{
 			RichText: []nt.RichText{
 				{Text: &nt.Text{Content: input.Note}},
 			},
