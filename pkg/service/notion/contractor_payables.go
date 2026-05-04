@@ -383,9 +383,13 @@ func (s *ContractorPayablesService) CreatePayable(ctx context.Context, input Cre
 			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found existing payable with status=New, updating pageID=%s", existing.PageID))
 			return s.updatePayable(ctx, existing.PageID, input)
 		}
-		// Status is Pending or other - skip
-		s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: existing payable has status=%s, skipping update", existing.Status))
-		return existing.PageID, nil
+		if existing.Status == "Cancelled" {
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: found existing payable with status=Cancelled, creating new payable instead pageID=%s", existing.PageID))
+		} else {
+			// Status is Pending or other - skip
+			s.logger.Debug(fmt.Sprintf("[DEBUG] contractor_payables: existing payable has status=%s, skipping update", existing.Status))
+			return existing.PageID, nil
+		}
 	}
 
 	// Build properties for the new payable
