@@ -57,6 +57,8 @@ func (g *googleService) ensureToken(refreshToken string) error {
 		return nil
 	}
 
+	serviceNeedsRefresh := g.activeRefreshToken != "" && g.activeRefreshToken != refreshToken
+
 	token := &oauth2.Token{
 		RefreshToken: refreshToken,
 	}
@@ -69,6 +71,11 @@ func (g *googleService) ensureToken(refreshToken string) error {
 
 	g.token = tok
 	g.activeRefreshToken = refreshToken
+	if serviceNeedsRefresh {
+		// Gmail service is bound to the HTTP client created from the previous token.
+		// Clear it so the next call rebuilds the client against the new mailbox.
+		g.service = nil
+	}
 
 	return nil
 }
