@@ -1227,25 +1227,16 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 			DiscordID: v.DiscordID,
 		}
 
-		discordUsername, ok := discordUsernameCache[v.DiscordID]
-		if !ok {
-			account, err := h.store.DiscordAccount.OneByDiscordID(h.repo.DB(), v.DiscordID)
-			if err != nil {
-				l.Error(err, "failed to get discord account by discord id")
-				data.Err = "discord account not found"
-				resp = append(resp, data)
-				continue
-			}
-
-			discordUsername = account.DiscordUsername
-			if discordUsername == "" {
-				data.Err = "discord username not found"
-				resp = append(resp, data)
-				continue
-			}
-
-			discordUsernameCache[v.DiscordID] = discordUsername
+		// Use the discord_username provided by the caller (resolved from Discord directly)
+		// instead of looking it up from our DB, which may have stale discord_id → username mappings.
+		discordUsername := v.DiscordUsername
+		if discordUsername == "" {
+			data.Err = "discord username not found"
+			resp = append(resp, data)
+			continue
 		}
+
+		discordUsernameCache[v.DiscordID] = discordUsername
 
 		latestPayoutDate, ok := latestPayoutDateCache[discordUsername]
 		if !ok {
@@ -1267,7 +1258,7 @@ func (h *handler) OfficeCheckIn(c *gin.Context) {
 			continue
 		}
 
-		r, err := h.controller.Employee.CheckIn(v.DiscordID, v.Time, float64(icyAmount))
+		r, err := h.controller.Employee.CheckIn(v.DiscordID, v.DiscordUsername, v.Time, float64(icyAmount))
 		if err != nil {
 			l.Error(err, "failed to checkin")
 			data.Err = err.Error()

@@ -274,6 +274,7 @@ type CheckInRequest struct {
 } // @name CheckInRequest
 
 type CheckIn struct {
-	DiscordID string    `json:"discord_id" binding:"required"`
-	Time      time.Time `json:"time" binding:"required"`
+	DiscordID       string    `json:"discord_id" binding:"required"`
+	DiscordUsername string    `json:"discord_username" binding:"required"`
+	Time            time.Time `json:"time" binding:"required"`
 }
