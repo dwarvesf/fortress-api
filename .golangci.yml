@@ -28,7 +28,7 @@ linters:
   settings:
     misspell:
       locale: US
-      ignore:
+      ignore-words:
         - cancelled
         - Cancelled
     lll:
