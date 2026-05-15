@@ -26,16 +26,16 @@ linters:
     # - revive
 
   settings:
-    misspell:
-      locale: US
-      ignore-words:
-        - cancelled
-        - Cancelled
     lll:
       line-length: 140
 
   exclusions:
     rules:
+      # Allow British spelling (cancelled/Cancelled) — misspell flags these as US-only
+      - linters:
+          - misspell
+        text: "cancelled"
+
       # Exclude some `staticcheck` messages.
       - linters:
           - staticcheck
