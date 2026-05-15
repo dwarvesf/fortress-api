@@ -19,16 +19,17 @@ type CheckinResponse struct {
 	TransactionHash string
 }
 
-func (r *controller) CheckIn(discordID string, t time.Time, amount float64) (*CheckinResponse, error) {
+func (r *controller) CheckIn(discordID string, discordUsername string, t time.Time, amount float64) (*CheckinResponse, error) {
 	l := r.logger.Fields(logger.Fields{
 		"controller": "employee",
 		"method":     "CheckIn",
 	})
 
-	// Get employee by discord id
-	employee, err := r.store.Employee.GetByDiscordID(r.repo.DB(), discordID, true)
+	// Get employee by discord username (resolved from Discord by the caller)
+	// instead of discord_id, which may be stale in our DB.
+	employee, err := r.store.Employee.GetByDiscordUsername(r.repo.DB(), discordUsername)
 	if err != nil {
-		l.Error(err, "failed to get employee by discord id")
+		l.Error(err, "failed to get employee by discord username")
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrEmployeeNotFound
 		}

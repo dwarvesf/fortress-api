@@ -720,6 +720,30 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/discord.IHandler.PostGolangNews-fm",
 			},
 		},
+		"/api/v1/notify/extra-payment/preview": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notify.IHandler.PreviewExtraPaymentNotification-fm",
+			},
+		},
+		"/api/v1/notify/extra-payment/send": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notify.IHandler.SendExtraPaymentNotification-fm",
+			},
+		},
+		"/api/v1/notify/extra-payment/send-one": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/notify.IHandler.SendOneExtraPaymentNotification-fm",
+			},
+		},
+		"/api/v1/work-updates/:month": {
+			"GET": {
+				Method:  "GET",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/workupdates.IHandler.GetWorkUpdates-fm",
+			},
+		},
 		"/webhooks/n8n": {
 			"POST": {
 				Method:  "POST",
