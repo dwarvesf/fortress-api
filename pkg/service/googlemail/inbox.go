@@ -21,16 +21,8 @@ func (g *googleService) ListInboxMessages(ctx context.Context, query string, max
 	})
 	l.Debug("listing inbox messages")
 
-	if g.service == nil {
-		l.Debug("gmail service not initialized, preparing service")
-		if err := g.ensureToken(g.appConfig.InvoiceListener.RefreshToken); err != nil {
-			l.Error(err, "failed to ensure token")
-			return nil, fmt.Errorf("failed to ensure token: %w", err)
-		}
-		if err := g.prepareService(); err != nil {
-			l.Error(err, "failed to prepare service")
-			return nil, fmt.Errorf("failed to prepare service: %w", err)
-		}
+	if err := g.ensureInvoiceListenerService(l); err != nil {
+		return nil, err
 	}
 
 	call := g.service.Users.Messages.List("me").Context(ctx).Q(query)
@@ -66,16 +58,8 @@ func (g *googleService) GetMessage(ctx context.Context, messageID string) (*Inbo
 	})
 	l.Debug("getting message")
 
-	if g.service == nil {
-		l.Debug("gmail service not initialized, preparing service")
-		if err := g.ensureToken(g.appConfig.InvoiceListener.RefreshToken); err != nil {
-			l.Error(err, "failed to ensure token")
-			return nil, fmt.Errorf("failed to ensure token: %w", err)
-		}
-		if err := g.prepareService(); err != nil {
-			l.Error(err, "failed to prepare service")
-			return nil, fmt.Errorf("failed to prepare service: %w", err)
-		}
+	if err := g.ensureInvoiceListenerService(l); err != nil {
+		return nil, err
 	}
 
 	msg, err := g.service.Users.Messages.Get("me", messageID).Context(ctx).Format("full").Do()
@@ -156,16 +140,8 @@ func (g *googleService) GetAttachment(ctx context.Context, messageID, attachment
 	})
 	l.Debug("getting attachment")
 
-	if g.service == nil {
-		l.Debug("gmail service not initialized, preparing service")
-		if err := g.ensureToken(g.appConfig.InvoiceListener.RefreshToken); err != nil {
-			l.Error(err, "failed to ensure token")
-			return nil, fmt.Errorf("failed to ensure token: %w", err)
-		}
-		if err := g.prepareService(); err != nil {
-			l.Error(err, "failed to prepare service")
-			return nil, fmt.Errorf("failed to prepare service: %w", err)
-		}
+	if err := g.ensureInvoiceListenerService(l); err != nil {
+		return nil, err
 	}
 
 	attachment, err := g.service.Users.Messages.Attachments.Get("me", messageID, attachmentID).Context(ctx).Do()
@@ -200,16 +176,8 @@ func (g *googleService) AddLabel(ctx context.Context, messageID, labelID string)
 	})
 	l.Debug("adding label to message")
 
-	if g.service == nil {
-		l.Debug("gmail service not initialized, preparing service")
-		if err := g.ensureToken(g.appConfig.InvoiceListener.RefreshToken); err != nil {
-			l.Error(err, "failed to ensure token")
-			return fmt.Errorf("failed to ensure token: %w", err)
-		}
-		if err := g.prepareService(); err != nil {
-			l.Error(err, "failed to prepare service")
-			return fmt.Errorf("failed to prepare service: %w", err)
-		}
+	if err := g.ensureInvoiceListenerService(l); err != nil {
+		return err
 	}
 
 	modifyRequest := &gmail.ModifyMessageRequest{
@@ -236,16 +204,8 @@ func (g *googleService) GetOrCreateLabel(ctx context.Context, labelName string) 
 	})
 	l.Debug("getting or creating label")
 
-	if g.service == nil {
-		l.Debug("gmail service not initialized, preparing service")
-		if err := g.ensureToken(g.appConfig.InvoiceListener.RefreshToken); err != nil {
-			l.Error(err, "failed to ensure token")
-			return "", fmt.Errorf("failed to ensure token: %w", err)
-		}
-		if err := g.prepareService(); err != nil {
-			l.Error(err, "failed to prepare service")
-			return "", fmt.Errorf("failed to prepare service: %w", err)
-		}
+	if err := g.ensureInvoiceListenerService(l); err != nil {
+		return "", err
 	}
 
 	// List existing labels
@@ -279,4 +239,21 @@ func (g *googleService) GetOrCreateLabel(ctx context.Context, labelName string) 
 	l.Debugf("created new label with ID: %s", created.Id)
 
 	return created.Id, nil
+}
+
+func (g *googleService) ensureInvoiceListenerService(l logger.Logger) error {
+	if err := g.ensureToken(g.appConfig.InvoiceListener.RefreshToken); err != nil {
+		l.Error(err, "failed to ensure token")
+		return fmt.Errorf("failed to ensure token: %w", err)
+	}
+
+	if g.service == nil {
+		l.Debug("gmail service not initialized or token changed, preparing service")
+		if err := g.prepareService(); err != nil {
+			l.Error(err, "failed to prepare service")
+			return fmt.Errorf("failed to prepare service: %w", err)
+		}
+	}
+
+	return nil
 }
