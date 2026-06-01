@@ -23,6 +23,17 @@ func TestExtractInvoiceIDsFromWorkbook(t *testing.T) {
 	require.Equal(t, []string{"INVC-202603-HUYTQ-ID6I", "INVC-202603-THANHPD-K5KW"}, invoiceIDs)
 }
 
+func TestExtractInvoiceIDsFromWorkbookWithMultipleInvoiceIDsInOneCell(t *testing.T) {
+	workbook := buildTestWorkbook(t, []string{
+		"INVC-202603-THANHPD-K5KW, INVC-202603-HUYTQ-ID6I",
+		"INVC-202603-THANHPD-K5KW",
+	})
+
+	invoiceIDs, err := extractInvoiceIDsFromWorkbook(workbook)
+	require.NoError(t, err)
+	require.Equal(t, []string{"INVC-202603-HUYTQ-ID6I", "INVC-202603-THANHPD-K5KW"}, invoiceIDs)
+}
+
 func buildTestWorkbook(t *testing.T, columnQValues []string) []byte {
 	t.Helper()
 
