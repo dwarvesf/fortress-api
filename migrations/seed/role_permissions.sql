@@ -284,4 +284,32 @@ INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, rol
 ('556e5273-630a-499c-8f69-0cda68c6ebda', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'fea2497c-694d-43d7-82cd-764d622a6706'), -- deliveryMetrics.leaderBoard.sync
 ('27700990-ae6c-4a93-a9aa-5e9e71d8ac56', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '1991c441-39bc-4b0f-9afa-491bebb1c965'),
 ('67c5a96e-9e89-4e29-90f9-661b47e43c65', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'f84e4e32-b104-4e9c-9694-b1a86e90ec25'), -- employees.transferCheckinIcy.fullAccess
-('b97c2450-63d5-4a6a-9f8d-9ac9541e0163', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '8fe4de41-15e8-4027-a769-e9344cd04415');
+('b97c2450-63d5-4a6a-9f8d-9ac9541e0163', NULL, '2023-07-26 16:35:12.475872', '2023-07-26 16:35:12.475872', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', '8fe4de41-15e8-4027-a769-e9344cd04415'),
+('cdec0d52-fe40-413a-abb5-5efb4da57497', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'c23c1c1c-bfaf-41e6-a4d7-6ef196fd2736', 'fc93a61b-5eb7-4590-8347-05b63650e345'); -- contractor-invoices.create
+
+-- FORTRESS DISCORD (contractor-invoices.create)
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('d571a932-d757-4f0d-960b-9d0acbd34c03', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', '3fcf9e36-2501-4f86-8418-cfe3a137b7f9', 'fc93a61b-5eb7-4590-8347-05b63650e345'); -- contractor-invoices.create
+
+-- ACCOUNTING
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('b9efed82-3451-4604-aaf5-0740b2c4f0a3', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', '89eba387-a223-4b3e-885a-97d885e5fc9d', '738ae6ae-e961-4fc2-b941-079e130f4213'), -- bankAccounts.read
+('a4a6d781-9efb-4b5e-bed1-81ddff1bb5a6', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', '89eba387-a223-4b3e-885a-97d885e5fc9d', '97a02a4d-b8fb-486d-af1a-25139014b375'), -- clients.read
+('170b9fa7-5974-40ce-95b6-204d3564623c', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', '89eba387-a223-4b3e-885a-97d885e5fc9d', '1991c441-39bc-4b0f-9afa-491bebb1c965'), -- companyInfos.read
+('2fb311ad-cfe2-4ed4-a84c-0a5c91c0a98d', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', '89eba387-a223-4b3e-885a-97d885e5fc9d', 'a7549f30-987c-47d1-9266-452f3cfc68b7'), -- employees.create
+('f8591721-7450-49ba-a462-c182260c78df', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', '89eba387-a223-4b3e-885a-97d885e5fc9d', '9c644140-c71d-4435-bd6b-a81171913046'), -- invoices.create
+('dc1d130f-bb3a-4101-a912-ed76da0ae8ff', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', '89eba387-a223-4b3e-885a-97d885e5fc9d', '259fb434-5321-43be-b007-76f3c2dfbfcc'), -- invoices.read
+('9031e82e-296f-4a5e-bafc-8a322e4495cf', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', '89eba387-a223-4b3e-885a-97d885e5fc9d', 'fc93a61b-5eb7-4590-8347-05b63650e345'); -- contractor-invoices.create
+
+-- FORTRESS API KEEPER
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('ff296981-101e-4856-bd74-40a2353a401e', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'b2e15182-e00a-40f3-bc1c-9645a0908358', '259fb434-5321-43be-b007-76f3c2dfbfcc'), -- invoices.read
+('1390f139-74e9-45c6-96fd-9d7603246252', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'b2e15182-e00a-40f3-bc1c-9645a0908358', 'fa6961f1-1cee-494f-8f1f-f4552b49b6fa'), -- invoices.edit
+('e4f03d6c-9c98-4514-81b8-68055b1ca607', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'b2e15182-e00a-40f3-bc1c-9645a0908358', '9c644140-c71d-4435-bd6b-a81171913046'), -- invoices.create
+('eaf8ef9b-40e6-43ea-a910-7b8f8b313d96', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'b2e15182-e00a-40f3-bc1c-9645a0908358', '9be15ffa-3695-4d7f-93aa-ef594a08c36a'), -- payrolls.read
+('44256ff3-5daa-4350-95e8-068a835bbc05', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'b2e15182-e00a-40f3-bc1c-9645a0908358', 'be186320-bef0-48cc-805e-f7b4810a3b30'), -- payrolls.create
+('7e7dbef8-46c6-4846-93b2-c72c980c218f', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'b2e15182-e00a-40f3-bc1c-9645a0908358', 'fc93a61b-5eb7-4590-8347-05b63650e345'); -- contractor-invoices.create
+
+-- FORTRESS API SELF SERVICE KEY
+INSERT INTO public.role_permissions (id, deleted_at, created_at, updated_at, role_id, permission_id) VALUES
+('9619c2de-9dc3-40f5-ba41-a5d9640e8204', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', '8e7212ec-ae8a-4452-b80e-ca917d57beed', 'fc93a61b-5eb7-4590-8347-05b63650e345'); -- contractor-invoices.create

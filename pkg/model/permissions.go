@@ -68,6 +68,7 @@ const (
 	PermissionFeedbacksDelete                     PermissionCode = "feedbacks.delete"
 	PermissionFeedbacksEdit                       PermissionCode = "feedbacks.edit"
 	PermissionFeedbacksRead                       PermissionCode = "feedbacks.read"
+	PermissionContractorInvoiceCreate             PermissionCode = "contractor-invoices.create"
 	PermissionInvoiceCreate                       PermissionCode = "invoices.create"
 	PermissionInvoiceDelete                       PermissionCode = "invoices.delete"
 	PermissionInvoiceEdit                         PermissionCode = "invoices.edit"

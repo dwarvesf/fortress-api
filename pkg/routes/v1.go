@@ -256,7 +256,7 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		invoiceGroup.POST("/:id/calculate-commissions", conditionalAuthMW, conditionalPermMW(model.PermissionProjectsCommissionRateEdit), h.Invoice.CalculateCommissions)
 		invoiceGroup.GET("/template", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.GetTemplate)
 		invoiceGroup.POST("/send", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceRead), h.Invoice.Send)
-		invoiceGroup.POST("/contractor/generate", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceCreate), h.Invoice.GenerateContractorInvoice)
+		invoiceGroup.POST("/contractor/generate", conditionalAuthMW, conditionalPermMW(model.PermissionContractorInvoiceCreate), h.Invoice.GenerateContractorInvoice)
 		invoiceGroup.POST("/mark-paid", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceEdit), h.Invoice.MarkPaid)
 		invoiceGroup.POST("/generate-splits", conditionalAuthMW, conditionalPermMW(model.PermissionInvoiceEdit), h.Invoice.GenerateSplits)
 	}

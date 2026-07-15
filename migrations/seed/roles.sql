@@ -10,4 +10,7 @@ INSERT INTO public.roles (id, deleted_at, created_at, updated_at, name, code, le
 ('349876e0-4d3b-463a-a9b0-4083b3ebcd83', NULL, '2023-11-07 09:50:25.714604', '2023-11-07 09:50:25.714604', 'Cronjob', 'cronjob', 20),
 ('3fcf9e36-2501-4f86-8418-cfe3a137b7f9', NULL, '2023-11-07 09:50:25.714604', '2023-11-07 09:50:25.714604', 'Fortress Discord', 'fortress-discord', 21),
 ('5a02645d-bbfd-4da5-9582-3d4a96bcfeb8', NULL, '2023-11-07 09:50:25.714604', '2023-11-07 09:50:25.714604', 'Fortress Bifrost', 'fortress-bifrost', 22),
-('4cb29e06-7df2-43b2-bdde-fd09b2e2025b', null, '2023-11-07 09:50:25.714604', '2023-11-07 09:50:25.714604', 'Fortress Valuation', 'fortress-valuation', 23);
+('4cb29e06-7df2-43b2-bdde-fd09b2e2025b', null, '2023-11-07 09:50:25.714604', '2023-11-07 09:50:25.714604', 'Fortress Valuation', 'fortress-valuation', 23),
+('89eba387-a223-4b3e-885a-97d885e5fc9d', NULL, '2023-04-12 09:04:01.112056', '2023-04-12 09:04:01.112056', 'Accounting', 'accounting', 1),
+('b2e15182-e00a-40f3-bc1c-9645a0908358', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'Fortress API Keeper', 'fortress-api-keeper', 24),
+('8e7212ec-ae8a-4452-b80e-ca917d57beed', NULL, '2026-07-15 00:00:00.000000', '2026-07-15 00:00:00.000000', 'Fortress API Self Service Key', 'fortress-api-self-service-key', 25);
