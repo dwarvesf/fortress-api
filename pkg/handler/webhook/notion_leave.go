@@ -696,18 +696,25 @@ func (h *handler) sendLeaveNotification(
 			{Name: "Type", Value: leave.UnavailabilityType, Inline: true},
 			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
 			{Name: "Details", Value: leave.AdditionalContext, Inline: false},
-			{Name: "Approve / Reject", Value: fmt.Sprintf("Message **Neko Bot**: `approve %s` or `reject %s`. Or open the [request page](%s).", leave.LeaveRequestTitle, leave.LeaveRequestTitle, notionPageURL(leave.PageID)), Inline: false},
+			{Name: "Approve / Reject", Value: fmt.Sprintf("Tap a button below, or message **Neko Bot** `approve %s` / `reject %s`.", leave.LeaveRequestTitle, leave.LeaveRequestTitle), Inline: false},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
 
-	// No Approve/Reject buttons. A button click is an interaction, and Discord delivers
-	// interactions either over the gateway or to an app's HTTP endpoint, never both. This
-	// bot's application is the Hermes desk (Neko Bot), whose slash commands need the
-	// gateway, so it cannot also carry the HTTP endpoint these buttons were answered on.
-	// Buttons here would render and silently do nothing, which is worse than no buttons.
-	// The link above is the interim; approval moves into conversation with the bot.
-	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, assigneeMentions, []*discordgo.MessageEmbed{embed}, nil)
+	// Both approval front-ends share one authorized backend (SPEC-087). A button click is a
+	// component interaction; because this message is posted as Neko Bot, that interaction is
+	// delivered over the Hermes GATEWAY (not to an HTTP endpoint, which would kill Neko Bot's
+	// slash commands). The gateway's notion_leave_* handler (hermes patch 0010) authenticates
+	// the clicker, mints an identity token, and calls the SAME /webhooks/discord/leave endpoint
+	// the DM tool calls. The custom_id carries the page id; the endpoint accepts a page id or a
+	// title as request_id, so button and DM converge.
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{Components: []discordgo.MessageComponent{
+			discordgo.Button{Label: "Approve", Style: discordgo.SecondaryButton, CustomID: fmt.Sprintf("notion_leave_approve_%s", leave.PageID), Emoji: discordgo.ComponentEmoji{Name: "✅"}},
+			discordgo.Button{Label: "Reject", Style: discordgo.SecondaryButton, CustomID: fmt.Sprintf("notion_leave_reject_%s", leave.PageID), Emoji: discordgo.ComponentEmoji{Name: "❌"}},
+		}},
+	}
+	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, assigneeMentions, []*discordgo.MessageEmbed{embed}, components)
 	if err != nil {
 		l.Error(err, "failed to send leave request message to discord channel")
 		// Fallback to auditlog

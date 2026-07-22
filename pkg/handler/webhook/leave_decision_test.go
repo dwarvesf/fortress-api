@@ -75,3 +75,22 @@ func TestIsLeaveAlreadyDecided(t *testing.T) {
 		}
 	}
 }
+
+// A button carries the Notion page id; the DM carries the title. Both must resolve, and dash
+// formatting on the page id must not matter.
+func TestLeavePageIDMatches(t *testing.T) {
+	cases := []struct {
+		candidate, requestID string
+		want                 bool
+	}{
+		{"3a564b29-b84c-81a6-bd55-fa785e0c3b1d", "3a564b29-b84c-81a6-bd55-fa785e0c3b1d", true},
+		{"3a564b29-b84c-81a6-bd55-fa785e0c3b1d", "3a564b29b84c81a6bd55fa785e0c3b1d", true}, // undashed
+		{"3a564b29-b84c-81a6-bd55-fa785e0c3b1d", "OOO-2026-innno_-HGU4", false},            // a title, not a page id
+		{"", "", false}, // empty page id never matches
+	}
+	for _, c := range cases {
+		if got := leavePageIDMatches(c.candidate, c.requestID); got != c.want {
+			t.Errorf("leavePageIDMatches(%q,%q) = %v, want %v", c.candidate, c.requestID, got, c.want)
+		}
+	}
+}

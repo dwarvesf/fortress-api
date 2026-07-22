@@ -1,12 +1,13 @@
 package webhook
 
-// Conversational leave approval (SPEC-087). The Discord Approve/Reject buttons were retired when
-// fortress-api's Discord identity became the Hermes desk bot (an app cannot both carry an HTTP
-// interactions endpoint and keep its gateway slash commands). Approval now arrives as a call from
-// the fortress MCP (behind the desk bot), which resolves the AUTHENTICATED lead's Discord handle
-// from a gateway-minted token and calls these endpoints.
+// Leave approval backend (SPEC-087), shared by TWO front-ends that both route through the Hermes
+// gateway (Neko Bot's interactions can't reach an HTTP endpoint without killing its slash commands):
+//   - a Discord Approve/Reject BUTTON click -> gateway notion_leave_* handler (hermes patch 0010)
+//   - a DM "approve <id>" -> the fortress MCP approve_leave tool
+// Both authenticate the clicker/sender, mint an identity token, and call these endpoints. request_id
+// is a title (DM) or a Notion page id (button); findPendingLeave accepts either.
 //
-// These endpoints add the authorization the button flow never had: only an Account Manager or
+// These endpoints add the authorization the old button flow never had: only an Account Manager or
 // Delivery Lead on the requester's active deployment (or an admin) may decide a request. The old
 // buttons recorded whoever clicked into "Reviewed By" but authorized nobody.
 //
@@ -109,19 +110,29 @@ func (h *handler) discordHandleForEmail(l logger.Logger, email string) string {
 	return acc.DiscordUsername
 }
 
-// findPendingLeaveByTitle resolves a request id (its title) to the pending LeaveRequest. Titles are
-// unique by construction (handle + random suffix). Returns ok=false when no pending request matches.
-func (h *handler) findPendingLeaveByTitle(ctx context.Context, leaveService *notionSvc.LeaveService, requestID string) (notionSvc.LeaveRequest, bool, error) {
+// findPendingLeave resolves a request id to the pending LeaveRequest. The id is either the
+// human title (from the DM tool, e.g. OOO-2026-innno_-HGU4) or the Notion page id (from a button's
+// custom_id). Both front-ends converge here. Returns ok=false when no pending request matches.
+func (h *handler) findPendingLeave(ctx context.Context, leaveService *notionSvc.LeaveService, requestID string) (notionSvc.LeaveRequest, bool, error) {
 	pending, err := leaveService.QueryPendingLeaveRequests(ctx)
 	if err != nil {
 		return notionSvc.LeaveRequest{}, false, err
 	}
+	want := strings.TrimSpace(requestID)
 	for _, lr := range pending {
-		if leaveTitleMatches(lr.LeaveRequestTitle, requestID) {
+		if leaveTitleMatches(lr.LeaveRequestTitle, requestID) || leavePageIDMatches(lr.PageID, want) {
 			return lr, true, nil
 		}
 	}
 	return notionSvc.LeaveRequest{}, false, nil
+}
+
+// leavePageIDMatches compares a Notion page id ignoring dash formatting (the API returns dashed
+// UUIDs; a button custom_id may carry the undashed form).
+func leavePageIDMatches(candidate, requestID string) bool {
+	strip := func(s string) string { return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(s), "-", "")) }
+	c := strip(candidate)
+	return c != "" && c == strip(requestID)
 }
 
 // leaveTitleMatches compares a candidate leave title against a requested id, tolerant of
@@ -232,7 +243,7 @@ func (h *handler) handleLeaveDecision(c *gin.Context, decision string) {
 		return
 	}
 
-	leave, ok, err := h.findPendingLeaveByTitle(ctx, leaveService, req.RequestID)
+	leave, ok, err := h.findPendingLeave(ctx, leaveService, req.RequestID)
 	if err != nil {
 		l.Errorf(err, "handleLeaveDecision: lookup failed: request=%s", req.RequestID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to look up leave request"})
