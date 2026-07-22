@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 
@@ -123,6 +124,12 @@ func (h *handler) findPendingLeave(ctx context.Context, leaveService *notionSvc.
 		if err != nil || lr == nil {
 			return notionSvc.LeaveRequest{}, false, nil
 		}
+		// Scope check: GetLeaveRequest fetches ANY page the integration can read, so confirm this
+		// page is actually a leave request (its title has the OOO-/LVR- shape) before we act on it.
+		// Otherwise a 32-hex request_id could point a decision at an unrelated page.
+		if !isLeaveRequestTitle(lr.LeaveRequestTitle) {
+			return notionSvc.LeaveRequest{}, false, nil
+		}
 		if isLeaveAlreadyDecided(lr.Status) {
 			return notionSvc.LeaveRequest{}, false, nil
 		}
@@ -163,6 +170,13 @@ func leaveTitleMatches(candidate, requestID string) bool {
 	return strings.EqualFold(strings.TrimSpace(candidate), strings.TrimSpace(requestID))
 }
 
+// isLeaveRequestTitle reports whether a title has the leave-request shape (OOO-... or LVR-...),
+// used to confirm a page resolved by id is actually a leave request and not an arbitrary page.
+func isLeaveRequestTitle(title string) bool {
+	t := strings.ToUpper(strings.TrimSpace(title))
+	return strings.HasPrefix(t, "OOO-") || strings.HasPrefix(t, "LVR-")
+}
+
 // isLeaveAlreadyDecided reports whether a leave request has already been acted on, so a repeat or
 // concurrent decision does not re-run the calendar side effect (SPEC-087 edge case 2).
 func isLeaveAlreadyDecided(status string) bool {
@@ -174,11 +188,29 @@ func isLeaveAlreadyDecided(status string) bool {
 	}
 }
 
+// leaveDecisionLocks serializes decisions per leave page id. The idempotency guard is a
+// read-status-then-write, which without a lock has a TOCTOU window: two near-simultaneous
+// approvals of the same request (a lead double-tapping the button) could both read Status=New
+// before either writes, and both create a calendar event. Locking per page id closes that window.
+// The api deployment is a single replica, so an in-process lock is sufficient; a multi-replica
+// deployment would additionally need a Notion conditional update (write only if Status is New).
+var leaveDecisionLocks sync.Map // pageID -> *sync.Mutex
+
+func lockLeaveDecision(pageID string) func() {
+	m, _ := leaveDecisionLocks.LoadOrStore(pageID, &sync.Mutex{})
+	mu := m.(*sync.Mutex)
+	mu.Lock()
+	return mu.Unlock
+}
+
 // applyLeaveDecision is the side-effect core shared by the endpoints (the button handlers keep
 // their own inline copy for now). "approve" -> Status Acknowledged + a calendar event; "reject" ->
 // Status Not Applicable, no calendar. Idempotent: if the request is already decided, it does NOT
 // re-create the calendar event, so two near-simultaneous approvals cannot double-book (edge case 2).
 func (h *handler) applyLeaveDecision(ctx context.Context, l logger.Logger, leaveService *notionSvc.LeaveService, pageID, approverPageID, decision string) {
+	unlock := lockLeaveDecision(pageID)
+	defer unlock()
+
 	// Idempotency guard: read current status first; skip the calendar side effect if already decided.
 	alreadyDecided := false
 	if cur, err := leaveService.GetLeaveRequest(ctx, pageID); err == nil && cur != nil {
