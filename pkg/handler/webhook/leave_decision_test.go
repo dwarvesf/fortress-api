@@ -1,6 +1,9 @@
 package webhook
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 // normalizeHandle is the security-critical comparison for leave approval: the caller's handle
 // (from the gateway token) is matched against the AM/DL set (from the Notion "Discord" field). A
@@ -94,5 +97,49 @@ func TestLooksLikeNotionPageID(t *testing.T) {
 		if got := looksLikeNotionPageID(c.in); got != c.want {
 			t.Errorf("looksLikeNotionPageID(%q) = %v, want %v", c.in, got, c.want)
 		}
+	}
+}
+
+// isLeaveRequestTitle scopes the button page-id path to real leave requests.
+func TestIsLeaveRequestTitle(t *testing.T) {
+	yes := []string{"OOO-2026-innno_-HGU4", "ooo-2026-x-Y", "LVR-2025-taipn-29DQ", "  OOO-2026-- "}
+	no := []string{"", "Some Random Page", "Meeting notes", "2026-07-22"}
+	for _, s := range yes {
+		if !isLeaveRequestTitle(s) {
+			t.Errorf("%q should be a leave title", s)
+		}
+	}
+	for _, s := range no {
+		if isLeaveRequestTitle(s) {
+			t.Errorf("%q should NOT be a leave title", s)
+		}
+	}
+}
+
+// lockLeaveDecision serializes per page id: the same id returns a lock that blocks a second caller
+// until released; different ids do not block each other.
+func TestLockLeaveDecision(t *testing.T) {
+	unlock := lockLeaveDecision("page-A")
+	// A different page must not be blocked by page-A's lock.
+	done := make(chan struct{})
+	go func() { u := lockLeaveDecision("page-B"); u(); close(done) }()
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("a different page id must not block")
+	}
+	// The same page id must block until the first unlock.
+	blocked := make(chan struct{})
+	go func() { u := lockLeaveDecision("page-A"); u(); close(blocked) }()
+	select {
+	case <-blocked:
+		t.Fatal("same page id must block while held")
+	case <-time.After(100 * time.Millisecond):
+	}
+	unlock()
+	select {
+	case <-blocked:
+	case <-time.After(time.Second):
+		t.Fatal("second caller should proceed after unlock")
 	}
 }
