@@ -696,7 +696,7 @@ func (h *handler) sendLeaveNotification(
 			{Name: "Type", Value: leave.UnavailabilityType, Inline: true},
 			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
 			{Name: "Details", Value: leave.AdditionalContext, Inline: false},
-			{Name: "Approve", Value: fmt.Sprintf("Set **Status** on the [request page](%s).", notionPageURL(leave.PageID)), Inline: false},
+			{Name: "Approve / Reject", Value: fmt.Sprintf("Message **Neko Bot**: `approve %s` or `reject %s`. Or open the [request page](%s).", leave.LeaveRequestTitle, leave.LeaveRequestTitle, notionPageURL(leave.PageID)), Inline: false},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
