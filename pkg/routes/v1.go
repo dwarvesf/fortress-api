@@ -89,13 +89,14 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		webhook.POST("/discord/interaction", h.Webhook.HandleDiscordInteraction)
 		webhook.POST("/discord/gen-invoice", h.Webhook.HandleGenInvoice)
 
-		// Conversational leave approval (SPEC-087). Unlike gen-invoice, these are a state change
-		// keyed on a claimed approver handle, so they are gated by API-key + permission (the caller
-		// is the fortress MCP behind the Neko Bot desk). PermissionCronjobExecute is the machine-to-
-		// machine default; a dedicated leave-approve permission is a fortress-team follow-up.
-		webhook.POST("/discord/leave/list", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Webhook.HandleLeaveList)
-		webhook.POST("/discord/leave/approve", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Webhook.HandleLeaveApprove)
-		webhook.POST("/discord/leave/reject", conditionalAuthMW, conditionalPermMW(model.PermissionCronjobExecute), h.Webhook.HandleLeaveReject)
+		// Leave approval (SPEC-087). Unlike gen-invoice (no HTTP auth), these are a state change
+		// keyed on a claimed approver handle, so they require a VALID fortress API key
+		// (conditionalAuthMW, same as /assets/upload). The real authorization is the AM/DL check
+		// inside the handler; the API key just proves the caller is a fortress-integrated bot
+		// (the Neko Bot gateway / MCP), not an anonymous internet client.
+		webhook.POST("/discord/leave/list", conditionalAuthMW, h.Webhook.HandleLeaveList)
+		webhook.POST("/discord/leave/approve", conditionalAuthMW, h.Webhook.HandleLeaveApprove)
+		webhook.POST("/discord/leave/reject", conditionalAuthMW, h.Webhook.HandleLeaveReject)
 
 		basecampGroup := webhook.Group("/basecamp")
 		{
