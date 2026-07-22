@@ -116,13 +116,29 @@ func (h *handler) findPendingLeaveByTitle(ctx context.Context, leaveService *not
 	if err != nil {
 		return notionSvc.LeaveRequest{}, false, err
 	}
-	want := strings.TrimSpace(requestID)
 	for _, lr := range pending {
-		if strings.EqualFold(strings.TrimSpace(lr.LeaveRequestTitle), want) {
+		if leaveTitleMatches(lr.LeaveRequestTitle, requestID) {
 			return lr, true, nil
 		}
 	}
 	return notionSvc.LeaveRequest{}, false, nil
+}
+
+// leaveTitleMatches compares a candidate leave title against a requested id, tolerant of
+// surrounding whitespace and case (the model relays the title as the lead typed it).
+func leaveTitleMatches(candidate, requestID string) bool {
+	return strings.EqualFold(strings.TrimSpace(candidate), strings.TrimSpace(requestID))
+}
+
+// isLeaveAlreadyDecided reports whether a leave request has already been acted on, so a repeat or
+// concurrent decision does not re-run the calendar side effect (SPEC-087 edge case 2).
+func isLeaveAlreadyDecided(status string) bool {
+	switch status {
+	case "Acknowledged", "Not Applicable", "Withdrawn":
+		return true
+	default:
+		return false
+	}
 }
 
 // applyLeaveDecision is the side-effect core shared by the endpoints (the button handlers keep
@@ -133,10 +149,7 @@ func (h *handler) applyLeaveDecision(ctx context.Context, l logger.Logger, leave
 	// Idempotency guard: read current status first; skip the calendar side effect if already decided.
 	alreadyDecided := false
 	if cur, err := leaveService.GetLeaveRequest(ctx, pageID); err == nil && cur != nil {
-		switch cur.Status {
-		case "Acknowledged", "Not Applicable", "Withdrawn":
-			alreadyDecided = true
-		}
+		alreadyDecided = isLeaveAlreadyDecided(cur.Status)
 	}
 
 	status := "Acknowledged"

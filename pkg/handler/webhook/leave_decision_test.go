@@ -37,3 +37,41 @@ func TestNormalizeHandle_MembershipSemantics(t *testing.T) {
 		t.Fatal("a different handle (innno vs innno_) must NOT match")
 	}
 }
+
+// leaveTitleMatches resolves the request id (the title the lead typed) to a pending request,
+// tolerant of case and surrounding whitespace but not of a genuinely different id.
+func TestLeaveTitleMatches(t *testing.T) {
+	cases := []struct {
+		candidate, requestID string
+		want                 bool
+	}{
+		{"OOO-2026-innno_-HGU4", "OOO-2026-innno_-HGU4", true},
+		{"OOO-2026-innno_-HGU4", "  OOO-2026-innno_-HGU4  ", true}, // trimmed
+		{"OOO-2026-innno_-HGU4", "ooo-2026-innno_-hgu4", true},     // case-fold
+		{"OOO-2026-innno_-HGU4", "OOO-2026-innno_-XXXX", false},    // different code
+		{"OOO-2026-innno_-HGU4", "OOO-2026-minhth-HGU4", false},    // different person
+		{"", "", true}, // degenerate; guarded upstream by required-field checks
+	}
+	for _, c := range cases {
+		if got := leaveTitleMatches(c.candidate, c.requestID); got != c.want {
+			t.Errorf("leaveTitleMatches(%q,%q) = %v, want %v", c.candidate, c.requestID, got, c.want)
+		}
+	}
+}
+
+// isLeaveAlreadyDecided drives the idempotency guard: only a still-open (New/pending) request
+// gets a fresh calendar event; anything already decided must not double-book.
+func TestIsLeaveAlreadyDecided(t *testing.T) {
+	decided := []string{"Acknowledged", "Not Applicable", "Withdrawn"}
+	open := []string{"New", "", "Pending", "in review"}
+	for _, s := range decided {
+		if !isLeaveAlreadyDecided(s) {
+			t.Errorf("status %q should count as already decided", s)
+		}
+	}
+	for _, s := range open {
+		if isLeaveAlreadyDecided(s) {
+			t.Errorf("status %q should NOT count as already decided", s)
+		}
+	}
+}
