@@ -3,7 +3,7 @@ package webhook
 import (
 	"context"
 	"crypto/hmac"
-"crypto/sha256"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -306,6 +306,12 @@ func formatShortDateRange(start, end time.Time) string {
 	return fmt.Sprintf("%s %d, %d - %s %d, %d",
 		start.Month().String()[:3], start.Day(), start.Year(),
 		end.Month().String()[:3], end.Day(), end.Year())
+}
+
+// notionPageURL builds a browser link to a Notion page. The API hands back dashed
+// UUIDs; notion.so wants them undashed, and serves the dashed form as a 404.
+func notionPageURL(pageID string) string {
+	return "https://www.notion.so/" + strings.ReplaceAll(pageID, "-", "")
 }
 
 // verifyNotionWebhookSignature verifies the HMAC-SHA256 signature of a Notion webhook request
@@ -690,34 +696,18 @@ func (h *handler) sendLeaveNotification(
 			{Name: "Type", Value: leave.UnavailabilityType, Inline: true},
 			{Name: "Dates", Value: formatShortDateRange(*leave.StartDate, *leave.EndDate), Inline: true},
 			{Name: "Details", Value: leave.AdditionalContext, Inline: false},
+			{Name: "Approve", Value: fmt.Sprintf("Set **Status** on the [request page](%s).", notionPageURL(leave.PageID)), Inline: false},
 		},
 		Timestamp: time.Now().Format("2006-01-02T15:04:05.000-07:00"),
 	}
 
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{
-					Label:    "Approve",
-					Style:    discordgo.SecondaryButton,
-					CustomID: fmt.Sprintf("notion_leave_approve_%s", leave.PageID),
-					Emoji: discordgo.ComponentEmoji{
-						Name: "✅",
-					},
-				},
-				discordgo.Button{
-					Label:    "Reject",
-					Style:    discordgo.SecondaryButton,
-					CustomID: fmt.Sprintf("notion_leave_reject_%s", leave.PageID),
-					Emoji: discordgo.ComponentEmoji{
-						Name: "❌",
-					},
-				},
-			},
-		},
-	}
-
-	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, assigneeMentions, []*discordgo.MessageEmbed{embed}, components)
+	// No Approve/Reject buttons. A button click is an interaction, and Discord delivers
+	// interactions either over the gateway or to an app's HTTP endpoint, never both. This
+	// bot's application is the Hermes desk (Neko Bot), whose slash commands need the
+	// gateway, so it cannot also carry the HTTP endpoint these buttons were answered on.
+	// Buttons here would render and silently do nothing, which is worse than no buttons.
+	// The link above is the interim; approval moves into conversation with the bot.
+	msg, err := h.service.Discord.SendChannelMessageComplex(channelID, assigneeMentions, []*discordgo.MessageEmbed{embed}, nil)
 	if err != nil {
 		l.Error(err, "failed to send leave request message to discord channel")
 		// Fallback to auditlog
