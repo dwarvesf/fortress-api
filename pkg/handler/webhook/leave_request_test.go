@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -65,6 +66,52 @@ func TestCanonicalLeaveType(t *testing.T) {
 	}
 }
 
+// canonicalLeaveType must EXACT-match (case/space tolerant) against the whole option name: every
+// allowed option round-trips to itself, and a substring of an option (e.g. "Personal" for
+// "Personal Time") must NOT match, or a contractor could smuggle a non-option value past the gate.
+func TestCanonicalLeaveType_Exhaustive(t *testing.T) {
+	for _, want := range defaultLeaveTypes {
+		if got, ok := canonicalLeaveType(want, defaultLeaveTypes); !ok || got != want {
+			t.Fatalf("allowed type %q must map to itself, got (%q,%v)", want, got, ok)
+		}
+		if got, ok := canonicalLeaveType(strings.ToUpper(want), defaultLeaveTypes); !ok || got != want {
+			t.Fatalf("uppercased %q must map to the canonical %q, got (%q,%v)", want, want, got, ok)
+		}
+	}
+	for _, bad := range []string{"", "  ", "Personal", "Time", "Health", "Vacation", "personal  time"} {
+		if got, ok := canonicalLeaveType(bad, defaultLeaveTypes); ok {
+			t.Fatalf("non-option %q must not match (got %q); only whole-name matches are valid", bad, got)
+		}
+	}
+}
+
+// Boundary coverage for the DEC-012 backdate/horizon windows: the inclusive edges (exactly
+// maxLeaveBackdateDays back, exactly maxLeaveHorizonDays out, and today itself) are ACCEPTED, while
+// one day past either edge is rejected. Also asserts surrounding whitespace on the dates is trimmed.
+func TestValidateLeaveRequestParams_Boundaries(t *testing.T) {
+	day := func(y, m, d int) string {
+		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC).Format("2006-01-02")
+	}
+	cases := []struct {
+		name, start, end, wantCode string
+	}{
+		{"today_allowed", day(2026, 7, 22), day(2026, 7, 22), ""},
+		{"backdate_exact_edge_allowed", day(2026, 7, 8), day(2026, 7, 22), ""},             // exactly 14 days back
+		{"backdate_one_past_edge_rejected", day(2026, 7, 7), day(2026, 7, 8), "backdated"}, // 15 days back
+		{"horizon_exact_edge_allowed", day(2027, 7, 22), day(2027, 7, 22), ""},             // exactly +365
+		{"horizon_one_past_edge_rejected", day(2027, 7, 23), day(2027, 7, 23), "too_far"},  // +366
+		{"whitespace_trimmed", "  2026-08-04 ", " 2026-08-06  ", ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			_, _, _, code, msg := validateLeaveRequestParams(c.start, c.end, "Personal Time", defaultLeaveTypes, fixedNow)
+			if code != c.wantCode {
+				t.Fatalf("code = %q (msg=%q), want %q", code, msg, c.wantCode)
+			}
+		})
+	}
+}
+
 // pickActiveContractor is the resolver's decision core: an exact normalized handle match on an ACTIVE
 // contractor resolves; an inactive contractor, a different handle, or an empty set do not (403).
 func TestPickActiveContractor(t *testing.T) {
@@ -101,6 +148,53 @@ func TestPickActiveContractor(t *testing.T) {
 	})
 }
 
+// Additional resolver edge cases: a nil slot in the over-fetched candidates is skipped (not a panic);
+// a status with surrounding whitespace is still "Active"; a non-Active status other than "Inactive"
+// (e.g. "Probation") is excluded; the stored Discord handle is normalized on the CANDIDATE side too
+// (case + #discriminator); an empty request handle matches nothing; and among several active
+// namesakes the first is returned deterministically.
+func TestPickActiveContractor_EdgeCases(t *testing.T) {
+	t.Run("nil_entry_skipped", func(t *testing.T) {
+		active := &notionSvc.ContractorDetails{PageID: "p1", DiscordUsername: "nlk0211", Status: "Active"}
+		got, ok := pickActiveContractor([]*notionSvc.ContractorDetails{nil, active}, "nlk0211")
+		if !ok || got.PageID != "p1" {
+			t.Fatalf("a nil candidate must be skipped, not fatal; got (%v,%v)", got, ok)
+		}
+	})
+	t.Run("status_whitespace_still_active", func(t *testing.T) {
+		c := &notionSvc.ContractorDetails{PageID: "p1", DiscordUsername: "nlk0211", Status: " Active "}
+		if _, ok := pickActiveContractor([]*notionSvc.ContractorDetails{c}, "nlk0211"); !ok {
+			t.Fatal("a status of ' Active ' must count as Active after trim")
+		}
+	})
+	t.Run("probation_excluded", func(t *testing.T) {
+		c := &notionSvc.ContractorDetails{PageID: "p1", DiscordUsername: "nlk0211", Status: "Probation"}
+		if _, ok := pickActiveContractor([]*notionSvc.ContractorDetails{c}, "nlk0211"); ok {
+			t.Fatal("any non-Active status (Probation) must resolve to not-found (403)")
+		}
+	})
+	t.Run("stored_handle_case_and_discriminator_normalized", func(t *testing.T) {
+		c := &notionSvc.ContractorDetails{PageID: "p1", DiscordUsername: "NLK0211#1234", Status: "Active"}
+		if _, ok := pickActiveContractor([]*notionSvc.ContractorDetails{c}, "nlk0211"); !ok {
+			t.Fatal("the stored handle must be normalized (case + #discriminator) before comparison")
+		}
+	})
+	t.Run("empty_request_handle_matches_nothing", func(t *testing.T) {
+		c := &notionSvc.ContractorDetails{PageID: "p1", DiscordUsername: "nlk0211", Status: "Active"}
+		if _, ok := pickActiveContractor([]*notionSvc.ContractorDetails{c}, "   "); ok {
+			t.Fatal("a blank requester handle must not resolve to any contractor")
+		}
+	})
+	t.Run("first_of_several_actives", func(t *testing.T) {
+		a := &notionSvc.ContractorDetails{PageID: "first", DiscordUsername: "dup", Status: "Active"}
+		b := &notionSvc.ContractorDetails{PageID: "second", DiscordUsername: "dup", Status: "Active"}
+		got, ok := pickActiveContractor([]*notionSvc.ContractorDetails{a, b}, "dup")
+		if !ok || got.PageID != "first" {
+			t.Fatalf("among active namesakes the first candidate must win, got (%v,%v)", got, ok)
+		}
+	})
+}
+
 func TestLeaveIdempotencyKey(t *testing.T) {
 	s := time.Date(2026, 8, 4, 0, 0, 0, 0, time.UTC)
 	e := time.Date(2026, 8, 6, 0, 0, 0, 0, time.UTC)
@@ -117,6 +211,27 @@ func TestLeaveIdempotencyKey(t *testing.T) {
 	}
 	if k1 == leaveIdempotencyKey("page-1", s, e.AddDate(0, 0, 1), "Personal Time") {
 		t.Fatal("a different end date must produce a different key")
+	}
+}
+
+// The idempotency key must be a stable, deterministic function of its inputs (same inputs -> byte-
+// identical key across calls), fold surrounding whitespace on the type, and change when the START
+// date changes (the existing test only varied the end date).
+func TestLeaveIdempotencyKey_Determinism(t *testing.T) {
+	s := time.Date(2026, 8, 4, 0, 0, 0, 0, time.UTC)
+	e := time.Date(2026, 8, 6, 0, 0, 0, 0, time.UTC)
+	if leaveIdempotencyKey("page-1", s, e, "Personal Time") != leaveIdempotencyKey("page-1", s, e, "Personal Time") {
+		t.Fatal("identical inputs must produce an identical key")
+	}
+	if leaveIdempotencyKey("page-1", s, e, "Personal Time") != leaveIdempotencyKey("page-1", s, e, "  personal time  ") {
+		t.Fatal("surrounding whitespace and case on the type must fold to the same key")
+	}
+	if leaveIdempotencyKey("page-1", s, e, "Personal Time") == leaveIdempotencyKey("page-1", s.AddDate(0, 0, 1), e, "Personal Time") {
+		t.Fatal("a different start date must produce a different key")
+	}
+	// A stable 64-hex-char SHA-256 digest (guards against an accidental format change).
+	if k := leaveIdempotencyKey("page-1", s, e, "Personal Time"); len(k) != 64 {
+		t.Fatalf("idempotency key must be a 64-char hex sha256 digest, got len %d", len(k))
 	}
 }
 
@@ -194,6 +309,32 @@ func TestDailyLimiter(t *testing.T) {
 	}
 }
 
+// The daily limiter is hit concurrently (mutex-guarded), so of N simultaneous submissions for one
+// contractor EXACTLY cap are allowed and the rest are blocked, with no lost updates. Run with -race
+// this also guards the counter map against a data race.
+func TestDailyLimiter_Concurrent(t *testing.T) {
+	const cap, n = 3, 64
+	d := newDailyLimiter(cap)
+	var allowed int32
+	var wg sync.WaitGroup
+	start := make(chan struct{})
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			if d.allow("busy-contractor", fixedNow) {
+				atomic.AddInt32(&allowed, 1)
+			}
+		}()
+	}
+	close(start)
+	wg.Wait()
+	if allowed != cap {
+		t.Fatalf("exactly %d concurrent submissions must be allowed, got %d", cap, allowed)
+	}
+}
+
 // The bot-created title must be a valid SPEC-087 leave request id so the approve/reject lookup can
 // resolve it.
 func TestGenerateLeaveRequestTitle(t *testing.T) {
@@ -203,6 +344,39 @@ func TestGenerateLeaveRequestTitle(t *testing.T) {
 	}
 	if got := title[:9]; got != "OOO-2026-" {
 		t.Fatalf("title prefix = %q, want OOO-2026-", got)
+	}
+}
+
+// An empty Discord handle must still yield a well-formed (parsable) request id via the "unknown"
+// slot, so the create never emits a title the SPEC-087 lookup would reject; the random suffix is a
+// 4-char uppercase-alphanumeric code, and successive calls vary it.
+func TestGenerateLeaveRequestTitle_Edge(t *testing.T) {
+	when := time.Date(2026, 8, 4, 0, 0, 0, 0, time.UTC)
+	title := generateLeaveRequestTitle("   ", when)
+	if !isValidLeaveRequestID(title) {
+		t.Fatalf("empty-handle title %q must still be a valid leave request id", title)
+	}
+	parts := strings.Split(title, "-")
+	if parts[2] != "unknown" {
+		t.Fatalf("blank handle must fall back to the 'unknown' slot, got %q", parts[2])
+	}
+	code := parts[3]
+	if len(code) != 4 {
+		t.Fatalf("the request code must be 4 chars, got %q", code)
+	}
+	for _, r := range code {
+		if !((r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')) {
+			t.Fatalf("the request code must be uppercase alphanumeric, got %q", code)
+		}
+	}
+	// The suffix is random: over several draws we expect at least two distinct codes (flake-proof:
+	// collision of 8 draws over a 36^4 space is astronomically unlikely).
+	seen := map[string]bool{}
+	for i := 0; i < 8; i++ {
+		seen[strings.Split(generateLeaveRequestTitle("nlk0211", when), "-")[3]] = true
+	}
+	if len(seen) < 2 {
+		t.Fatalf("expected the random code to vary across draws, saw only %v", seen)
 	}
 }
 
@@ -267,6 +441,48 @@ func TestHandleLeaveRequest_BadRequests(t *testing.T) {
 	}
 	for i, m := range bad {
 		t.Run("bad_params", func(t *testing.T) {
+			b, _ := json.Marshal(m)
+			w := post(b)
+			assert.Equalf(t, http.StatusBadRequest, w.Code, "case %d", i)
+		})
+	}
+}
+
+// The handler rejects an out-of-set type and whitespace-only required fields with a 400 BEFORE the
+// Notion service is created (shape validation precedes the resolver). Edge case 1 (bad type) and the
+// required-field guard exercised through the real HTTP entrypoint, not just the pure validator.
+func TestHandleLeaveRequest_InvalidTypeAndWhitespace(t *testing.T) {
+	l := logger.NewLogrusLogger("debug")
+	h := &handler{logger: l}
+
+	post := func(body []byte) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest("POST", "/webhooks/discord/leave/request", bytes.NewBuffer(body))
+		c.Request.Header.Set("Content-Type", "application/json")
+		h.HandleLeaveRequest(c)
+		return w
+	}
+
+	t.Run("type_not_in_option_set", func(t *testing.T) {
+		b, _ := json.Marshal(map[string]string{
+			"requester_handle": "nlk0211", "start_date": "2026-08-04", "end_date": "2026-08-06", "type": "Sabbatical",
+		})
+		w := post(b)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "invalid_type")
+	})
+
+	// A field that is present but only whitespace is treated as missing (required-field guard), so it
+	// never reaches Notion as an empty create.
+	whitespace := []map[string]string{
+		{"requester_handle": "   ", "start_date": "2026-08-04", "end_date": "2026-08-06", "type": "Personal Time"},
+		{"requester_handle": "nlk0211", "start_date": "  ", "end_date": "2026-08-06", "type": "Personal Time"},
+		{"requester_handle": "nlk0211", "start_date": "2026-08-04", "end_date": " ", "type": "Personal Time"},
+		{"requester_handle": "nlk0211", "start_date": "2026-08-04", "end_date": "2026-08-06", "type": "  "},
+	}
+	for i, m := range whitespace {
+		t.Run("whitespace_only_field", func(t *testing.T) {
 			b, _ := json.Marshal(m)
 			w := post(b)
 			assert.Equalf(t, http.StatusBadRequest, w.Code, "case %d", i)
