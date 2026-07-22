@@ -83,7 +83,7 @@ func (s *LeaveService) GetLeaveRequest(ctx context.Context, pageID string) (*Lea
 		LeaveRequestTitle:  ExtractTitle(props, "Leave Request"),
 		UnavailabilityType: ExtractSelect(props, "Unavailability Type"),
 		AdditionalContext:  ExtractRichText(props, "Additional Context"),
-		Status:             ExtractSelect(props, "Status"),
+		Status:             ExtractStatus(props, "Status"),
 	}
 
 	// Extract dates
@@ -188,12 +188,13 @@ func (s *LeaveService) QueryPendingLeaveRequests(ctx context.Context) ([]LeaveRe
 
 	s.logger.Debug(fmt.Sprintf("querying pending leave requests from data source: %s", dataSourceID))
 
-	// Query for pending leave requests
+	// Query for pending leave requests. The "Status" property is a Notion STATUS type (not select),
+	// and a not-yet-decided request is "New" (Acknowledged / Not Applicable / Withdrawn are decided).
 	filter := &nt.DatabaseQueryFilter{
 		Property: "Status",
 		DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
-			Select: &nt.SelectDatabaseQueryFilter{
-				Equals: "Pending",
+			Status: &nt.StatusDatabaseQueryFilter{
+				Equals: "New",
 			},
 		},
 	}
@@ -216,7 +217,7 @@ func (s *LeaveService) QueryPendingLeaveRequests(ctx context.Context) ([]LeaveRe
 			LeaveRequestTitle:  ExtractTitle(props, "Leave Request"),
 			UnavailabilityType: ExtractSelect(props, "Unavailability Type"),
 			AdditionalContext:  ExtractRichText(props, "Additional Context"),
-			Status:             ExtractSelect(props, "Status"),
+			Status:             ExtractStatus(props, "Status"),
 			StartDate:          ExtractDate(props, "Start Date"),
 			EndDate:            ExtractDate(props, "End Date"),
 			Email:              ExtractEmail(props, "Team Email"),

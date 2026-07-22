@@ -114,25 +114,47 @@ func (h *handler) discordHandleForEmail(l logger.Logger, email string) string {
 // human title (from the DM tool, e.g. OOO-2026-innno_-HGU4) or the Notion page id (from a button's
 // custom_id). Both front-ends converge here. Returns ok=false when no pending request matches.
 func (h *handler) findPendingLeave(ctx context.Context, leaveService *notionSvc.LeaveService, requestID string) (notionSvc.LeaveRequest, bool, error) {
+	want := strings.TrimSpace(requestID)
+
+	// A page id (button path) resolves directly, no list query needed. Only a still-New request is
+	// actionable; an already-decided one is treated as "not pending" so approve/reject 404s cleanly.
+	if looksLikeNotionPageID(want) {
+		lr, err := leaveService.GetLeaveRequest(ctx, want)
+		if err != nil || lr == nil {
+			return notionSvc.LeaveRequest{}, false, nil
+		}
+		if isLeaveAlreadyDecided(lr.Status) {
+			return notionSvc.LeaveRequest{}, false, nil
+		}
+		return *lr, true, nil
+	}
+
+	// A title (DM path) needs the pending list to match against.
 	pending, err := leaveService.QueryPendingLeaveRequests(ctx)
 	if err != nil {
 		return notionSvc.LeaveRequest{}, false, err
 	}
-	want := strings.TrimSpace(requestID)
 	for _, lr := range pending {
-		if leaveTitleMatches(lr.LeaveRequestTitle, requestID) || leavePageIDMatches(lr.PageID, want) {
+		if leaveTitleMatches(lr.LeaveRequestTitle, requestID) {
 			return lr, true, nil
 		}
 	}
 	return notionSvc.LeaveRequest{}, false, nil
 }
 
-// leavePageIDMatches compares a Notion page id ignoring dash formatting (the API returns dashed
-// UUIDs; a button custom_id may carry the undashed form).
-func leavePageIDMatches(candidate, requestID string) bool {
-	strip := func(s string) string { return strings.ToLower(strings.ReplaceAll(strings.TrimSpace(s), "-", "")) }
-	c := strip(candidate)
-	return c != "" && c == strip(requestID)
+// looksLikeNotionPageID reports whether s is a Notion page id (32 hex chars, dashed or not) rather
+// than a human leave title.
+func looksLikeNotionPageID(s string) bool {
+	stripped := strings.ReplaceAll(s, "-", "")
+	if len(stripped) != 32 {
+		return false
+	}
+	for _, r := range stripped {
+		if !((r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')) {
+			return false
+		}
+	}
+	return true
 }
 
 // leaveTitleMatches compares a candidate leave title against a requested id, tolerant of
