@@ -766,6 +766,143 @@ func buildContractorEmailLookupFilter(email string) *nt.DatabaseQueryFilter {
 	}
 }
 
+// LookupContractorDetailsByDiscord returns every contractor whose "Discord" field matches the given
+// handle (SPEC-088 TASK-003). The only handle->contractor lookup that existed before this was the
+// rates path (QueryRatesByDiscordAndMonth, on the Contractor Rates DB); this one hits the Contractor
+// DB directly so it is not coupled to rates. The Notion "contains" filter is a case-sensitive,
+// broad match (it also catches a stored "handle#1234" discriminator), so callers MUST narrow the
+// result with an exact normalized comparison (see webhook.pickActiveContractor) rather than trusting
+// the first row. Returns an empty slice (not an error) when nothing matches.
+func (s *LeaveService) LookupContractorDetailsByDiscord(ctx context.Context, handle string) ([]*ContractorDetails, error) {
+	if strings.TrimSpace(handle) == "" {
+		s.logger.Debug("contractor lookup handle is empty, skipping Discord lookup")
+		return nil, nil
+	}
+
+	if s.client == nil {
+		return nil, errors.New("notion client is nil")
+	}
+
+	contractorDBID := s.cfg.LeaveIntegration.Notion.ContractorDBID
+	if contractorDBID == "" {
+		return nil, errors.New("contractor database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("looking up contractor details by Discord handle: handle=%s db_id=%s", handle, contractorDBID))
+
+	// "Discord" is a rich_text property on the Contractor DB (see GetDiscordUsernameFromContractor,
+	// which reads it via ExtractRichText). Over-fetch with "contains" and let the caller exact-match.
+	query := &nt.DatabaseQuery{
+		Filter: &nt.DatabaseQueryFilter{
+			Property: "Discord",
+			DatabaseQueryPropertyFilter: nt.DatabaseQueryPropertyFilter{
+				RichText: &nt.TextPropertyFilter{
+					Contains: strings.TrimSpace(handle),
+				},
+			},
+		},
+		PageSize: 10,
+	}
+
+	resp, err := s.client.QueryDatabase(ctx, contractorDBID, query)
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to query contractors by Discord handle: handle=%s", handle))
+		return nil, fmt.Errorf("failed to query contractor database: %w", err)
+	}
+
+	details := make([]*ContractorDetails, 0, len(resp.Results))
+	for _, page := range resp.Results {
+		d, err := buildContractorDetailsFromPage(page)
+		if err != nil {
+			s.logger.Error(err, "failed to cast contractor properties in Discord lookup")
+			continue
+		}
+		details = append(details, d)
+	}
+
+	s.logger.Debug(fmt.Sprintf("Discord lookup returned %d candidate(s): handle=%s", len(details), handle))
+	return details, nil
+}
+
+// CreateLeaveInput carries the fields the self-service endpoint writes onto a new "Unavailability
+// Notices" page (SPEC-088 TASK-005).
+type CreateLeaveInput struct {
+	Title              string // pre-formatted "OOO-YYYY-<discord>-CODE" (Notion's own auto-ID needs the form)
+	ContractorPageID   string
+	UnavailabilityType string
+	StartDate          time.Time
+	EndDate            time.Time
+	Description        string
+}
+
+// CreateLeaveRequest creates a Status=New "Unavailability Notices" page with the Contractor relation,
+// Unavailability Type SELECT, and dates set (SPEC-088 TASK-005 + DEC-013). It writes Type explicitly
+// because the onleave auto-fill defaults an empty select to "Personal Time" (see
+// webhook.HandleNotionOnLeave), which would otherwise overwrite the contractor's intent. Returns the
+// created page ID.
+//
+// SPEC-088 execute-time note: this mirrors the existing page-create idiom (ContractorPayables.
+// CreatePayable) via ParentTypeDatabase + LeaveDBID. If the leave DB is a *multi-source* database the
+// classic /pages create may need the data-source parent instead (the query path already special-cases
+// this in executeDataSourceQuery); that can only be confirmed against live Notion (TASK-001 spike).
+func (s *LeaveService) CreateLeaveRequest(ctx context.Context, input CreateLeaveInput) (string, error) {
+	if s.client == nil {
+		return "", errors.New("notion client is nil")
+	}
+
+	leaveDBID := s.cfg.LeaveIntegration.Notion.LeaveDBID
+	if leaveDBID == "" {
+		return "", errors.New("leave database ID not configured")
+	}
+
+	s.logger.Debug(fmt.Sprintf("creating leave request page: contractor=%s type=%s start=%s end=%s",
+		input.ContractorPageID, input.UnavailabilityType, input.StartDate.Format("2006-01-02"), input.EndDate.Format("2006-01-02")))
+
+	props := nt.DatabasePageProperties{
+		"Leave Request": nt.DatabasePageProperty{
+			Title: []nt.RichText{
+				{Text: &nt.Text{Content: input.Title}},
+			},
+		},
+		"Status": nt.DatabasePageProperty{
+			Status: &nt.SelectOptions{Name: "New"},
+		},
+		"Contractor": nt.DatabasePageProperty{
+			Relation: []nt.Relation{{ID: input.ContractorPageID}},
+		},
+		"Unavailability Type": nt.DatabasePageProperty{
+			Select: &nt.SelectOptions{Name: input.UnavailabilityType},
+		},
+		"Start Date": nt.DatabasePageProperty{
+			Date: &nt.Date{Start: nt.NewDateTime(input.StartDate, false)},
+		},
+		"End Date": nt.DatabasePageProperty{
+			Date: &nt.Date{Start: nt.NewDateTime(input.EndDate, false)},
+		},
+	}
+
+	if strings.TrimSpace(input.Description) != "" {
+		props["Additional Context"] = nt.DatabasePageProperty{
+			RichText: []nt.RichText{
+				{Text: &nt.Text{Content: input.Description}},
+			},
+		}
+	}
+
+	page, err := s.client.CreatePage(ctx, nt.CreatePageParams{
+		ParentType:             nt.ParentTypeDatabase,
+		ParentID:               leaveDBID,
+		DatabasePageProperties: &props,
+	})
+	if err != nil {
+		s.logger.Error(err, fmt.Sprintf("failed to create leave request page: contractor=%s", input.ContractorPageID))
+		return "", fmt.Errorf("failed to create leave request: %w", err)
+	}
+
+	s.logger.Debug(fmt.Sprintf("created leave request page: page_id=%s title=%s", page.ID, input.Title))
+	return page.ID, nil
+}
+
 // LookupContractorByEmail finds contractor page ID by team email or personal email.
 // Returns empty string if not found (graceful handling)
 // Returns error only on API failures

@@ -412,6 +412,27 @@ type NotionAutomationUserObject struct {
 	ID     string `json:"id"`
 }
 
+// fortressIntegrationUserID is the Notion user id of the integration that the self-service leave
+// endpoint (HandleLeaveRequest, SPEC-088) authenticates as when it creates a row via the API. Rows
+// created by that user are announced directly by the endpoint through announceNewLeaveRequest, so the
+// Notion-automation path (HandleNotionOnLeave) must SKIP them to avoid a double-notify (SPEC-088
+// DEC-010).
+//
+// SPEC-088 execute-time TODO: the real id is captured by the TASK-001 staging spike (the "created_by"
+// of an API-created row). It is intentionally left EMPTY here rather than guessing a real id: while
+// empty the guard is inert (an empty createdBy never matches an empty constant, because the guard
+// also checks createdByUserID != ""), so the form path keeps its exact current behavior until the id
+// is filled in.
+const fortressIntegrationUserID = ""
+
+// shouldSkipIntegrationCreatedRow reports whether the Notion automation path should ignore a row
+// because the self-service endpoint created (and already announced) it (SPEC-088 DEC-010). It is
+// deliberately inert while fortressIntegrationUserID is empty, so the form path keeps its exact
+// current behavior until the TASK-001 spike fills the id in.
+func shouldSkipIntegrationCreatedRow(createdByUserID string) bool {
+	return fortressIntegrationUserID != "" && createdByUserID == fortressIntegrationUserID
+}
+
 // HandleNotionOnLeave handles on-leave webhook events from Notion automation
 // This endpoint auto-fills the Employee relation based on Team Email
 //
@@ -475,6 +496,16 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		return
 	}
 
+	// SPEC-088 DEC-010 skip-guard: a row created by the fortress integration user was filed via the
+	// self-service endpoint, which already resolved the AM/DL and posted the notification. Skip it here
+	// so the request is announced exactly once even if the Notion automation also fires on API creates.
+	// Inert while fortressIntegrationUserID is empty (see its doc comment).
+	if shouldSkipIntegrationCreatedRow(createdByUserID) {
+		l.Debug(fmt.Sprintf("skipping integration-created row (already announced by endpoint): page_id=%s", pageID))
+		c.JSON(http.StatusOK, view.CreateResponse[any](nil, nil, nil, nil, "ignored:integration_created"))
+		return
+	}
+
 	// Create leave service
 	leaveService := notion.NewLeaveService(h.config, h.store, h.repo, h.logger)
 	if leaveService == nil {
@@ -522,7 +553,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 
 	// Step 3: Fetch contractor details if we have the ID
 	var contractor *notion.ContractorDetails
-	var contractorDiscordMention string
 
 	if leave.EmployeeID != "" {
 		l.Debug(fmt.Sprintf("fetching contractor details from Notion: contractor_id=%s", leave.EmployeeID))
@@ -544,7 +574,6 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		} else {
 			l.Debug(fmt.Sprintf("found contractor: id=%s full_name=%s email=%s discord=%s",
 				leave.EmployeeID, contractor.FullName, contractor.TeamEmail, contractor.DiscordUsername))
-			contractorDiscordMention = h.getDiscordMentionFromUsername(l, contractor.DiscordUsername)
 		}
 	}
 
@@ -593,9 +622,9 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 		return
 	}
 
-	// Step 4: Send notification (priority path — must happen even if auto-fill fails later)
+	// Step 4: Send notification (priority path, must happen even if auto-fill fails later)
 	if contractor != nil {
-		h.sendLeaveNotification(ctx, l, leaveService, leave, contractor, contractorDiscordMention)
+		h.announceNewLeaveRequest(ctx, l, leaveService, leave, contractor)
 	} else {
 		// Contractor lookup failed — we can't send a proper leave notification
 		l.Error(errors.New("contractor not found"), fmt.Sprintf("cannot send leave notification: page_id=%s created_by=%s", pageID, createdByUserID))
@@ -638,6 +667,23 @@ func (h *handler) HandleNotionOnLeave(c *gin.Context) {
 
 	l.Debug(fmt.Sprintf("leave request processing complete: page_id=%s contractor_id=%s auto_fill_failed=%v",
 		pageID, leave.EmployeeID, autoFillFailed))
+}
+
+// announceNewLeaveRequest is the shared "announce a new leave request" core (SPEC-088 TASK-004):
+// resolve the requester's AM/DL (by team email, inside sendLeaveNotification) and post the
+// #project-talk embed with approve/reject affordances. Both the Notion-automation path
+// (HandleNotionOnLeave) and the self-service endpoint (HandleLeaveRequest) call this, so a bot-filed
+// row and a form-filed row notify the SAME approvers in the SAME shape. leave.Email must be the
+// requester's team email for the AM/DL resolution to hit real stakeholders rather than the fallback.
+func (h *handler) announceNewLeaveRequest(
+	ctx context.Context,
+	l logger.Logger,
+	leaveService *notion.LeaveService,
+	leave *notion.LeaveRequest,
+	contractor *notion.ContractorDetails,
+) {
+	contractorDiscordMention := h.getDiscordMentionFromUsername(l, contractor.DiscordUsername)
+	h.sendLeaveNotification(ctx, l, leaveService, leave, contractor, contractorDiscordMention)
 }
 
 // sendLeaveNotification sends the leave request notification to Discord

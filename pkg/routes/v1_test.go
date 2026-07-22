@@ -868,6 +868,30 @@ func Test_loadV1Routes(t *testing.T) {
 				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleGenInvoice-fm",
 			},
 		},
+		"/webhooks/discord/leave/list": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleLeaveList-fm",
+			},
+		},
+		"/webhooks/discord/leave/approve": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleLeaveApprove-fm",
+			},
+		},
+		"/webhooks/discord/leave/reject": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleLeaveReject-fm",
+			},
+		},
+		"/webhooks/discord/leave/request": {
+			"POST": {
+				Method:  "POST",
+				Handler: "github.com/dwarvesf/fortress-api/pkg/handler/webhook.IHandler.HandleLeaveRequest-fm",
+			},
+		},
 		"/api/v1/bank-accounts": {
 			"GET": {
 				Method:  "GET",

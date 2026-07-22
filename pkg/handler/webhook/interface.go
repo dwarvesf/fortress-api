@@ -26,4 +26,5 @@ type IHandler interface {
 	HandleLeaveList(c *gin.Context)
 	HandleLeaveApprove(c *gin.Context)
 	HandleLeaveReject(c *gin.Context)
+	HandleLeaveRequest(c *gin.Context)
 }

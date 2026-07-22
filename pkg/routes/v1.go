@@ -97,6 +97,10 @@ func loadV1Routes(r *gin.Engine, h *handler.Handler, repo store.DBRepo, s *store
 		webhook.POST("/discord/leave/list", conditionalAuthMW, h.Webhook.HandleLeaveList)
 		webhook.POST("/discord/leave/approve", conditionalAuthMW, h.Webhook.HandleLeaveApprove)
 		webhook.POST("/discord/leave/reject", conditionalAuthMW, h.Webhook.HandleLeaveReject)
+		// Leave submission self-service (SPEC-088). Same gate as the decision routes: it creates a row
+		// AS a named contractor, so it needs a valid fortress API key (the real authorization is the
+		// by-Discord active-contractor resolve inside the handler), NOT the unauthenticated gen-invoice group.
+		webhook.POST("/discord/leave/request", conditionalAuthMW, h.Webhook.HandleLeaveRequest)
 
 		basecampGroup := webhook.Group("/basecamp")
 		{
