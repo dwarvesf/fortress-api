@@ -454,6 +454,10 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	var convWg sync.WaitGroup
 	var convMu sync.Mutex
 	var capturedDisplayRate float64
+	// First conversion failure on a NON-USD payout. Recorded rather than
+	// swallowed, and checked after the WaitGroup, so one bad payout refuses the
+	// whole invoice instead of quietly contributing a wrong line to it.
+	var convErr error
 
 	for i, payout := range payouts {
 		convWg.Add(1)
@@ -464,8 +468,22 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 			if err != nil {
 				convMu.Lock()
 				l.Error(err, fmt.Sprintf("failed to resolve payout amount to USD: pageID=%s", p.PageID))
+				// Falling back to the raw amount is only safe when the payout is
+				// ALREADY in USD. For any other currency it assigns the local
+				// figure straight to the dollar field, so a 26,000,000 VND payout
+				// becomes a $26,000,000 invoice line, and it does so precisely
+				// when Wise or Redis is down, which is when nobody is watching.
+				// Refuse instead: an invoice that fails to generate is a support
+				// ticket, an invoice with a 1000x line is a payment.
+				if cur := strings.ToUpper(strings.TrimSpace(p.Currency)); cur != "" && cur != "USD" {
+					if convErr == nil {
+						convErr = fmt.Errorf("refusing to invoice payout %s: cannot convert %s to USD: %w", p.PageID, cur, err)
+					}
+					convMu.Unlock()
+					return
+				}
 				convMu.Unlock()
-				amountUSD = p.Amount // Fallback to original amount if conversion fails
+				amountUSD = p.Amount
 			}
 			// ResolveAmountUSD already rounds to 2 decimal places, but we ensure it's assigned correctly
 			amountsUSD[idx] = amountUSD
@@ -480,6 +498,9 @@ func (c *controller) GenerateContractorInvoice(ctx context.Context, discord, mon
 	}
 
 	convWg.Wait()
+	if convErr != nil {
+		return nil, convErr
+	}
 	l.Debug("[DEBUG] contractor_invoice: parallel currency conversions completed")
 
 	// Create task order service for hourly rate processing
